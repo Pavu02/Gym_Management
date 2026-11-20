@@ -1,5 +1,6 @@
 package com.gym.springapp.config;
 
+import com.gym.springapp.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -26,12 +27,30 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
+    public String generateToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole().name());
+        return createToken(claims, user.getEmail());
+    }
+
+    public String generateToken(String email, String role, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", role);
+        return createToken(claims, email);
+    }
+
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        return createToken(claims, email);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(email)
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -42,10 +61,23 @@ public class JwtUtils {
         return extractAllClaims(token).getSubject();
     }
 
+    public Long extractUserId(String token) {
+        Object val = extractAllClaims(token).get("userId");
+        if (val instanceof Number num) {
+            return num.longValue();
+        }
+        return null;
+    }
+
+    public String extractRole(String token) {
+        Object val = extractAllClaims(token).get("role");
+        return val != null ? val.toString() : null;
+    }
+
     public boolean validateToken(String token, String email) {
         try {
             String extractedEmail = extractEmail(token);
-            return (extractedEmail.equals(email) && !isTokenExpired(token));
+            return (extractedEmail.equalsIgnoreCase(email) && !isTokenExpired(token));
         } catch (Exception e) {
             return false;
         }
@@ -63,7 +95,7 @@ public class JwtUtils {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()

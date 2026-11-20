@@ -23,9 +23,9 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
 
     public UserServiceImpl(UserRepo userRepo,
-                           PasswordEncoder passwordEncoder,
-                           AuthenticationManager authenticationManager,
-                           JwtUtils jwtUtils) {
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtUtils jwtUtils) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
@@ -47,20 +47,20 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepo.save(user);
 
-        String token = jwtUtils.generateToken(savedUser.getEmail(), savedUser.getRole().name());
-        return new AuthResponse(token, savedUser.getId(), savedUser.getName(), savedUser.getEmail(), savedUser.getRole().name());
+        String token = jwtUtils.generateToken(savedUser);
+        return new AuthResponse(token, savedUser.getId(), savedUser.getName(), savedUser.getEmail(),
+                savedUser.getRole().name());
     }
 
     @Override
     public AuthResponse login(LoginRequestDTO request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
-        );
+                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
         User user = userRepo.findByEmail(request.email())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.email()));
 
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtils.generateToken(user);
         return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole().name());
     }
 }

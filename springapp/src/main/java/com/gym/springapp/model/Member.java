@@ -53,4 +53,10 @@ public class Member {
     private String emergencyContactPhone;
 
     private boolean onboardingCompleted = false;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

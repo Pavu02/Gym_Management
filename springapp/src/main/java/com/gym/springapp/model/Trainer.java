@@ -30,4 +30,13 @@ public class Trainer {
     private double rating = 4.5;
 
     private double monthlyFee;
+
+    @Column(nullable = false)
+    private int maxMembers = 15;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

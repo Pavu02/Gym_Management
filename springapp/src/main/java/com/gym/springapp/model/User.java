@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -30,4 +32,33 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
+        updatedAt = LocalDateTime.now();
+    }
 }

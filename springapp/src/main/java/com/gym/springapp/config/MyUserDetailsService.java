@@ -18,8 +18,12 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        User user = userRepo.findByEmailIgnoreCaseAndDeletedFalse(email.trim().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found or account deactivated with email: " + email));
+        if (!user.isActive()) {
+            throw new UsernameNotFoundException("User account is inactive: " + email);
+        }
         return new UserPrinciple(user);
     }
 }
