@@ -73,7 +73,12 @@
                                                                                                                                       "maximumError":  "20kb"
                                                                                                                                   }
                                                                                                                               ],
-                                                                                                                  "outputHashing":  "all"
+                                                                                                                  "outputHashing":  "all",
+                                                                                                                  "optimization":  {
+                                                                                                                                       "scripts":  true,
+                                                                                                                                       "styles":  true,
+                                                                                                                                       "fonts":  false
+                                                                                                                                   }
                                                                                                               },
                                                                                                "development":  {
                                                                                                                    "optimization":  false,
@@ -126,9 +131,8 @@
                                                                    }
                                                       }
                                     }
-                },
-                "cli": {
-                  "analytics": "91947c8e-68c4-46b4-ad8b-f93d35bec2b2"
-                }
+                 },
+    "cli":  {
+                "analytics":  "91947c8e-68c4-46b4-ad8b-f93d35bec2b2"
+            }
 }
-
