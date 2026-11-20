@@ -46,13 +46,26 @@
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea id="description" formControlName="description" rows="4"
+        <textarea id="description" formControlName="description" rows="3"
           placeholder="Detailed plan benefits, access privileges..."
           [class.is-invalid]="planForm.get('description')?.touched && planForm.get('description')?.invalid"></textarea>
         <div class="error-text"
           *ngIf="planForm.get('description')?.touched && planForm.get('description')?.errors?.['required']">
           Description is required
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="features">Plan Features (comma-separated)</label>
+        <input type="text" id="features" formControlName="features"
+          placeholder="e.g. Gym Access, Locker Room, Free WiFi, Diet Consultation" class="form-input" />
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="popular">
+          <span>Highlight as <strong>"Most Popular"</strong> Plan</span>
+        </label>
       </div>
 
       <div class="form-actions">

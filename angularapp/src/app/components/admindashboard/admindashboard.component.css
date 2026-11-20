@@ -72,6 +72,10 @@
   color: #4caf50;
 }
 
+.stat-pending .stat-value {
+  color: #ffa726;
+}
+
 .stat-expired .stat-value {
   color: #ef5350;
 }

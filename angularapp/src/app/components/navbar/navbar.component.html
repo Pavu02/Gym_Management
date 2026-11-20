@@ -3,7 +3,14 @@
     <a routerLink="/home" class="logo">Gym<span>Pro</span></a>
   </div>
 
-  <div class="nav-links">
+  <!-- Onboarding Navbar View -->
+  <div class="nav-links" *ngIf="isLoggedIn() && isOnboarding">
+    <span class="onboarding-badge">Member Onboarding</span>
+    <button class="btn-logout" (click)="logout()">Logout</button>
+  </div>
+
+  <!-- Regular Navbar View -->
+  <div class="nav-links" *ngIf="!isOnboarding">
     <!-- Public Links (Not Logged In) -->
     <ng-container *ngIf="!isLoggedIn()">
       <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
@@ -25,6 +32,7 @@
     <ng-container *ngIf="isLoggedIn() && getRole() === 'MEMBER'">
       <a routerLink="/member/profile" routerLinkActive="active">Profile</a>
       <a routerLink="/member/plan" routerLinkActive="active">My Plan</a>
+      <a routerLink="/member/trainer" routerLinkActive="active">My Trainer</a>
       <a routerLink="/member/attendance" routerLinkActive="active">Attendance</a>
       <a routerLink="/member/payments" routerLinkActive="active">Payments</a>
     </ng-container>

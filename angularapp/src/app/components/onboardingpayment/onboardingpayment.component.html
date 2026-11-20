@@ -1,0 +1,91 @@
+<div class="onboarding-page">
+  <app-onboardingstepper [step]="4"></app-onboardingstepper>
+
+  <div class="header-section">
+    <h1>Review & Complete Payment</h1>
+    <p class="subtitle">Review your membership package details and complete activation.</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Calculating order summary...</p>
+  </div>
+
+  <div *ngIf="!loading && summary" class="payment-container">
+    <!-- Order Summary Card -->
+    <div class="summary-card">
+      <h3 class="card-title">Order Summary</h3>
+
+      <div class="summary-item">
+        <div class="item-info">
+          <span class="item-name">{{ summary.planName }} Plan</span>
+          <span class="item-sub">{{ summary.durationMonths }} {{ summary.durationMonths === 1 ? 'Month' : 'Months' }}
+            gym access</span>
+        </div>
+        <span class="item-price">₹{{ summary.planPrice | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="summary-item" *ngIf="summary.trainerName">
+        <div class="item-info">
+          <span class="item-name">Personal Trainer: {{ summary.trainerName }}</span>
+          <span class="item-sub">Dedicated coaching for {{ summary.durationMonths }} months</span>
+        </div>
+        <span class="item-price">+ ₹{{ summary.trainerFee | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="summary-item" *ngIf="!summary.trainerName">
+        <div class="item-info">
+          <span class="item-name">Personal Trainer</span>
+          <span class="item-sub">Self-guided training</span>
+        </div>
+        <span class="item-price text-free">₹0</span>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="total-row">
+        <span class="total-label">Total Amount Due</span>
+        <span class="total-amount">₹{{ summary.totalAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Payment Mode Selector -->
+    <div class="payment-mode-card">
+      <h3 class="card-title">Select Payment Mode</h3>
+
+      <div class="modes-list">
+        <div *ngFor="let mode of paymentModes" class="mode-card" [class.selected]="selectedMode === mode.id"
+          (click)="selectMode(mode.id)">
+          <div class="mode-icon">{{ mode.icon }}</div>
+          <div class="mode-details">
+            <div class="mode-title">{{ mode.label }}</div>
+            <div class="mode-desc">{{ mode.desc }}</div>
+          </div>
+          <div class="mode-radio">
+            <span class="radio-dot" *ngIf="selectedMode === mode.id"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-note">
+        <span class="info-icon">ℹ️</span>
+        <span><strong>Demo Mode:</strong> This is a simulation payment for instant onboarding activation. No real
+          charges will be made.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-bar" *ngIf="!loading && summary">
+    <button type="button" class="btn-secondary" (click)="onBack()">← Back</button>
+    <button type="button" class="btn-pay" [disabled]="submitting" (click)="onPay()">
+      <span *ngIf="!submitting">Pay ₹{{ summary.totalAmount | number:'1.0-0' }} & Activate Membership 🚀</span>
+      <span *ngIf="submitting" class="submitting-text">
+        <span class="btn-spinner"></span> Activating Membership...
+      </span>
+    </button>
+  </div>
+</div>

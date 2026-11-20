@@ -5,6 +5,9 @@ export interface Trainer {
   user?: User;
   specialization: string;
   experienceYears: number;
+  bio?: string;
+  rating?: number;
+  monthlyFee?: number;
 }
 
 export interface TrainerRequest {
@@ -14,4 +17,7 @@ export interface TrainerRequest {
   phone?: string;
   specialization: string;
   experienceYears: number;
+  bio?: string;
+  rating?: number;
+  monthlyFee?: number;
 }

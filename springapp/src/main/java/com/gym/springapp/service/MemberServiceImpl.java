@@ -1,7 +1,9 @@
 package com.gym.springapp.service;
 
+import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
+import com.gym.springapp.dto.RenewRequestDTO;
 import com.gym.springapp.exceptions.DuplicateResourceException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.*;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,16 +44,32 @@ public class MemberServiceImpl implements MemberService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    private MemberResponseDTO toDTO(Member member) {
+    @Override
+    public MemberResponseDTO toDTO(Member member) {
         if (member.getExpiryDate() != null && member.getExpiryDate().isBefore(LocalDate.now())) {
             if (!"EXPIRED".equals(member.getStatus())) {
                 member.setStatus("EXPIRED");
                 member = memberRepo.save(member);
             }
         }
+
         String planName = member.getPlan() != null ? member.getPlan().getName() : null;
+        Long planId = member.getPlan() != null ? member.getPlan().getId() : null;
         String trainerName = (member.getTrainer() != null && member.getTrainer().getUser() != null)
                 ? member.getTrainer().getUser().getName() : null;
+        Long trainerId = member.getTrainer() != null ? member.getTrainer().getId() : null;
+
+        Double bmi = null;
+        if (member.getHeightCm() > 0 && member.getWeightKg() > 0) {
+            double hMeter = member.getHeightCm() / 100.0;
+            bmi = Math.round((member.getWeightKg() / (hMeter * hMeter)) * 10.0) / 10.0;
+        }
+
+        Long daysLeft = null;
+        if (member.getExpiryDate() != null) {
+            long diff = ChronoUnit.DAYS.between(LocalDate.now(), member.getExpiryDate());
+            daysLeft = Math.max(0, diff);
+        }
 
         return new MemberResponseDTO(
                 member.getId(),
@@ -61,7 +80,20 @@ public class MemberServiceImpl implements MemberService {
                 trainerName,
                 member.getJoinDate(),
                 member.getExpiryDate(),
-                member.getStatus()
+                member.getStatus(),
+                planId,
+                trainerId,
+                member.getGender(),
+                member.getDateOfBirth(),
+                member.getHeightCm(),
+                member.getWeightKg(),
+                bmi,
+                member.getFitnessGoal(),
+                member.getMedicalConditions(),
+                member.getEmergencyContactName(),
+                member.getEmergencyContactPhone(),
+                member.isOnboardingCompleted(),
+                daysLeft
         );
     }
 
@@ -72,8 +104,11 @@ public class MemberServiceImpl implements MemberService {
             throw new DuplicateResourceException("Email already exists: " + request.email());
         }
 
-        Plan plan = planRepo.findById(request.planId())
-                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with id: " + request.planId()));
+        Plan plan = null;
+        if (request.planId() != null) {
+            plan = planRepo.findById(request.planId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Plan not found with id: " + request.planId()));
+        }
 
         Trainer trainer = null;
         if (request.trainerId() != null) {
@@ -95,8 +130,11 @@ public class MemberServiceImpl implements MemberService {
         member.setPlan(plan);
         member.setTrainer(trainer);
         member.setJoinDate(today);
-        member.setExpiryDate(today.plusMonths(plan.getDurationMonths()));
+        if (plan != null) {
+            member.setExpiryDate(today.plusMonths(plan.getDurationMonths()));
+        }
         member.setStatus("ACTIVE");
+        member.setOnboardingCompleted(true);
 
         Member savedMember = memberRepo.save(member);
         return toDTO(savedMember);
@@ -195,5 +233,85 @@ public class MemberServiceImpl implements MemberService {
         return memberRepo.findByTrainerId(trainer.getId()).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public MemberResponseDTO updateMyProfile(String email, MemberProfileUpdateDTO request) {
+        Member member = memberRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + email));
+
+        User user = member.getUser();
+        if (user != null) {
+            if (request.name() != null && !request.name().isBlank()) user.setName(request.name());
+            if (request.phone() != null && !request.phone().isBlank()) user.setPhone(request.phone());
+            userRepo.save(user);
+        }
+
+        if (request.gender() != null) member.setGender(request.gender());
+        if (request.dateOfBirth() != null) member.setDateOfBirth(request.dateOfBirth());
+        if (request.heightCm() > 0) member.setHeightCm(request.heightCm());
+        if (request.weightKg() > 0) member.setWeightKg(request.weightKg());
+        if (request.fitnessGoal() != null) member.setFitnessGoal(request.fitnessGoal());
+        if (request.medicalConditions() != null) member.setMedicalConditions(request.medicalConditions());
+        if (request.emergencyContactName() != null) member.setEmergencyContactName(request.emergencyContactName());
+        if (request.emergencyContactPhone() != null) member.setEmergencyContactPhone(request.emergencyContactPhone());
+
+        return toDTO(memberRepo.save(member));
+    }
+
+    @Override
+    @Transactional
+    public MemberResponseDTO changeTrainer(String email, Long trainerId) {
+        Member member = memberRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + email));
+
+        Trainer trainer = trainerRepo.findById(trainerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + trainerId));
+
+        member.setTrainer(trainer);
+        return toDTO(memberRepo.save(member));
+    }
+
+    @Override
+    @Transactional
+    public MemberResponseDTO removeTrainer(String email) {
+        Member member = memberRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + email));
+
+        member.setTrainer(null);
+        return toDTO(memberRepo.save(member));
+    }
+
+    @Override
+    @Transactional
+    public MemberResponseDTO renewMembership(String email, RenewRequestDTO request) {
+        Member member = memberRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + email));
+
+        Plan plan = planRepo.findById(request.planId())
+                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with id: " + request.planId()));
+
+        LocalDate today = LocalDate.now();
+        LocalDate baseDate = (member.getExpiryDate() != null && member.getExpiryDate().isAfter(today))
+                ? member.getExpiryDate() : today;
+
+        member.setPlan(plan);
+        member.setExpiryDate(baseDate.plusMonths(plan.getDurationMonths()));
+        member.setStatus("ACTIVE");
+        if (member.getJoinDate() == null) {
+            member.setJoinDate(today);
+        }
+        member.setOnboardingCompleted(true);
+
+        Payment payment = new Payment();
+        payment.setMember(member);
+        payment.setAmount(plan.getPrice());
+        payment.setMode(request.mode() != null ? request.mode().toUpperCase() : "UPI");
+        payment.setStatus("PAID");
+        payment.setPaymentDate(today);
+        paymentRepo.save(payment);
+
+        return toDTO(memberRepo.save(member));
     }
 }

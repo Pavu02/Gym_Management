@@ -1,0 +1,41 @@
+<div class="success-page">
+  <div class="success-card">
+    <!-- Animated Checkmark Icon -->
+    <div class="checkmark-wrapper">
+      <div class="checkmark-circle">
+        <div class="checkmark-stem"></div>
+        <div class="checkmark-kick"></div>
+      </div>
+    </div>
+
+    <h1>Welcome to GymPro, {{ userName }}!</h1>
+    <p class="tagline">Your membership is now active and your fitness adventure begins now.</p>
+
+    <!-- Details Card -->
+    <div class="details-box" *ngIf="member">
+      <div class="detail-row">
+        <span class="label">Membership Plan</span>
+        <span class="value plan-badge">{{ member.planName || 'Active' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Dedicated Trainer</span>
+        <span class="value">{{ member.trainerName ? member.trainerName : 'No trainer (Self-guided)' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Valid Until</span>
+        <span class="value highlight-date">{{ member.expiryDate | date:'mediumDate' }} ({{ member.daysLeft }} days)</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Membership Status</span>
+        <span class="status-active">● ACTIVE</span>
+      </div>
+    </div>
+
+    <button type="button" class="btn-dashboard" (click)="goToDashboard()">
+      Go to My Dashboard →
+    </button>
+  </div>
+</div>

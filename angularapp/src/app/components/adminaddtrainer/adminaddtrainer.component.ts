@@ -43,7 +43,10 @@ export class AdminaddtrainerComponent implements OnInit {
         name: ['', [Validators.required]],
         phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
         specialization: ['', [Validators.required]],
-        experienceYears: [1, [Validators.required, Validators.min(0)]]
+        experienceYears: [1, [Validators.required, Validators.min(0)]],
+        bio: [''],
+        rating: [4.5, [Validators.min(1), Validators.max(5)]],
+        monthlyFee: [0, [Validators.min(0)]]
       });
     } else {
       this.trainerForm = this.fb.group({
@@ -52,7 +55,10 @@ export class AdminaddtrainerComponent implements OnInit {
         password: ['', [Validators.required, Validators.minLength(6)]],
         phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
         specialization: ['', [Validators.required]],
-        experienceYears: [1, [Validators.required, Validators.min(0)]]
+        experienceYears: [1, [Validators.required, Validators.min(0)]],
+        bio: [''],
+        rating: [4.5, [Validators.min(1), Validators.max(5)]],
+        monthlyFee: [0, [Validators.min(0)]]
       });
     }
   }
@@ -65,7 +71,10 @@ export class AdminaddtrainerComponent implements OnInit {
           name: trainer.user?.name,
           phone: trainer.user?.phone,
           specialization: trainer.specialization,
-          experienceYears: trainer.experienceYears
+          experienceYears: trainer.experienceYears,
+          bio: trainer.bio || '',
+          rating: trainer.rating || 4.5,
+          monthlyFee: trainer.monthlyFee || 0
         });
         this.loading = false;
       },

@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AttendanceService } from '../../services/attendance.service';
+import { MemberService } from '../../services/member.service';
 import { Attendance } from '../../models/attendance.model';
 
 @Component({
@@ -14,11 +16,31 @@ export class MemberattendanceComponent implements OnInit {
   actionLoading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
+  isExpired: boolean = false;
 
-  constructor(private attendanceService: AttendanceService) {}
+  constructor(
+    private attendanceService: AttendanceService,
+    private memberService: MemberService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    this.checkMembershipStatus();
     this.loadMyAttendance();
+  }
+
+  checkMembershipStatus(): void {
+    this.memberService.getMyProfile().subscribe({
+      next: (profile) => {
+        if (profile.status === 'EXPIRED' || (profile.daysLeft !== undefined && profile.daysLeft <= 0)) {
+          this.isExpired = true;
+        }
+      }
+    });
+  }
+
+  goToRenew(): void {
+    this.router.navigate(['/member/plan']);
   }
 
   loadMyAttendance(): void {

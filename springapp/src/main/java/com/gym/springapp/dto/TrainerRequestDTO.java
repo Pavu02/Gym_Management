@@ -6,5 +6,8 @@ public record TrainerRequestDTO(
     String password,
     String phone,
     String specialization,
-    int experienceYears
+    int experienceYears,
+    String bio,
+    Double rating,
+    Double monthlyFee
 ) {}

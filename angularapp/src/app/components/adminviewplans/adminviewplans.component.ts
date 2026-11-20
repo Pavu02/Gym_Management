@@ -30,7 +30,7 @@ export class AdminviewplansComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to load plans';
+        this.errorMessage = err.error?.message || 'Failed to load membership plans';
         this.loading = false;
       }
     });
@@ -41,8 +41,17 @@ export class AdminviewplansComponent implements OnInit {
       this.filteredPlans = [...this.plans];
     } else {
       const term = this.searchTerm.toLowerCase();
-      this.filteredPlans = this.plans.filter(p => p.name.toLowerCase().includes(term));
+      this.filteredPlans = this.plans.filter(p =>
+        p.name.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term) ||
+        (p.features && p.features.toLowerCase().includes(term))
+      );
     }
+  }
+
+  getFeatures(featuresStr?: string): string[] {
+    if (!featuresStr) return [];
+    return featuresStr.split(',').map(f => f.trim()).filter(f => f.length > 0);
   }
 
   deletePlan(id: number, name: string): void {
@@ -59,7 +68,7 @@ export class AdminviewplansComponent implements OnInit {
         this.loadPlans();
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to delete plan';
+        this.errorMessage = err.error?.message || 'Failed to delete plan. It might be assigned to members.';
       }
     });
   }

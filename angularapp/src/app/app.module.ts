@@ -25,6 +25,13 @@ import { MemberattendanceComponent } from './components/memberattendance/membera
 import { MemberpaymentsComponent } from './components/memberpayments/memberpayments.component';
 import { TrainerviewmembersComponent } from './components/trainerviewmembers/trainerviewmembers.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { OnboardingstepperComponent } from './components/onboardingstepper/onboardingstepper.component';
+import { OnboardingplansComponent } from './components/onboardingplans/onboardingplans.component';
+import { OnboardingtrainerComponent } from './components/onboardingtrainer/onboardingtrainer.component';
+import { OnboardingprofileComponent } from './components/onboardingprofile/onboardingprofile.component';
+import { OnboardingpaymentComponent } from './components/onboardingpayment/onboardingpayment.component';
+import { OnboardingsuccessComponent } from './components/onboardingsuccess/onboardingsuccess.component';
+import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +54,14 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     MemberviewplanComponent,
     MemberattendanceComponent,
     MemberpaymentsComponent,
-    TrainerviewmembersComponent
+    TrainerviewmembersComponent,
+    OnboardingstepperComponent,
+    OnboardingplansComponent,
+    OnboardingtrainerComponent,
+    OnboardingprofileComponent,
+    OnboardingpaymentComponent,
+    OnboardingsuccessComponent,
+    MembertrainerComponent
   ],
   imports: [
     BrowserModule,

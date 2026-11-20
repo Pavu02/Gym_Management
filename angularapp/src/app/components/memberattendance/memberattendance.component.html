@@ -1,4 +1,16 @@
 <div class="attendance-container">
+  <!-- Membership Expired Banner -->
+  <div class="expired-banner" *ngIf="isExpired">
+    <div class="expired-content">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <strong>Membership Expired!</strong>
+        <p>Your gym membership has expired. Check-in is paused until membership renewal.</p>
+      </div>
+    </div>
+    <button class="btn-renew-alert" (click)="goToRenew()">Renew Now →</button>
+  </div>
+
   <div class="attendance-header">
     <h1>Workout <span>Attendance</span></h1>
     <p>Mark your gym attendance and track your consistency</p>
@@ -28,7 +40,7 @@
         *ngIf="!todayRecord"
         (click)="checkIn()"
         class="btn-attend btn-in"
-        [disabled]="actionLoading"
+        [disabled]="actionLoading || isExpired"
       >
         {{ actionLoading ? 'Processing...' : '⚡ Check In' }}
       </button>

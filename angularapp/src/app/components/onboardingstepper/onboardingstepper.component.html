@@ -1,0 +1,12 @@
+<div class="stepper-container">
+  <div class="stepper">
+    <div *ngFor="let s of steps; let i = index" class="step-item" [class.active]="step === s.num" [class.completed]="step > s.num">
+      <div class="step-indicator">
+        <span *ngIf="step > s.num" class="check">✔</span>
+        <span *ngIf="step <= s.num">{{ s.num }}</span>
+      </div>
+      <span class="step-label">{{ s.label }}</span>
+      <div *ngIf="i < steps.length - 1" class="step-line" [class.filled]="step > s.num"></div>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,55 @@
   padding: 3rem 1.5rem;
 }
 
+.expired-banner {
+  background-color: rgba(229, 57, 53, 0.2);
+  border: 1px solid #e53935;
+  border-radius: 12px;
+  padding: 1.2rem 1.6rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.expired-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.warning-icon {
+  font-size: 2rem;
+}
+
+.expired-content strong {
+  font-size: 1.15rem;
+  color: #ff8a80;
+}
+
+.expired-content p {
+  color: #dddddd;
+  font-size: 0.9rem;
+  margin: 0.2rem 0 0;
+}
+
+.btn-renew-alert {
+  background-color: #e53935;
+  color: #ffffff;
+  border: none;
+  padding: 0.7rem 1.6rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-renew-alert:hover {
+  background-color: #c62828;
+}
+
 .payments-header {
   margin-bottom: 2rem;
 }

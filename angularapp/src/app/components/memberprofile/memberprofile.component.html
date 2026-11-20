@@ -1,67 +1,215 @@
 <div class="profile-container">
-  <div class="profile-header">
-    <h1>My <span>Profile</span></h1>
-    <p>Your gym membership and fitness account details</p>
+  <!-- Membership Expired Global Alert -->
+  <div class="expired-banner" *ngIf="profile && (profile.status === 'EXPIRED' || daysLeft === 0)">
+    <div class="expired-content">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <strong>Membership Expired!</strong>
+        <p>Your gym membership has expired. Renew today to maintain access to facilities and classes.</p>
+      </div>
+    </div>
+    <button class="btn-renew-alert" (click)="goToRenew()">Renew Now →</button>
   </div>
 
-  <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
+  <div class="profile-header">
+    <div>
+      <h1>My <span>Profile</span></h1>
+      <p>Manage your fitness details, emergency contact, and membership status</p>
+    </div>
+    <button class="btn-toggle-edit" *ngIf="!isEditing && !loading" (click)="toggleEdit()">
+      ✏️ Edit Profile
+    </button>
   </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
 
   <div class="loading-state" *ngIf="loading">
-    Loading profile...
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
   </div>
 
-  <div class="profile-card" *ngIf="!loading && profile">
-    <div class="profile-top">
-      <div class="avatar-circle">
-        {{ profile.name.charAt(0).toUpperCase() }}
+  <div *ngIf="!loading && profile">
+    <!-- View Profile Card -->
+    <div class="profile-card" *ngIf="!isEditing">
+      <div class="profile-top">
+        <div class="avatar-circle">
+          {{ profile.name.charAt(0).toUpperCase() }}
+        </div>
+        <div class="user-main">
+          <div class="name-row">
+            <h2>{{ profile.name }}</h2>
+            <span class="status-badge" 
+                  [class.badge-active]="profile.status === 'ACTIVE'"
+                  [class.badge-expired]="profile.status === 'EXPIRED'"
+                  [class.badge-pending]="profile.status === 'PENDING_PAYMENT'">
+              {{ profile.status }}
+            </span>
+          </div>
+          <p class="user-email">{{ profile.email }} | {{ profile.phone }}</p>
+        </div>
       </div>
-      <div class="user-main">
-        <h2>{{ profile.name }}</h2>
-        <p class="user-email">{{ profile.email }}</p>
-        <span
-          class="status-badge"
-          [class.badge-active]="profile.status === 'ACTIVE'"
-          [class.badge-expired]="profile.status === 'EXPIRED'"
-        >
-          {{ profile.status }}
-        </span>
+
+      <!-- Days Left Progress Card -->
+      <div class="days-progress-box" [class.box-danger]="daysLeft < 7">
+        <div class="days-header">
+          <div>
+            <span class="days-title">Membership Validity</span>
+            <div class="days-sub">Expires on {{ profile.expiryDate | date:'mediumDate' }}</div>
+          </div>
+          <div class="days-value-col">
+            <span class="days-count" [class.text-danger]="daysLeft < 7">{{ daysLeft }} Days Left</span>
+            <button class="btn-renew-small" *ngIf="daysLeft < 7" (click)="goToRenew()">Renew Now</button>
+          </div>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-fill" 
+               [style.width.%]="daysLeft > 30 ? 100 : (daysLeft / 30) * 100"
+               [class.fill-danger]="daysLeft < 7"></div>
+        </div>
+      </div>
+
+      <!-- Fitness & BMI Stats Bar -->
+      <div class="fitness-stats-bar">
+        <div class="stat-pill">
+          <span class="stat-lbl">Fitness Goal</span>
+          <span class="stat-val goal-val">{{ getGoalLabel(profile.fitnessGoal) }}</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-lbl">Body Mass Index</span>
+          <div class="bmi-badge-row">
+            <span class="stat-val" *ngIf="profile.bmi">{{ profile.bmi }}</span>
+            <span class="bmi-tag" [style.background-color]="getBmiCategory(profile.bmi).color">
+              {{ getBmiCategory(profile.bmi).label }}
+            </span>
+          </div>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-lbl">Height & Weight</span>
+          <span class="stat-val">{{ profile.heightCm || '--' }} cm / {{ profile.weightKg || '--' }} kg</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-lbl">Gender</span>
+          <span class="stat-val">{{ profile.gender || 'Not specified' }}</span>
+        </div>
+      </div>
+
+      <div class="profile-divider"></div>
+
+      <!-- Detail Grid -->
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Active Plan</span>
+          <span class="detail-value highlight">{{ profile.planName || 'None' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Assigned Trainer</span>
+          <span class="detail-value">{{ profile.trainerName || 'Self-training' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Join Date</span>
+          <span class="detail-value">{{ profile.joinDate | date:'mediumDate' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Date of Birth</span>
+          <span class="detail-value">{{ profile.dateOfBirth ? (profile.dateOfBirth | date:'mediumDate') : 'Not provided' }}</span>
+        </div>
+
+        <div class="detail-item full-width">
+          <span class="detail-label">Medical Conditions / Injuries</span>
+          <span class="detail-value">{{ profile.medicalConditions || 'None reported' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Emergency Contact Name</span>
+          <span class="detail-value">{{ profile.emergencyContactName || 'Not provided' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Emergency Contact Phone</span>
+          <span class="detail-value">{{ profile.emergencyContactPhone || 'Not provided' }}</span>
+        </div>
       </div>
     </div>
 
-    <div class="profile-divider"></div>
-
-    <div class="details-grid">
-      <div class="detail-item">
-        <span class="detail-label">Phone Number</span>
-        <span class="detail-value">{{ profile.phone || 'Not provided' }}</span>
+    <!-- Inline Edit Form -->
+    <div class="edit-card" *ngIf="isEditing">
+      <div class="edit-header">
+        <h3>Edit Personal & Fitness Details</h3>
+        <button class="btn-cancel" (click)="toggleEdit()">Cancel</button>
       </div>
 
-      <div class="detail-item">
-        <span class="detail-label">Active Plan</span>
-        <span class="detail-value highlight">{{ profile.planName || 'No Active Plan' }}</span>
-      </div>
+      <form [formGroup]="editForm" (ngSubmit)="saveProfile()">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" formControlName="name" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number (10 digits)</label>
+            <input type="tel" formControlName="phone" class="form-input">
+          </div>
+        </div>
 
-      <div class="detail-item">
-        <span class="detail-label">Assigned Trainer</span>
-        <span class="detail-value">{{ profile.trainerName || 'Self-training' }}</span>
-      </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select formControlName="gender" class="form-select">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" formControlName="dateOfBirth" class="form-input">
+          </div>
+        </div>
 
-      <div class="detail-item">
-        <span class="detail-label">Join Date</span>
-        <span class="detail-value">{{ profile.joinDate | date:'mediumDate' }}</span>
-      </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Height (cm)</label>
+            <input type="number" formControlName="heightCm" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" formControlName="weightKg" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fitness Goal</label>
+            <select formControlName="fitnessGoal" class="form-select">
+              <option *ngFor="let g of fitnessGoals" [value]="g.id">{{ g.label }}</option>
+            </select>
+          </div>
+        </div>
 
-      <div class="detail-item">
-        <span class="detail-label">Expiry Date</span>
-        <span class="detail-value">{{ profile.expiryDate | date:'mediumDate' }}</span>
-      </div>
+        <div class="form-group">
+          <label class="form-label">Medical Conditions / Notes</label>
+          <textarea formControlName="medicalConditions" rows="2" class="form-textarea"></textarea>
+        </div>
 
-      <div class="detail-item days-box">
-        <span class="detail-label">Membership Days Left</span>
-        <span class="days-count" [class.text-danger]="daysLeft <= 5">{{ daysLeft }} Days</span>
-      </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Emergency Contact Name</label>
+            <input type="text" formControlName="emergencyContactName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Contact Phone</label>
+            <input type="tel" formControlName="emergencyContactPhone" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="toggleEdit()">Cancel</button>
+          <button type="submit" class="btn-save" [disabled]="savingProfile">
+            <span *ngIf="!savingProfile">Save Changes</span>
+            <span *ngIf="savingProfile">Saving...</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

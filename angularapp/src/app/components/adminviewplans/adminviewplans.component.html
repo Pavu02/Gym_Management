@@ -2,7 +2,7 @@
   <div class="view-header">
     <div>
       <h1>Membership <span>Plans</span></h1>
-      <p>Manage all available gym membership tiers</p>
+      <p>Manage all available gym membership tiers, features, and pricing</p>
     </div>
     <a routerLink="/admin/plans/add" class="btn-add">+ Add New Plan</a>
   </div>
@@ -16,8 +16,8 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" placeholder="Search plans by name..." [(ngModel)]="searchTerm" (input)="filterPlans()"
-      class="search-input" />
+    <input type="text" placeholder="Search plans by name or features..." [(ngModel)]="searchTerm"
+      (input)="filterPlans()" class="search-input" />
   </div>
 
   <div class="table-card">
@@ -28,7 +28,8 @@
           <th>Plan Name</th>
           <th>Duration</th>
           <th>Price</th>
-          <th>Description</th>
+          <th>Features</th>
+          <th>Badge</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -38,14 +39,22 @@
           <td class="font-bold">{{ plan.name }}</td>
           <td>{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</td>
           <td class="price-cell">₹{{ plan.price | number:'1.2-2' }}</td>
-          <td class="desc-cell">{{ plan.description }}</td>
+          <td class="features-cell">
+            <span class="chip-feature" *ngFor="let feat of getFeatures(plan.features)">
+              {{ feat }}
+            </span>
+          </td>
+          <td>
+            <span class="badge-popular" *ngIf="plan.popular">MOST POPULAR</span>
+            <span class="text-muted" *ngIf="!plan.popular">-</span>
+          </td>
           <td class="actions-cell">
             <a [routerLink]="['/admin/plans/edit', plan.id]" class="btn-action btn-edit">Edit</a>
             <button (click)="deletePlan(plan.id!, plan.name)" class="btn-action btn-delete">Delete</button>
           </td>
         </tr>
         <tr *ngIf="filteredPlans.length === 0 && !loading">
-          <td colspan="6" class="no-data">No plans found.</td>
+          <td colspan="7" class="no-data">No plans found.</td>
         </tr>
       </tbody>
     </table>

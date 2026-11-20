@@ -16,6 +16,7 @@ export class AdminviewmembersComponent implements OnInit {
   loading: boolean = true;
   errorMessage: string = '';
   successMessage: string = '';
+  selectedMemberForModal: MemberResponse | null = null;
 
   constructor(
     private memberService: MemberService,
@@ -53,6 +54,24 @@ export class AdminviewmembersComponent implements OnInit {
 
       return matchSearch && matchStatus;
     });
+  }
+
+  openDetailsModal(member: MemberResponse): void {
+    this.selectedMemberForModal = member;
+  }
+
+  closeDetailsModal(): void {
+    this.selectedMemberForModal = null;
+  }
+
+  getAge(dob?: string): number | string {
+    if (!dob) return 'N/A';
+    const birth = new Date(dob);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+    return age > 0 ? age : 'N/A';
   }
 
   checkIn(member: MemberResponse): void {

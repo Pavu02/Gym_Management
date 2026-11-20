@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -7,8 +9,15 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent {
+  isOnboarding: boolean = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.isOnboarding = event.urlAfterRedirects ? event.urlAfterRedirects.startsWith('/onboarding') : event.url.startsWith('/onboarding');
+    });
+  }
 
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();

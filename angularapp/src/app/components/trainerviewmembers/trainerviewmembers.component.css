@@ -75,6 +75,44 @@
   border: 1px solid #ef5350;
 }
 
+.status-pending {
+  background-color: rgba(255, 167, 38, 0.2);
+  color: #ffa726;
+  border: 1px solid #ffa726;
+}
+
+.member-sub {
+  color: #888888;
+  font-size: 0.8rem;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.badge-goal {
+  background-color: rgba(255, 107, 0, 0.15);
+  color: #ff8533;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.badge-bmi {
+  background-color: #262626;
+  border: 1px solid #3d3d3d;
+  color: #ffffff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.medical-cell {
+  color: #aaaaaa;
+  font-size: 0.85rem;
+  max-width: 250px;
+}
+
 .no-data {
   text-align: center;
   padding: 2.5rem;

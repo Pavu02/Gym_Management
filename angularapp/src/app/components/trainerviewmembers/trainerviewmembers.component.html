@@ -1,7 +1,7 @@
 <div class="trainer-page-container">
   <div class="trainer-header">
     <h1>My Assigned <span>Members</span></h1>
-    <p>Manage training progress and workout consistency for your trainees</p>
+    <p>Manage training progress, fitness goals, and workout safety for your trainees</p>
   </div>
 
   <div class="alert alert-error" *ngIf="errorMessage">
@@ -12,31 +12,46 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Member Name</th>
-          <th>Phone Number</th>
-          <th>Membership Plan</th>
-          <th>Plan Expiry</th>
+          <th>Member</th>
+          <th>Plan & Expiry</th>
+          <th>Fitness Goal</th>
+          <th>BMI</th>
+          <th>Medical / Injuries</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let member of assignedMembers">
-          <td class="font-bold">{{ member.name }}</td>
-          <td>{{ member.phone || 'N/A' }}</td>
-          <td>{{ member.planName || 'N/A' }}</td>
-          <td>{{ member.expiryDate | date:'mediumDate' }}</td>
+          <td class="font-bold">
+            <div>{{ member.name }}</div>
+            <div class="member-sub">{{ member.email }} | {{ member.phone || 'No phone' }}</div>
+          </td>
+          <td>
+            <div>{{ member.planName || 'N/A' }}</div>
+            <div class="member-sub">{{ member.expiryDate ? (member.expiryDate | date:'mediumDate') : 'Pending' }}</div>
+          </td>
+          <td>
+            <span class="badge-goal">{{ member.fitnessGoal || 'General Fitness' }}</span>
+          </td>
+          <td>
+            <span class="badge-bmi">{{ member.bmi ? member.bmi : 'N/A' }}</span>
+          </td>
+          <td class="medical-cell">
+            {{ member.medicalConditions || 'None reported' }}
+          </td>
           <td>
             <span
               class="status-badge"
               [class.status-active]="member.status === 'ACTIVE'"
+              [class.status-pending]="member.status === 'PENDING_PAYMENT'"
               [class.status-expired]="member.status === 'EXPIRED'"
             >
-              {{ member.status }}
+              {{ member.status === 'PENDING_PAYMENT' ? 'PENDING' : member.status }}
             </span>
           </td>
         </tr>
         <tr *ngIf="assignedMembers.length === 0 && !loading">
-          <td colspan="5" class="no-data">No members are currently assigned to you.</td>
+          <td colspan="6" class="no-data">No members are currently assigned to you.</td>
         </tr>
       </tbody>
     </table>

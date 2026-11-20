@@ -1,0 +1,83 @@
+<div class="trainer-page">
+  <div class="page-header">
+    <h1>My Personal <span>Trainer</span></h1>
+    <p>Manage your dedicated 1-on-1 coach or choose a new instructor</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading trainer details...</p>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Active Trainer Card -->
+    <div class="current-card" *ngIf="currentTrainer">
+      <div class="card-badge">Assigned Coach</div>
+      <div class="current-layout">
+        <div class="avatar-circle">
+          {{ getInitials(currentTrainer.user?.name) }}
+        </div>
+        <div class="coach-info">
+          <h2>{{ currentTrainer.user?.name }}</h2>
+          <div class="specialization">{{ currentTrainer.specialization }}</div>
+          <div class="meta-row">
+            <span class="rating">⭐ {{ currentTrainer.rating || 4.5 | number:'1.1-1' }}</span>
+            <span class="dot">•</span>
+            <span class="exp">{{ currentTrainer.experienceYears }} years experience</span>
+            <span class="dot">•</span>
+            <span class="fee">₹{{ currentTrainer.monthlyFee || 0 | number:'1.0-0' }} / mo</span>
+          </div>
+          <p class="bio">{{ currentTrainer.bio }}</p>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-change" (click)="toggleChangeTrainer()">
+          {{ showChangeList ? 'Close List' : 'Change Trainer' }}
+        </button>
+        <button class="btn-remove" [disabled]="submitting" (click)="removeTrainer()">
+          Remove Trainer
+        </button>
+      </div>
+    </div>
+
+    <!-- No Trainer State -->
+    <div class="empty-card" *ngIf="!currentTrainer">
+      <div class="empty-icon">🏋️</div>
+      <h3>No Personal Trainer Assigned</h3>
+      <p>You are currently training independently. Want expert guidance and custom workouts? Choose a dedicated coach below.</p>
+      <button class="btn-hire" (click)="toggleChangeTrainer()">
+        {{ showChangeList ? 'Close List' : 'Hire a Personal Trainer' }}
+      </button>
+    </div>
+
+    <!-- Available Trainers Drawer / Section -->
+    <div class="trainers-section" *ngIf="showChangeList">
+      <h3 class="section-title">Available Expert Trainers</h3>
+      <div class="trainers-grid">
+        <div class="trainer-item-card" *ngFor="let trainer of availableTrainers"
+             [class.active-trainer]="trainer.id === currentTrainer?.id">
+          <div class="trainer-item-header">
+            <div class="item-avatar">{{ getInitials(trainer.user?.name) }}</div>
+            <div>
+              <h4>{{ trainer.user?.name }}</h4>
+              <span class="item-spec">{{ trainer.specialization }}</span>
+            </div>
+          </div>
+          <p class="item-bio">{{ trainer.bio }}</p>
+          <div class="item-footer">
+            <span class="item-fee">₹{{ trainer.monthlyFee | number:'1.0-0' }} / mo</span>
+            <button class="btn-select-tr" 
+                    [disabled]="trainer.id === currentTrainer?.id || submitting"
+                    (click)="changeTrainer(trainer.id)">
+              {{ trainer.id === currentTrainer?.id ? 'Current Coach' : 'Select Trainer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

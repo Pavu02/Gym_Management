@@ -1,4 +1,16 @@
 <div class="payments-container">
+  <!-- Membership Expired Banner -->
+  <div class="expired-banner" *ngIf="isExpired">
+    <div class="expired-content">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <strong>Membership Expired!</strong>
+        <p>Your membership has expired. Renew your plan to continue using gym facilities.</p>
+      </div>
+    </div>
+    <button class="btn-renew-alert" (click)="goToRenew()">Renew Now →</button>
+  </div>
+
   <div class="payments-header">
     <h1>Payment <span>History</span></h1>
     <p>Review your membership transaction records and payment receipts</p>

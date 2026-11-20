@@ -54,6 +54,8 @@ public class PlanServiceImpl implements PlanService {
         existingPlan.setDurationMonths(planDetails.getDurationMonths());
         existingPlan.setPrice(planDetails.getPrice());
         existingPlan.setDescription(planDetails.getDescription());
+        existingPlan.setFeatures(planDetails.getFeatures());
+        existingPlan.setPopular(planDetails.isPopular());
 
         return planRepo.save(existingPlan);
     }

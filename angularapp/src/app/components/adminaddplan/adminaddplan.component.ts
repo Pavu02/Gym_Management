@@ -28,7 +28,9 @@ export class AdminaddplanComponent implements OnInit {
       name: ['', [Validators.required]],
       durationMonths: [1, [Validators.required, Validators.min(1)]],
       price: [0, [Validators.required, Validators.min(0.01)]],
-      description: ['', [Validators.required]]
+      description: ['', [Validators.required]],
+      features: [''],
+      popular: [false]
     });
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -47,7 +49,9 @@ export class AdminaddplanComponent implements OnInit {
           name: plan.name,
           durationMonths: plan.durationMonths,
           price: plan.price,
-          description: plan.description
+          description: plan.description,
+          features: plan.features || '',
+          popular: plan.popular || false
         });
         this.loading = false;
       },

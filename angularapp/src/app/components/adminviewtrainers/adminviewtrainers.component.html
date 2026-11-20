@@ -2,7 +2,7 @@
   <div class="view-header">
     <div>
       <h1>Gym <span>Trainers</span></h1>
-      <p>Manage all professional gym trainers and coaches</p>
+      <p>Manage all professional gym trainers, certifications, ratings and fees</p>
     </div>
     <a routerLink="/admin/trainers/add" class="btn-add">+ Add New Trainer</a>
   </div>
@@ -20,20 +20,23 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
           <th>Specialization</th>
           <th>Experience</th>
+          <th>Monthly Fee</th>
+          <th>Rating</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let trainer of trainers">
-          <td class="font-bold">{{ trainer.user?.name }}</td>
-          <td>{{ trainer.user?.email }}</td>
-          <td>{{ trainer.user?.phone }}</td>
+          <td class="font-bold">
+            <div>{{ trainer.user?.name }}</div>
+            <div class="text-sub">{{ trainer.user?.email }} | {{ trainer.user?.phone }}</div>
+          </td>
           <td><span class="badge-specialization">{{ trainer.specialization }}</span></td>
           <td>{{ trainer.experienceYears }} Years</td>
+          <td class="fee-cell">₹{{ trainer.monthlyFee || 0 | number:'1.0-0' }}</td>
+          <td><span class="rating-badge">⭐ {{ trainer.rating || 4.5 | number:'1.1-1' }}</span></td>
           <td class="actions-cell">
             <a [routerLink]="['/admin/trainers/edit', trainer.id]" class="btn-action btn-edit">Edit</a>
             <button (click)="deleteTrainer(trainer.id!, trainer.user?.name || '')" class="btn-action btn-delete">Delete</button>

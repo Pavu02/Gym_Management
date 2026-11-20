@@ -17,14 +17,28 @@ import { MemberprofileComponent } from './components/memberprofile/memberprofile
 import { MemberviewplanComponent } from './components/memberviewplan/memberviewplan.component';
 import { MemberattendanceComponent } from './components/memberattendance/memberattendance.component';
 import { MemberpaymentsComponent } from './components/memberpayments/memberpayments.component';
+import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
 import { TrainerviewmembersComponent } from './components/trainerviewmembers/trainerviewmembers.component';
+import { OnboardingplansComponent } from './components/onboardingplans/onboardingplans.component';
+import { OnboardingtrainerComponent } from './components/onboardingtrainer/onboardingtrainer.component';
+import { OnboardingprofileComponent } from './components/onboardingprofile/onboardingprofile.component';
+import { OnboardingpaymentComponent } from './components/onboardingpayment/onboardingpayment.component';
+import { OnboardingsuccessComponent } from './components/onboardingsuccess/onboardingsuccess.component';
 import { authGuard } from './guards/auth.guard';
+import { onboardingGuard } from './guards/onboarding.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
+
+  // Onboarding routes (Role MEMBER only, guarded)
+  { path: 'onboarding/plans', component: OnboardingplansComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'onboarding/trainer', component: OnboardingtrainerComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'onboarding/profile', component: OnboardingprofileComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'onboarding/payment', component: OnboardingpaymentComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'onboarding/success', component: OnboardingsuccessComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
 
   // Admin routes
   { path: 'admin/dashboard', component: AdmindashboardComponent, canActivate: [authGuard], data: { role: 'ADMIN' } },
@@ -41,10 +55,11 @@ const routes: Routes = [
   { path: 'admin/attendance', component: AdminviewattendanceComponent, canActivate: [authGuard], data: { role: 'ADMIN' } },
 
   // Member routes
-  { path: 'member/profile', component: MemberprofileComponent, canActivate: [authGuard], data: { role: 'MEMBER' } },
-  { path: 'member/plan', component: MemberviewplanComponent, canActivate: [authGuard], data: { role: 'MEMBER' } },
-  { path: 'member/attendance', component: MemberattendanceComponent, canActivate: [authGuard], data: { role: 'MEMBER' } },
-  { path: 'member/payments', component: MemberpaymentsComponent, canActivate: [authGuard], data: { role: 'MEMBER' } },
+  { path: 'member/profile', component: MemberprofileComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'member/plan', component: MemberviewplanComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'member/trainer', component: MembertrainerComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'member/attendance', component: MemberattendanceComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'member/payments', component: MemberpaymentsComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
 
   // Trainer routes
   { path: 'trainer/members', component: TrainerviewmembersComponent, canActivate: [authGuard], data: { role: 'TRAINER' } },

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { OnboardingService } from '../../services/onboarding.service';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private onboardingService: OnboardingService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -50,7 +52,22 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: (res) => {
         this.loading = false;
-        this.redirectByRole(res.role);
+        if (res.role === 'MEMBER') {
+          this.onboardingService.getStatus().subscribe({
+            next: (status) => {
+              if (status && status.onboardingCompleted) {
+                this.router.navigate(['/member/profile']);
+              } else {
+                this.router.navigate(['/onboarding/plans']);
+              }
+            },
+            error: () => {
+              this.router.navigate(['/onboarding/plans']);
+            }
+          });
+        } else {
+          this.redirectByRole(res.role);
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -65,7 +82,18 @@ export class LoginComponent implements OnInit {
     } else if (role === 'TRAINER') {
       this.router.navigate(['/trainer/members']);
     } else if (role === 'MEMBER') {
-      this.router.navigate(['/member/profile']);
+      this.onboardingService.getStatus().subscribe({
+        next: (status) => {
+          if (status && status.onboardingCompleted) {
+            this.router.navigate(['/member/profile']);
+          } else {
+            this.router.navigate(['/onboarding/plans']);
+          }
+        },
+        error: () => {
+          this.router.navigate(['/onboarding/plans']);
+        }
+      });
     } else {
       this.router.navigate(['/home']);
     }

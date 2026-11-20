@@ -1,7 +1,9 @@
 package com.gym.springapp.controller;
 
+import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
+import com.gym.springapp.dto.RenewRequestDTO;
 import com.gym.springapp.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,5 +68,36 @@ public class MemberController {
     public ResponseEntity<MemberResponseDTO> getMyProfile(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(memberService.getMyProfile(email));
+    }
+
+    @PutMapping("/me/profile")
+    @PreAuthorize("hasRole('MEMBER')")
+    public ResponseEntity<MemberResponseDTO> updateMyProfile(Authentication authentication,
+                                                             @RequestBody MemberProfileUpdateDTO request) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(memberService.updateMyProfile(email, request));
+    }
+
+    @PutMapping("/me/trainer/{id}")
+    @PreAuthorize("hasRole('MEMBER')")
+    public ResponseEntity<MemberResponseDTO> changeMyTrainer(Authentication authentication,
+                                                            @PathVariable Long id) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(memberService.changeTrainer(email, id));
+    }
+
+    @PutMapping("/me/trainer/remove")
+    @PreAuthorize("hasRole('MEMBER')")
+    public ResponseEntity<MemberResponseDTO> removeMyTrainer(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(memberService.removeTrainer(email));
+    }
+
+    @PostMapping("/me/renew")
+    @PreAuthorize("hasRole('MEMBER')")
+    public ResponseEntity<MemberResponseDTO> renewMembership(Authentication authentication,
+                                                             @RequestBody RenewRequestDTO request) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(memberService.renewMembership(email, request));
     }
 }

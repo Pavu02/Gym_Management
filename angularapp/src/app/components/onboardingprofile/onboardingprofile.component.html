@@ -1,0 +1,143 @@
+<div class="onboarding-page">
+  <app-onboardingstepper [step]="3"></app-onboardingstepper>
+
+  <div class="header-section">
+    <h1>Fitness & Health Profile</h1>
+    <p class="subtitle">Tell us about yourself so we can personalize your training and ensure a safe experience.</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+    <!-- Section 1: Demographics & Metrics -->
+    <div class="form-card">
+      <h3 class="card-title">1. Physical Details</h3>
+
+      <!-- Gender Radios -->
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <div class="gender-radio-group">
+          <label class="radio-card" [class.selected]="profileForm.get('gender')?.value === 'Male'">
+            <input type="radio" formControlName="gender" value="Male"> Male
+          </label>
+          <label class="radio-card" [class.selected]="profileForm.get('gender')?.value === 'Female'">
+            <input type="radio" formControlName="gender" value="Female"> Female
+          </label>
+          <label class="radio-card" [class.selected]="profileForm.get('gender')?.value === 'Other'">
+            <input type="radio" formControlName="gender" value="Other"> Other
+          </label>
+        </div>
+      </div>
+
+      <!-- Date of Birth -->
+      <div class="form-group">
+        <label class="form-label" for="dob">Date of Birth (Age 14 - 80)</label>
+        <input type="date" id="dob" formControlName="dateOfBirth" class="form-input"
+          [class.input-error]="profileForm.get('dateOfBirth')?.touched && profileForm.get('dateOfBirth')?.invalid">
+        <div *ngIf="profileForm.get('dateOfBirth')?.touched && profileForm.get('dateOfBirth')?.invalid"
+          class="field-error">
+          <span *ngIf="profileForm.get('dateOfBirth')?.errors?.['required']">Date of birth is required.</span>
+          <span *ngIf="profileForm.get('dateOfBirth')?.errors?.['invalidAge']">Age must be between 14 and 80
+            years.</span>
+        </div>
+      </div>
+
+      <!-- Height, Weight & Live BMI -->
+      <div class="metrics-row">
+        <div class="form-group">
+          <label class="form-label" for="height">Height (cm)</label>
+          <input type="number" id="height" formControlName="heightCm" placeholder="e.g. 175" class="form-input"
+            [class.input-error]="profileForm.get('heightCm')?.touched && profileForm.get('heightCm')?.invalid">
+          <div *ngIf="profileForm.get('heightCm')?.touched && profileForm.get('heightCm')?.invalid" class="field-error">
+            Height must be between 100 and 250 cm.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="weight">Weight (kg)</label>
+          <input type="number" id="weight" formControlName="weightKg" placeholder="e.g. 72" class="form-input"
+            [class.input-error]="profileForm.get('weightKg')?.touched && profileForm.get('weightKg')?.invalid">
+          <div *ngIf="profileForm.get('weightKg')?.touched && profileForm.get('weightKg')?.invalid" class="field-error">
+            Weight must be between 30 and 250 kg.
+          </div>
+        </div>
+
+        <!-- Live BMI Preview Widget -->
+        <div class="bmi-preview-card">
+          <div class="bmi-label">Calculated BMI</div>
+          <div class="bmi-value" [style.color]="bmiColor">
+            {{ bmi ? bmi : '--' }}
+          </div>
+          <div class="bmi-cat" [style.color]="bmiColor">
+            {{ bmiCategory ? bmiCategory : 'Enter height & weight' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Fitness Goal -->
+    <div class="form-card">
+      <h3 class="card-title">2. Primary Fitness Goal</h3>
+      <div class="goals-grid">
+        <div *ngFor="let goal of fitnessGoals" class="goal-card"
+          [class.selected]="profileForm.get('fitnessGoal')?.value === goal.id" (click)="selectGoal(goal.id)">
+          <div class="goal-icon">{{ goal.icon }}</div>
+          <div class="goal-label">{{ goal.label }}</div>
+          <div class="goal-desc">{{ goal.desc }}</div>
+        </div>
+      </div>
+      <div *ngIf="profileForm.get('fitnessGoal')?.touched && profileForm.get('fitnessGoal')?.invalid"
+        class="field-error">
+        Please select a fitness goal.
+      </div>
+    </div>
+
+    <!-- Section 3: Medical & Emergency Contact -->
+    <div class="form-card">
+      <h3 class="card-title">3. Safety & Emergency Contact</h3>
+
+      <div class="form-group">
+        <label class="form-label" for="medical">Medical Conditions or Injuries (Optional)</label>
+        <textarea id="medical" formControlName="medicalConditions" rows="2"
+          placeholder="e.g. Asthma, lower back pain, allergies, or None" class="form-textarea"></textarea>
+      </div>
+
+      <div class="metrics-row">
+        <div class="form-group">
+          <label class="form-label" for="ecName">Emergency Contact Name</label>
+          <input type="text" id="ecName" formControlName="emergencyContactName" placeholder="e.g. Parent / Spouse"
+            class="form-input"
+            [class.input-error]="profileForm.get('emergencyContactName')?.touched && profileForm.get('emergencyContactName')?.invalid">
+          <div
+            *ngIf="profileForm.get('emergencyContactName')?.touched && profileForm.get('emergencyContactName')?.invalid"
+            class="field-error">
+            Emergency contact name is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ecPhone">Emergency Contact Phone (10 digits)</label>
+          <input type="tel" id="ecPhone" formControlName="emergencyContactPhone" placeholder="10-digit mobile number"
+            class="form-input"
+            [class.input-error]="profileForm.get('emergencyContactPhone')?.touched && profileForm.get('emergencyContactPhone')?.invalid">
+          <div
+            *ngIf="profileForm.get('emergencyContactPhone')?.touched && profileForm.get('emergencyContactPhone')?.invalid"
+            class="field-error">
+            Phone must be a valid 10-digit number.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-bar">
+      <button type="button" class="btn-secondary" (click)="onBack()">← Back</button>
+      <button type="submit" class="btn-primary" [disabled]="submitting">
+        <span *ngIf="!submitting">Review & Continue to Payment →</span>
+        <span *ngIf="submitting">Saving Profile...</span>
+      </button>
+    </div>
+  </form>
+</div>

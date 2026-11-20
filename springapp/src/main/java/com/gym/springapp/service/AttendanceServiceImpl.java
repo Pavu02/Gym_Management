@@ -28,6 +28,10 @@ public class AttendanceServiceImpl implements AttendanceService {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
 
+        if ("PENDING_PAYMENT".equalsIgnoreCase(member.getStatus()) || !member.isOnboardingCompleted()) {
+            throw new BadRequestException("Complete your membership first");
+        }
+
         LocalDate today = LocalDate.now();
         if (member.getExpiryDate() != null && member.getExpiryDate().isBefore(today)) {
             member.setStatus("EXPIRED");

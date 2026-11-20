@@ -1,0 +1,83 @@
+<div class="onboarding-page">
+  <app-onboardingstepper [step]="2"></app-onboardingstepper>
+
+  <div class="header-section">
+    <h1>Need a Personal Trainer?</h1>
+    <p class="subtitle">Accelerate your fitness results with certified expert coaching, or choose to train
+      independently.</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading trainers...</p>
+  </div>
+
+  <div *ngIf="!loading" class="trainers-container">
+    <!-- Option: Skip / Train on own -->
+    <div class="skip-card" [class.selected]="selectedTrainerId === null" (click)="selectTrainer(null)">
+      <div class="skip-icon">🏃‍♂️</div>
+      <div class="skip-content">
+        <h3>Skip - I'll train on my own</h3>
+        <p>No personal trainer added. You can always hire one later from your dashboard.</p>
+      </div>
+      <div class="skip-price">
+        <span class="free-tag">₹0 Extra</span>
+        <button class="btn-check" [class.checked]="selectedTrainerId === null">
+          {{ selectedTrainerId === null ? '✔ Selected' : 'Select' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="divider">
+      <span>OR CHOOSE A DEDICATED TRAINER</span>
+    </div>
+
+    <!-- Trainers Grid -->
+    <div class="trainers-grid">
+      <div *ngFor="let trainer of trainers" class="trainer-card" [class.selected]="selectedTrainerId === trainer.id"
+        (click)="selectTrainer(trainer.id!)">
+
+        <div class="trainer-header">
+          <div class="avatar-circle">
+            {{ getInitials(trainer.user?.name) }}
+          </div>
+          <div class="trainer-meta">
+            <h3>{{ trainer.user?.name }}</h3>
+            <div class="specialization">{{ trainer.specialization }}</div>
+            <div class="rating-badge">⭐ {{ trainer.rating || 4.5 | number:'1.1-1' }} ({{ trainer.experienceYears }} yrs
+              exp)</div>
+          </div>
+        </div>
+
+        <p class="bio">{{ trainer.bio || 'Experienced fitness instructor committed to helping you crush your goals.' }}
+        </p>
+
+        <div class="fee-section">
+          <div class="fee-monthly">
+            <span class="fee-num">₹{{ trainer.monthlyFee || 0 | number:'1.0-0' }}</span>
+            <span class="fee-sub"> / month</span>
+          </div>
+          <div class="fee-total" *ngIf="currentPlan">
+            + ₹{{ getTrainerCost(trainer.monthlyFee) | number:'1.0-0' }} for {{ currentPlan.durationMonths }}mo
+          </div>
+        </div>
+
+        <button class="btn-trainer-select" [class.btn-trainer-selected]="selectedTrainerId === trainer.id">
+          {{ selectedTrainerId === trainer.id ? '✔ Trainer Selected' : 'Select Trainer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-bar" *ngIf="!loading">
+    <button class="btn-secondary" (click)="onBack()">← Back</button>
+    <button class="btn-primary" [disabled]="submitting" (click)="onContinue()">
+      <span *ngIf="!submitting">Continue to Profile Setup →</span>
+      <span *ngIf="submitting">Processing...</span>
+    </button>
+  </div>
+</div>

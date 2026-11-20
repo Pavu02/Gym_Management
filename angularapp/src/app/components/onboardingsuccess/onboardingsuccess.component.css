@@ -1,0 +1,139 @@
+.success-page {
+  max-width: 650px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+  color: #ffffff;
+}
+
+.success-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.checkmark-wrapper {
+  margin: 0 auto 1.8rem;
+  display: flex;
+  justify-content: center;
+}
+
+.checkmark-circle {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.4);
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.checkmark-stem {
+  position: absolute;
+  width: 5px;
+  height: 32px;
+  background-color: #ffffff;
+  left: 44px;
+  top: 22px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.checkmark-kick {
+  position: absolute;
+  width: 18px;
+  height: 5px;
+  background-color: #ffffff;
+  left: 26px;
+  top: 45px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.success-card h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.tagline {
+  color: #aaaaaa;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+.details-box {
+  background-color: #242424;
+  border: 1px solid #333333;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 2.2rem;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #888888;
+  font-size: 0.9rem;
+}
+
+.value {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.plan-badge {
+  color: #ff6b00;
+  font-weight: 700;
+}
+
+.highlight-date {
+  color: #00e676;
+}
+
+.status-active {
+  color: #00e676;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.btn-dashboard {
+  background-color: #ff6b00;
+  color: #ffffff;
+  border: none;
+  padding: 0.95rem 2.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  width: 100%;
+}
+
+.btn-dashboard:hover {
+  background-color: #e05e00;
+  transform: translateY(-2px);
+}

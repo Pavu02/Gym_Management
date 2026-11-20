@@ -103,6 +103,31 @@
   max-width: 300px;
 }
 
+.features-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-width: 250px;
+}
+
+.chip-feature {
+  background-color: #262626;
+  border: 1px solid #383838;
+  color: #cccccc;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.badge-popular {
+  background-color: #ff6b00;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+}
+
 .actions-cell {
   display: flex;
   gap: 0.6rem;

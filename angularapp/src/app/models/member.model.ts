@@ -10,6 +10,15 @@ export interface Member {
   joinDate?: string;
   expiryDate?: string;
   status?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  heightCm?: number;
+  weightKg?: number;
+  fitnessGoal?: string;
+  medicalConditions?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface MemberRequest {
@@ -31,4 +40,17 @@ export interface MemberResponse {
   joinDate: string;
   expiryDate: string;
   status: string;
+  planId?: number;
+  trainerId?: number | null;
+  gender?: string;
+  dateOfBirth?: string;
+  heightCm?: number;
+  weightKg?: number;
+  bmi?: number;
+  fitnessGoal?: string;
+  medicalConditions?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  onboardingCompleted?: boolean;
+  daysLeft?: number;
 }

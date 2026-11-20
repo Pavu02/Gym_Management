@@ -32,6 +32,7 @@ public class DashboardServiceImpl implements DashboardService {
         long totalMembers = memberRepo.count();
         long activeMembers = memberRepo.countByStatus("ACTIVE");
         long expiredMembers = memberRepo.countByStatus("EXPIRED");
+        long pendingMembers = memberRepo.countByStatus("PENDING_PAYMENT");
         long totalTrainers = trainerRepo.count();
         long totalPlans = planRepo.count();
         long todayAttendance = attendanceRepo.countByDate(LocalDate.now());
@@ -44,6 +45,7 @@ public class DashboardServiceImpl implements DashboardService {
                 totalMembers,
                 activeMembers,
                 expiredMembers,
+                pendingMembers,
                 totalTrainers,
                 totalPlans,
                 todayAttendance,

@@ -23,4 +23,8 @@ public class Plan {
     private double price;
 
     private String description;
+
+    private String features;
+
+    private boolean popular;
 }

@@ -2,7 +2,7 @@
   <div class="view-header">
     <div>
       <h1>Gym <span>Members</span></h1>
-      <p>View and manage all registered gym members</p>
+      <p>View and manage all registered gym members, profiles and onboarding status</p>
     </div>
     <a routerLink="/admin/members/add" class="btn-add">+ Add New Member</a>
   </div>
@@ -29,6 +29,7 @@
       <select [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
         <option value="ALL">All Status</option>
         <option value="ACTIVE">Active</option>
+        <option value="PENDING_PAYMENT">Pending Onboarding</option>
         <option value="EXPIRED">Expired</option>
       </select>
     </div>
@@ -39,7 +40,7 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Email</th>
+          <th>Email & Phone</th>
           <th>Plan</th>
           <th>Trainer</th>
           <th>Expiry Date</th>
@@ -50,20 +51,25 @@
       <tbody>
         <tr *ngFor="let member of filteredMembers">
           <td class="font-bold">{{ member.name }}</td>
-          <td>{{ member.email }}</td>
+          <td>
+            <div>{{ member.email }}</div>
+            <div class="text-sub">{{ member.phone || 'N/A' }}</div>
+          </td>
           <td>{{ member.planName || 'No Plan' }}</td>
           <td>{{ member.trainerName || 'Self' }}</td>
-          <td>{{ member.expiryDate | date:'mediumDate' }}</td>
+          <td>{{ member.expiryDate ? (member.expiryDate | date:'mediumDate') : 'Pending' }}</td>
           <td>
             <span
               class="status-badge"
               [class.status-active]="member.status === 'ACTIVE'"
+              [class.status-pending]="member.status === 'PENDING_PAYMENT'"
               [class.status-expired]="member.status === 'EXPIRED'"
             >
-              {{ member.status }}
+              {{ member.status === 'PENDING_PAYMENT' ? 'PENDING' : member.status }}
             </span>
           </td>
           <td class="actions-cell">
+            <button (click)="openDetailsModal(member)" class="btn-action btn-view" title="View Full Details">View</button>
             <button (click)="checkIn(member)" class="btn-action btn-checkin" title="Check In">In</button>
             <button (click)="checkOut(member)" class="btn-action btn-checkout" title="Check Out">Out</button>
             <a [routerLink]="['/admin/members/edit', member.id]" class="btn-action btn-edit">Edit</a>
@@ -75,5 +81,79 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Member Full Profile Details Modal -->
+  <div class="modal-overlay" *ngIf="selectedMemberForModal" (click)="closeDetailsModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>{{ selectedMemberForModal.name }}</h3>
+          <span class="modal-sub">{{ selectedMemberForModal.email }} | {{ selectedMemberForModal.phone }}</span>
+        </div>
+        <button class="btn-close" (click)="closeDetailsModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-grid">
+          <div class="m-item">
+            <span class="m-lbl">Membership Status</span>
+            <span class="m-val highlight">{{ selectedMemberForModal.status }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Onboarding Completed</span>
+            <span class="m-val">{{ selectedMemberForModal.onboardingCompleted ? 'Yes' : 'No (Pending)' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Plan & Duration</span>
+            <span class="m-val">{{ selectedMemberForModal.planName || 'None' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Assigned Trainer</span>
+            <span class="m-val">{{ selectedMemberForModal.trainerName || 'Self Training' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Gender</span>
+            <span class="m-val">{{ selectedMemberForModal.gender || 'Not specified' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Age / DOB</span>
+            <span class="m-val">{{ getAge(selectedMemberForModal.dateOfBirth) }} yrs ({{ selectedMemberForModal.dateOfBirth ? (selectedMemberForModal.dateOfBirth | date:'mediumDate') : 'N/A' }})</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Height / Weight</span>
+            <span class="m-val">{{ selectedMemberForModal.heightCm || '--' }} cm / {{ selectedMemberForModal.weightKg || '--' }} kg</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Calculated BMI</span>
+            <span class="m-val">{{ selectedMemberForModal.bmi || 'N/A' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Primary Fitness Goal</span>
+            <span class="m-val goal-tag">{{ selectedMemberForModal.fitnessGoal || 'Not specified' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Days Left</span>
+            <span class="m-val">{{ selectedMemberForModal.daysLeft !== null ? selectedMemberForModal.daysLeft + ' Days' : 'N/A' }}</span>
+          </div>
+          <div class="m-item m-full">
+            <span class="m-lbl">Medical Conditions / Injuries</span>
+            <span class="m-val">{{ selectedMemberForModal.medicalConditions || 'None reported' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Emergency Contact</span>
+            <span class="m-val">{{ selectedMemberForModal.emergencyContactName || 'N/A' }}</span>
+          </div>
+          <div class="m-item">
+            <span class="m-lbl">Emergency Phone</span>
+            <span class="m-val">{{ selectedMemberForModal.emergencyContactPhone || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal-close" (click)="closeDetailsModal()">Close</button>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,0 +1,60 @@
+<div class="onboarding-page">
+  <app-onboardingstepper [step]="1"></app-onboardingstepper>
+
+  <div class="header-section">
+    <h1>Choose Your Membership Plan</h1>
+    <p class="subtitle">Welcome, <span class="highlight">{{ memberName }}</span>! Start your fitness journey today.</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading available plans...</p>
+  </div>
+
+  <div *ngIf="!loading && plans.length > 0" class="plans-grid">
+    <div *ngFor="let plan of plans" class="plan-card" [class.popular]="plan.popular"
+      [class.selected]="selectedPlanId === plan.id" (click)="selectPlan(plan.id)">
+
+      <div *ngIf="plan.popular" class="popular-badge">MOST POPULAR</div>
+
+      <div class="plan-header">
+        <h3 class="plan-name">{{ plan.name }}</h3>
+        <p class="plan-desc">{{ plan.description }}</p>
+      </div>
+
+      <div class="price-container">
+        <div class="main-price">
+          <span class="currency">₹</span>
+          <span class="amount">{{ plan.price | number:'1.0-0' }}</span>
+        </div>
+        <div class="duration-tag">for {{ plan.durationMonths }} {{ plan.durationMonths === 1 ? 'Month' : 'Months' }}
+        </div>
+        <div class="per-month">≈ ₹{{ (plan.price / plan.durationMonths) | number:'1.0-0' }} / month</div>
+      </div>
+
+      <div class="features-list">
+        <div class="feature-item" *ngFor="let feat of getFeatures(plan.features)">
+          <span class="feature-icon">✔</span>
+          <span class="feature-text">{{ feat }}</span>
+        </div>
+      </div>
+
+      <div class="select-indicator">
+        <button type="button" class="btn-select" [class.btn-selected]="selectedPlanId === plan.id">
+          {{ selectedPlanId === plan.id ? '✓ Selected' : 'Choose ' + plan.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-bar" *ngIf="!loading">
+    <button class="btn-primary" [disabled]="!selectedPlanId || submitting" (click)="onContinue()">
+      <span *ngIf="!submitting">Continue to Trainer Selection →</span>
+      <span *ngIf="submitting">Processing...</span>
+    </button>
+  </div>
+</div>

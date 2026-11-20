@@ -83,6 +83,23 @@
   font-weight: 500;
 }
 
+.text-sub {
+  color: #888888;
+  font-size: 0.8rem;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.fee-cell {
+  color: #00e676;
+  font-weight: 700;
+}
+
+.rating-badge {
+  color: #ffc107;
+  font-weight: 700;
+}
+
 .actions-cell {
   display: flex;
   gap: 0.6rem;

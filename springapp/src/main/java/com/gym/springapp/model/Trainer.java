@@ -23,4 +23,11 @@ public class Trainer {
     private String specialization;
 
     private int experienceYears;
+
+    @Column(length = 500)
+    private String bio;
+
+    private double rating = 4.5;
+
+    private double monthlyFee;
 }

@@ -44,7 +44,7 @@ public class TrainerServiceImpl implements TrainerService {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPassword(passwordEncoder.encode(request.password() != null ? request.password() : "password123"));
         user.setPhone(request.phone());
         user.setRole(Role.TRAINER);
         User savedUser = userRepo.save(user);
@@ -53,6 +53,9 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.setUser(savedUser);
         trainer.setSpecialization(request.specialization());
         trainer.setExperienceYears(request.experienceYears());
+        trainer.setBio(request.bio());
+        trainer.setRating(request.rating() != null && request.rating() > 0 ? request.rating() : 4.5);
+        trainer.setMonthlyFee(request.monthlyFee() != null ? request.monthlyFee() : 0.0);
 
         return trainerRepo.save(trainer);
     }
@@ -74,12 +77,17 @@ public class TrainerServiceImpl implements TrainerService {
         Trainer trainer = getTrainerById(id);
         User user = trainer.getUser();
 
-        if (request.name() != null) user.setName(request.name());
-        if (request.phone() != null) user.setPhone(request.phone());
-        userRepo.save(user);
+        if (user != null) {
+            if (request.name() != null) user.setName(request.name());
+            if (request.phone() != null) user.setPhone(request.phone());
+            userRepo.save(user);
+        }
 
-        trainer.setSpecialization(request.specialization());
+        if (request.specialization() != null) trainer.setSpecialization(request.specialization());
         trainer.setExperienceYears(request.experienceYears());
+        if (request.bio() != null) trainer.setBio(request.bio());
+        if (request.rating() != null && request.rating() > 0) trainer.setRating(request.rating());
+        if (request.monthlyFee() != null) trainer.setMonthlyFee(request.monthlyFee());
 
         return trainerRepo.save(trainer);
     }

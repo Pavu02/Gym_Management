@@ -11,5 +11,18 @@ public record MemberResponseDTO(
         String trainerName,
         LocalDate joinDate,
         LocalDate expiryDate,
-        String status) {
+        String status,
+        Long planId,
+        Long trainerId,
+        String gender,
+        LocalDate dateOfBirth,
+        double heightCm,
+        double weightKg,
+        Double bmi,
+        String fitnessGoal,
+        String medicalConditions,
+        String emergencyContactName,
+        String emergencyContactPhone,
+        boolean onboardingCompleted,
+        Long daysLeft) {
 }

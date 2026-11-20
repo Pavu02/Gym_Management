@@ -1,41 +1,104 @@
 <div class="plans-container">
-  <div class="plans-header">
-    <h1>Gym <span>Plans</span></h1>
-    <p>View your active membership details and browse upgrade options</p>
-  </div>
-
-  <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
-
-  <!-- Current Plan Section -->
-  <div class="current-plan-card" *ngIf="member">
-    <h2>Your Current <span>Plan</span></h2>
-    <div class="current-plan-details">
-      <div class="plan-badge-name">{{ member.planName || 'No Active Plan' }}</div>
-      <p class="expiry-info">
-        Valid until: <strong>{{ member.expiryDate | date:'mediumDate' }}</strong>
-        <span class="status-tag" [class.tag-active]="member.status === 'ACTIVE'"
-          [class.tag-expired]="member.status === 'EXPIRED'">
-          {{ member.status }}
-        </span>
-      </p>
+  <!-- Membership Expired Global Alert -->
+  <div class="expired-banner"
+    *ngIf="member && (member.status === 'EXPIRED' || (member.daysLeft !== undefined && member.daysLeft <= 0))">
+    <div class="expired-content">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <strong>Membership Expired!</strong>
+        <p>Please select a plan below and renew to restore full gym access.</p>
+      </div>
     </div>
   </div>
 
-  <!-- All Plans Grid -->
-  <h2 class="sub-heading">All Available <span>Membership Plans</span></h2>
-  <div class="plans-grid">
-    <div class="plan-card" *ngFor="let plan of allPlans" [class.is-current]="plan.name === member?.planName">
+  <div class="plans-header">
+    <h1>Gym <span>Plans</span></h1>
+    <p>View your active membership details and explore renew or upgrade options</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading plans...</p>
+  </div>
+
+  <!-- Current Plan Section -->
+  <div class="current-plan-card" *ngIf="!loading && member">
+    <div class="current-header">
+      <h2>Your Active <span>Plan</span></h2>
+      <span class="status-badge" [class.badge-active]="member.status === 'ACTIVE'"
+        [class.badge-expired]="member.status === 'EXPIRED'">
+        {{ member.status }}
+      </span>
+    </div>
+
+    <div class="current-body">
+      <div class="plan-hero">
+        <span class="hero-name">{{ member.planName || 'No Active Plan' }}</span>
+        <span class="hero-dates">
+          Valid: <strong>{{ member.joinDate | date:'mediumDate' }}</strong> to <strong>{{ member.expiryDate |
+            date:'mediumDate' }}</strong>
+        </span>
+      </div>
+
+      <div class="days-remaining">
+        <span class="days-num" [class.text-danger]="(member.daysLeft || 0) < 7">{{ member.daysLeft }}</span>
+        <span class="days-label">Days Left</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Plans Section -->
+  <h2 class="sub-heading">Browse All <span>Membership Plans</span></h2>
+
+  <div class="plans-grid" *ngIf="!loading">
+    <div class="plan-card" *ngFor="let plan of allPlans" [class.is-current]="plan.name === member?.planName"
+      [class.popular]="plan.popular">
+
+      <div class="popular-ribbon" *ngIf="plan.popular">MOST POPULAR</div>
       <div class="current-ribbon" *ngIf="plan.name === member?.planName">Active Plan</div>
-      <h3>{{ plan.name }}</h3>
-      <div class="plan-price">₹{{ plan.price | number:'1.2-2' }}</div>
-      <div class="plan-duration">{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</div>
+
+      <h3 class="plan-title">{{ plan.name }}</h3>
+      <div class="plan-price">
+        <span class="currency">₹</span>{{ plan.price | number:'1.0-0' }}
+        <span class="period">/ {{ plan.durationMonths }}mo</span>
+      </div>
       <p class="plan-desc">{{ plan.description }}</p>
+
       <div class="plan-features">
-        <div class="feature-line">✓ Full gym equipment access</div>
-        <div class="feature-line">✓ Locker & shower facilities</div>
-        <div class="feature-line">✓ Digital attendance tracking</div>
+        <div class="feature-item" *ngFor="let feat of getFeatures(plan.features)">
+          <span class="check">✔</span> {{ feat }}
+        </div>
+      </div>
+
+      <!-- Action Button / Renew Dialog -->
+      <div class="plan-action" *ngIf="renewingPlanId !== plan.id">
+        <button class="btn-renew" (click)="openRenewDialog(plan.id)">
+          {{ plan.name === member?.planName ? 'Renew Current Plan' : 'Upgrade to ' + plan.name }}
+        </button>
+      </div>
+
+      <!-- Modal-like Inline Renew Box -->
+      <div class="renew-box" *ngIf="renewingPlanId === plan.id">
+        <h4>Confirm Renewal / Upgrade</h4>
+        <div class="mode-select-row">
+          <label class="mode-label">Payment Mode:</label>
+          <div class="mode-options">
+            <label *ngFor="let m of paymentModes" class="mode-opt" [class.selected]="selectedMode === m">
+              <input type="radio" [(ngModel)]="selectedMode" [value]="m"> {{ m }}
+            </label>
+          </div>
+        </div>
+
+        <div class="renew-actions">
+          <button class="btn-cancel-small" (click)="cancelRenew()">Cancel</button>
+          <button class="btn-confirm-pay" [disabled]="submitting" (click)="confirmRenew(plan.id)">
+            <span *ngIf="!submitting">Pay ₹{{ plan.price | number:'1.0-0' }}</span>
+            <span *ngIf="submitting">Processing...</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
