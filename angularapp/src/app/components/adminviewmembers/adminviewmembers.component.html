@@ -1,0 +1,79 @@
+<div class="view-page-container">
+  <div class="view-header">
+    <div>
+      <h1>Gym <span>Members</span></h1>
+      <p>View and manage all registered gym members</p>
+    </div>
+    <a routerLink="/admin/members/add" class="btn-add">+ Add New Member</a>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="toolbar">
+    <input
+      type="text"
+      placeholder="Search by name, email, or phone..."
+      [(ngModel)]="searchTerm"
+      (input)="applyFilter()"
+      class="search-input"
+    />
+
+    <div class="filter-group">
+      <label>Status:</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
+        <option value="ALL">All Status</option>
+        <option value="ACTIVE">Active</option>
+        <option value="EXPIRED">Expired</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Plan</th>
+          <th>Trainer</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of filteredMembers">
+          <td class="font-bold">{{ member.name }}</td>
+          <td>{{ member.email }}</td>
+          <td>{{ member.planName || 'No Plan' }}</td>
+          <td>{{ member.trainerName || 'Self' }}</td>
+          <td>{{ member.expiryDate | date:'mediumDate' }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [class.status-active]="member.status === 'ACTIVE'"
+              [class.status-expired]="member.status === 'EXPIRED'"
+            >
+              {{ member.status }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button (click)="checkIn(member)" class="btn-action btn-checkin" title="Check In">In</button>
+            <button (click)="checkOut(member)" class="btn-action btn-checkout" title="Check Out">Out</button>
+            <a [routerLink]="['/admin/members/edit', member.id]" class="btn-action btn-edit">Edit</a>
+            <button (click)="deleteMember(member.id, member.name)" class="btn-action btn-delete">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredMembers.length === 0 && !loading">
+          <td colspan="7" class="no-data">No members found matching the criteria.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

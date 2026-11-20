@@ -1,0 +1,42 @@
+<div class="plans-container">
+  <div class="plans-header">
+    <h1>Gym <span>Plans</span></h1>
+    <p>View your active membership details and browse upgrade options</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Current Plan Section -->
+  <div class="current-plan-card" *ngIf="member">
+    <h2>Your Current <span>Plan</span></h2>
+    <div class="current-plan-details">
+      <div class="plan-badge-name">{{ member.planName || 'No Active Plan' }}</div>
+      <p class="expiry-info">
+        Valid until: <strong>{{ member.expiryDate | date:'mediumDate' }}</strong>
+        <span class="status-tag" [class.tag-active]="member.status === 'ACTIVE'"
+          [class.tag-expired]="member.status === 'EXPIRED'">
+          {{ member.status }}
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- All Plans Grid -->
+  <h2 class="sub-heading">All Available <span>Membership Plans</span></h2>
+  <div class="plans-grid">
+    <div class="plan-card" *ngFor="let plan of allPlans" [class.is-current]="plan.name === member?.planName">
+      <div class="current-ribbon" *ngIf="plan.name === member?.planName">Active Plan</div>
+      <h3>{{ plan.name }}</h3>
+      <div class="plan-price">₹{{ plan.price | number:'1.2-2' }}</div>
+      <div class="plan-duration">{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</div>
+      <p class="plan-desc">{{ plan.description }}</p>
+      <div class="plan-features">
+        <div class="feature-line">✓ Full gym equipment access</div>
+        <div class="feature-line">✓ Locker & shower facilities</div>
+        <div class="feature-line">✓ Digital attendance tracking</div>
+      </div>
+    </div>
+  </div>
+</div>

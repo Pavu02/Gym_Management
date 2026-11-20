@@ -1,0 +1,123 @@
+<div class="form-page-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h2>{{ isEditMode ? 'Edit' : 'Add New' }} <span>Trainer</span></h2>
+      <p>{{ isEditMode ? 'Update trainer professional details' : 'Register a new gym trainer' }}</p>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="trainerForm" (ngSubmit)="onSubmit()" class="form-body">
+      <div class="form-group">
+        <label for="name">Trainer Name</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          placeholder="e.g. Mike Tyson"
+          [class.is-invalid]="trainerForm.get('name')?.touched && trainerForm.get('name')?.invalid"
+        />
+        <div class="error-text" *ngIf="trainerForm.get('name')?.touched && trainerForm.get('name')?.errors?.['required']">
+          Name is required
+        </div>
+      </div>
+
+      <!-- Hide email and password in edit mode -->
+      <ng-container *ngIf="!isEditMode">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="trainer@gym.com"
+            [class.is-invalid]="trainerForm.get('email')?.touched && trainerForm.get('email')?.invalid"
+          />
+          <div class="error-text" *ngIf="trainerForm.get('email')?.touched && trainerForm.get('email')?.errors?.['required']">
+            Email is required
+          </div>
+          <div class="error-text" *ngIf="trainerForm.get('email')?.touched && trainerForm.get('email')?.errors?.['email']">
+            Please enter a valid email address
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Min 6 characters"
+            [class.is-invalid]="trainerForm.get('password')?.touched && trainerForm.get('password')?.invalid"
+          />
+          <div class="error-text" *ngIf="trainerForm.get('password')?.touched && trainerForm.get('password')?.errors?.['required']">
+            Password is required
+          </div>
+          <div class="error-text" *ngIf="trainerForm.get('password')?.touched && trainerForm.get('password')?.errors?.['minlength']">
+            Password must be at least 6 characters
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="form-group">
+        <label for="phone">Phone Number (10 digits)</label>
+        <input
+          type="text"
+          id="phone"
+          formControlName="phone"
+          placeholder="10-digit mobile number"
+          [class.is-invalid]="trainerForm.get('phone')?.touched && trainerForm.get('phone')?.invalid"
+        />
+        <div class="error-text" *ngIf="trainerForm.get('phone')?.touched && trainerForm.get('phone')?.errors?.['required']">
+          Phone is required
+        </div>
+        <div class="error-text" *ngIf="trainerForm.get('phone')?.touched && trainerForm.get('phone')?.errors?.['pattern']">
+          Phone must be exactly 10 digits
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label for="specialization">Specialization</label>
+          <input
+            type="text"
+            id="specialization"
+            formControlName="specialization"
+            placeholder="e.g. Bodybuilding, CrossFit"
+            [class.is-invalid]="trainerForm.get('specialization')?.touched && trainerForm.get('specialization')?.invalid"
+          />
+          <div class="error-text" *ngIf="trainerForm.get('specialization')?.touched && trainerForm.get('specialization')?.errors?.['required']">
+            Specialization is required
+          </div>
+        </div>
+
+        <div class="form-group col">
+          <label for="experienceYears">Experience (Years)</label>
+          <input
+            type="number"
+            id="experienceYears"
+            formControlName="experienceYears"
+            min="0"
+            [class.is-invalid]="trainerForm.get('experienceYears')?.touched && trainerForm.get('experienceYears')?.invalid"
+          />
+          <div class="error-text" *ngIf="trainerForm.get('experienceYears')?.touched && trainerForm.get('experienceYears')?.errors?.['min']">
+            Experience cannot be negative
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-save" [disabled]="loading">
+          {{ loading ? 'Saving...' : (isEditMode ? 'Update Trainer' : 'Add Trainer') }}
+        </button>
+        <a routerLink="/admin/trainers" class="btn btn-cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

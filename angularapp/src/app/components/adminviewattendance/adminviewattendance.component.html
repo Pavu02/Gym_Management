@@ -1,0 +1,60 @@
+<div class="view-page-container">
+  <div class="view-header">
+    <div>
+      <h1>Attendance <span>Logs</span></h1>
+      <p>Real-time check-in and check-out logs for all gym members</p>
+    </div>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="toolbar">
+    <div class="date-filter">
+      <label for="dateFilter">Filter by Date:</label>
+      <input
+        type="date"
+        id="dateFilter"
+        [(ngModel)]="selectedDate"
+        (change)="filterByDate()"
+        class="date-input"
+      />
+      <button *ngIf="selectedDate" (click)="resetFilter()" class="btn-clear">Clear Filter</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Member Name</th>
+          <th>Email</th>
+          <th>Date</th>
+          <th>Check-In Time</th>
+          <th>Check-Out Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let record of filteredRecords">
+          <td>{{ record.id }}</td>
+          <td class="font-bold">{{ record.member?.user?.name }}</td>
+          <td>{{ record.member?.user?.email }}</td>
+          <td>{{ record.date | date:'mediumDate' }}</td>
+          <td class="time-in">{{ record.checkIn }}</td>
+          <td class="time-out">{{ record.checkOut || 'Active In-Gym' }}</td>
+          <td>
+            <span class="status-badge" [class.badge-active]="!record.checkOut" [class.badge-completed]="!!record.checkOut">
+              {{ record.checkOut ? 'Completed' : 'Working Out' }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredRecords.length === 0 && !loading">
+          <td colspan="7" class="no-data">No attendance records found for this date.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

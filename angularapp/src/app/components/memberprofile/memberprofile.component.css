@@ -1,0 +1,146 @@
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.profile-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.profile-header h1 {
+  font-size: 2.2rem;
+}
+
+.profile-header h1 span {
+  color: #ff6b00;
+}
+
+.profile-header p {
+  color: #888888;
+}
+
+.profile-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.avatar-circle {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background-color: #ff6b00;
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-main h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.user-email {
+  color: #888888;
+  margin-bottom: 0.6rem;
+}
+
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-active {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+  border: 1px solid #4caf50;
+}
+
+.badge-expired {
+  background-color: rgba(239, 83, 80, 0.2);
+  color: #e57373;
+  border: 1px solid #ef5350;
+}
+
+.profile-divider {
+  height: 1px;
+  background-color: #282828;
+  margin: 2rem 0;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.8rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.detail-label {
+  color: #888888;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.detail-value.highlight {
+  color: #ff6b00;
+  font-weight: 600;
+}
+
+.days-box {
+  background-color: #242424;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #333333;
+}
+
+.days-count {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #81c784;
+}
+
+.text-danger {
+  color: #ef5350 !important;
+}
+
+.loading-state {
+  text-align: center;
+  color: #888888;
+  padding: 3rem;
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+  color: #ef5350;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}

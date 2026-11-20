@@ -1,0 +1,10 @@
+﻿angularapp/node_modules/
+angularapp/dist/
+angularapp/.angular/
+springapp/target/
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+Thumbs.db

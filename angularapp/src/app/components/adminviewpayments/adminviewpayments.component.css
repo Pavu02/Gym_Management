@@ -1,0 +1,206 @@
+.view-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.view-header {
+  margin-bottom: 2rem;
+}
+
+.view-header h1 {
+  font-size: 2.2rem;
+}
+
+.view-header h1 span {
+  color: #ff6b00;
+}
+
+.view-header p {
+  color: #888888;
+}
+
+.form-card-top {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+}
+
+.form-card-top h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+}
+
+.form-card-top h2 span {
+  color: #ff6b00;
+}
+
+.payment-inline-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  color: #cccccc;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  background-color: #242424;
+  border: 1px solid #383838;
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #ff6b00;
+}
+
+.btn-record {
+  background-color: #ff6b00;
+  color: #ffffff;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.btn-record:hover:not(:disabled) {
+  background-color: #e05e00;
+}
+
+.btn-record:disabled {
+  opacity: 0.6;
+}
+
+.table-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #282828;
+}
+
+.data-table th {
+  background-color: #222222;
+  color: #a0a0a0;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.data-table tbody tr:hover {
+  background-color: #202020;
+}
+
+.font-bold {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.price-cell {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.badge-mode {
+  background-color: #282828;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #cccccc;
+}
+
+.status-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-paid {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+  border: 1px solid #4caf50;
+}
+
+.status-pending {
+  background-color: rgba(255, 179, 0, 0.2);
+  color: #ffb300;
+  border: 1px solid #ffb300;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn-action {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-delete {
+  background-color: #4a2424;
+  color: #e57373;
+}
+
+.btn-action:hover {
+  opacity: 0.8;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2.5rem;
+  color: #888888;
+}
+
+.alert {
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.alert-success {
+  background-color: rgba(46, 125, 50, 0.2);
+  border: 1px solid #2e7d32;
+  color: #81c784;
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+  color: #ef5350;
+}

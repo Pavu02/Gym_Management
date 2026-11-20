@@ -1,0 +1,44 @@
+<div class="trainer-page-container">
+  <div class="trainer-header">
+    <h1>My Assigned <span>Members</span></h1>
+    <p>Manage training progress and workout consistency for your trainees</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Member Name</th>
+          <th>Phone Number</th>
+          <th>Membership Plan</th>
+          <th>Plan Expiry</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of assignedMembers">
+          <td class="font-bold">{{ member.name }}</td>
+          <td>{{ member.phone || 'N/A' }}</td>
+          <td>{{ member.planName || 'N/A' }}</td>
+          <td>{{ member.expiryDate | date:'mediumDate' }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [class.status-active]="member.status === 'ACTIVE'"
+              [class.status-expired]="member.status === 'EXPIRED'"
+            >
+              {{ member.status }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="assignedMembers.length === 0 && !loading">
+          <td colspan="5" class="no-data">No members are currently assigned to you.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

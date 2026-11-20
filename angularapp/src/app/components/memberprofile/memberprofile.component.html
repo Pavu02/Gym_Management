@@ -1,0 +1,67 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>My <span>Profile</span></h1>
+    <p>Your gym membership and fitness account details</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    Loading profile...
+  </div>
+
+  <div class="profile-card" *ngIf="!loading && profile">
+    <div class="profile-top">
+      <div class="avatar-circle">
+        {{ profile.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="user-main">
+        <h2>{{ profile.name }}</h2>
+        <p class="user-email">{{ profile.email }}</p>
+        <span
+          class="status-badge"
+          [class.badge-active]="profile.status === 'ACTIVE'"
+          [class.badge-expired]="profile.status === 'EXPIRED'"
+        >
+          {{ profile.status }}
+        </span>
+      </div>
+    </div>
+
+    <div class="profile-divider"></div>
+
+    <div class="details-grid">
+      <div class="detail-item">
+        <span class="detail-label">Phone Number</span>
+        <span class="detail-value">{{ profile.phone || 'Not provided' }}</span>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">Active Plan</span>
+        <span class="detail-value highlight">{{ profile.planName || 'No Active Plan' }}</span>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">Assigned Trainer</span>
+        <span class="detail-value">{{ profile.trainerName || 'Self-training' }}</span>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">Join Date</span>
+        <span class="detail-value">{{ profile.joinDate | date:'mediumDate' }}</span>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">Expiry Date</span>
+        <span class="detail-value">{{ profile.expiryDate | date:'mediumDate' }}</span>
+      </div>
+
+      <div class="detail-item days-box">
+        <span class="detail-label">Membership Days Left</span>
+        <span class="days-count" [class.text-danger]="daysLeft <= 5">{{ daysLeft }} Days</span>
+      </div>
+    </div>
+  </div>
+</div>

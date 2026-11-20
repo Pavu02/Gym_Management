@@ -1,0 +1,57 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Welcome <span>Back</span></h2>
+      <p>Log in to access your GymPro dashboard</p>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+        />
+        <div class="error-text" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']">
+          Email is required
+        </div>
+        <div class="error-text" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['email']">
+          Please enter a valid email address
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Enter your password"
+          [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+        />
+        <div class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
+          Password is required
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        {{ loading ? 'Logging in...' : 'Sign In' }}
+      </button>
+
+      <p class="auth-footer">
+        Don't have an account? <a routerLink="/signup">Sign up here</a>
+      </p>
+    </form>
+  </div>
+</div>

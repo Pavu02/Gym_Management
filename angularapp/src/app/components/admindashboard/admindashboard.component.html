@@ -1,0 +1,84 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Admin <span>Dashboard</span></h1>
+    <p>Overview of gym members, trainers, attendance, and revenue</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading">
+    Loading stats...
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading && stats">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-info">
+        <h3>Total Members</h3>
+        <p class="stat-value">{{ stats.totalMembers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-active">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <h3>Active Members</h3>
+        <p class="stat-value">{{ stats.activeMembers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-expired">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-info">
+        <h3>Expired Members</h3>
+        <p class="stat-value">{{ stats.expiredMembers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🥊</div>
+      <div class="stat-info">
+        <h3>Total Trainers</h3>
+        <p class="stat-value">{{ stats.totalTrainers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-info">
+        <h3>Total Plans</h3>
+        <p class="stat-value">{{ stats.totalPlans }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-info">
+        <h3>Today's Attendance</h3>
+        <p class="stat-value">{{ stats.todayAttendance }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card stat-revenue">
+      <div class="stat-icon">💰</div>
+      <div class="stat-info">
+        <h3>Monthly Revenue</h3>
+        <p class="stat-value">₹{{ stats.monthlyRevenue | number:'1.2-2' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Section -->
+  <div class="quick-actions" *ngIf="!loading">
+    <h2>Quick <span>Management</span></h2>
+    <div class="actions-grid">
+      <a routerLink="/admin/members/add" class="action-btn">+ Add Member</a>
+      <a routerLink="/admin/trainers/add" class="action-btn">+ Add Trainer</a>
+      <a routerLink="/admin/plans/add" class="action-btn">+ Add Plan</a>
+      <a routerLink="/admin/payments" class="action-btn">+ Record Payment</a>
+      <a routerLink="/admin/attendance" class="action-btn">View Attendance</a>
+    </div>
+  </div>
+</div>

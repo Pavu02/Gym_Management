@@ -1,0 +1,131 @@
+.payments-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.payments-header {
+  margin-bottom: 2rem;
+}
+
+.payments-header h1 {
+  font-size: 2.2rem;
+}
+
+.payments-header h1 span {
+  color: #ff6b00;
+}
+
+.payments-header p {
+  color: #888888;
+}
+
+.summary-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1.8rem 2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.summary-info h3 {
+  color: #888888;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.total-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #4caf50;
+}
+
+.summary-count {
+  color: #888888;
+  font-size: 0.95rem;
+}
+
+.table-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #282828;
+}
+
+.data-table th {
+  background-color: #222222;
+  color: #a0a0a0;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.data-table tbody tr:hover {
+  background-color: #202020;
+}
+
+.amount-cell {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.mode-badge {
+  background-color: #282828;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #cccccc;
+}
+
+.status-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-paid {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+  border: 1px solid #4caf50;
+}
+
+.status-pending {
+  background-color: rgba(255, 179, 0, 0.2);
+  color: #ffb300;
+  border: 1px solid #ffb300;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2.5rem;
+  color: #888888;
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+  color: #ef5350;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}

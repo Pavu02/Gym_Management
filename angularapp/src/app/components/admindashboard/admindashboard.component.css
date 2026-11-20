@@ -1,0 +1,134 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.dashboard-header {
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header h1 span {
+  color: #ff6b00;
+}
+
+.dashboard-header p {
+  color: #888888;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: #ff6b00;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  background-color: #242424;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-info h3 {
+  font-size: 0.95rem;
+  color: #888888;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stat-active .stat-value {
+  color: #4caf50;
+}
+
+.stat-expired .stat-value {
+  color: #ef5350;
+}
+
+.stat-revenue .stat-value {
+  color: #ffb300;
+}
+
+.quick-actions {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.quick-actions h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.quick-actions h2 span {
+  color: #ff6b00;
+}
+
+.actions-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  background-color: #242424;
+  border: 1px solid #383838;
+  color: #ffffff;
+  padding: 0.75rem 1.4rem;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #ff6b00;
+  border-color: #ff6b00;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 3rem;
+  color: #888888;
+  font-size: 1.2rem;
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+  color: #ef5350;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}

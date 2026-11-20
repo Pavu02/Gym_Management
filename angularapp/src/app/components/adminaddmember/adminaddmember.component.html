@@ -1,0 +1,107 @@
+<div class="form-page-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h2>{{ isEditMode ? 'Edit' : 'Add New' }} <span>Member</span></h2>
+      <p>{{ isEditMode ? 'Update member and subscription details' : 'Register a new gym member with a membership plan'
+        }}</p>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="form-body">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" formControlName="name" placeholder="Member full name"
+          [class.is-invalid]="memberForm.get('name')?.touched && memberForm.get('name')?.invalid" />
+        <div class="error-text" *ngIf="memberForm.get('name')?.touched && memberForm.get('name')?.errors?.['required']">
+          Name is required
+        </div>
+      </div>
+
+      <!-- Hide email and password in edit mode -->
+      <ng-container *ngIf="!isEditMode">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" formControlName="email" placeholder="member@gym.com"
+            [class.is-invalid]="memberForm.get('email')?.touched && memberForm.get('email')?.invalid" />
+          <div class="error-text"
+            *ngIf="memberForm.get('email')?.touched && memberForm.get('email')?.errors?.['required']">
+            Email is required
+          </div>
+          <div class="error-text"
+            *ngIf="memberForm.get('email')?.touched && memberForm.get('email')?.errors?.['email']">
+            Please enter a valid email address
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Initial Password</label>
+          <input type="password" id="password" formControlName="password" placeholder="Min 6 characters"
+            [class.is-invalid]="memberForm.get('password')?.touched && memberForm.get('password')?.invalid" />
+          <div class="error-text"
+            *ngIf="memberForm.get('password')?.touched && memberForm.get('password')?.errors?.['required']">
+            Password is required
+          </div>
+          <div class="error-text"
+            *ngIf="memberForm.get('password')?.touched && memberForm.get('password')?.errors?.['minlength']">
+            Password must be at least 6 characters
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="form-group">
+        <label for="phone">Phone Number (10 digits)</label>
+        <input type="text" id="phone" formControlName="phone" placeholder="10-digit mobile number"
+          [class.is-invalid]="memberForm.get('phone')?.touched && memberForm.get('phone')?.invalid" />
+        <div class="error-text"
+          *ngIf="memberForm.get('phone')?.touched && memberForm.get('phone')?.errors?.['required']">
+          Phone is required
+        </div>
+        <div class="error-text"
+          *ngIf="memberForm.get('phone')?.touched && memberForm.get('phone')?.errors?.['pattern']">
+          Phone must be exactly 10 digits
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col">
+          <label for="planId">Membership Plan</label>
+          <select id="planId" formControlName="planId"
+            [class.is-invalid]="memberForm.get('planId')?.touched && memberForm.get('planId')?.invalid">
+            <option [ngValue]="null" disabled>Select a Plan</option>
+            <option *ngFor="let p of plans" [value]="p.id">
+              {{ p.name }} ({{ p.durationMonths }}mo - ₹{{ p.price }})
+            </option>
+          </select>
+          <div class="error-text"
+            *ngIf="memberForm.get('planId')?.touched && memberForm.get('planId')?.errors?.['required']">
+            Please select a membership plan
+          </div>
+        </div>
+
+        <div class="form-group col">
+          <label for="trainerId">Assigned Trainer (Optional)</label>
+          <select id="trainerId" formControlName="trainerId">
+            <option [ngValue]="null">No Trainer (Self-workout)</option>
+            <option *ngFor="let t of trainers" [value]="t.id">
+              {{ t.user?.name }} ({{ t.specialization }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-save" [disabled]="loading">
+          {{ loading ? 'Saving...' : (isEditMode ? 'Update Member' : 'Register Member') }}
+        </button>
+        <a routerLink="/admin/members" class="btn btn-cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

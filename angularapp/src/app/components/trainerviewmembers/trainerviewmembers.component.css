@@ -1,0 +1,91 @@
+.trainer-page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.trainer-header {
+  margin-bottom: 2rem;
+}
+
+.trainer-header h1 {
+  font-size: 2.2rem;
+}
+
+.trainer-header h1 span {
+  color: #ff6b00;
+}
+
+.trainer-header p {
+  color: #888888;
+}
+
+.table-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #282828;
+}
+
+.data-table th {
+  background-color: #222222;
+  color: #a0a0a0;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.data-table tbody tr:hover {
+  background-color: #202020;
+}
+
+.font-bold {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.status-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+  border: 1px solid #4caf50;
+}
+
+.status-expired {
+  background-color: rgba(239, 83, 80, 0.2);
+  color: #e57373;
+  border: 1px solid #ef5350;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2.5rem;
+  color: #888888;
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+  color: #ef5350;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}

@@ -1,0 +1,48 @@
+<div class="view-page-container">
+  <div class="view-header">
+    <div>
+      <h1>Gym <span>Trainers</span></h1>
+      <p>Manage all professional gym trainers and coaches</p>
+    </div>
+    <a routerLink="/admin/trainers/add" class="btn-add">+ Add New Trainer</a>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Specialization</th>
+          <th>Experience</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let trainer of trainers">
+          <td class="font-bold">{{ trainer.user?.name }}</td>
+          <td>{{ trainer.user?.email }}</td>
+          <td>{{ trainer.user?.phone }}</td>
+          <td><span class="badge-specialization">{{ trainer.specialization }}</span></td>
+          <td>{{ trainer.experienceYears }} Years</td>
+          <td class="actions-cell">
+            <a [routerLink]="['/admin/trainers/edit', trainer.id]" class="btn-action btn-edit">Edit</a>
+            <button (click)="deleteTrainer(trainer.id!, trainer.user?.name || '')" class="btn-action btn-delete">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="trainers.length === 0 && !loading">
+          <td colspan="6" class="no-data">No trainers found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

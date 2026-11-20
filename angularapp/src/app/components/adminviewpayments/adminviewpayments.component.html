@@ -1,0 +1,108 @@
+<div class="view-page-container">
+  <div class="view-header">
+    <div>
+      <h1>Gym <span>Payments</span></h1>
+      <p>Record and monitor membership fee transactions</p>
+    </div>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Form at the top -->
+  <div class="form-card-top">
+    <h2>Record New <span>Payment</span></h2>
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="payment-inline-form">
+      <div class="form-group">
+        <label for="memberId">Member</label>
+        <select id="memberId" formControlName="memberId" [class.is-invalid]="paymentForm.get('memberId')?.touched && paymentForm.get('memberId')?.invalid">
+          <option [ngValue]="null" disabled>Select Member</option>
+          <option *ngFor="let m of members" [value]="m.id">
+            {{ m.name }} ({{ m.email }})
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Amount (₹)</label>
+        <input
+          type="number"
+          id="amount"
+          formControlName="amount"
+          placeholder="e.g. 5000"
+          min="1"
+          [class.is-invalid]="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="mode">Payment Mode</label>
+        <select id="mode" formControlName="mode">
+          <option value="UPI">UPI</option>
+          <option value="CASH">CASH</option>
+          <option value="CARD">CARD</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Payment Status</label>
+        <select id="status" formControlName="status">
+          <option value="PAID">PAID</option>
+          <option value="PENDING">PENDING</option>
+        </select>
+      </div>
+
+      <div class="form-group btn-col">
+        <button type="submit" class="btn-record" [disabled]="submitting">
+          {{ submitting ? 'Saving...' : '+ Add Payment' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table of all payments -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Member Name</th>
+          <th>Amount</th>
+          <th>Payment Date</th>
+          <th>Mode</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of payments">
+          <td>{{ payment.id }}</td>
+          <td class="font-bold">{{ payment.member?.user?.name }}</td>
+          <td class="price-cell">₹{{ payment.amount | number:'1.2-2' }}</td>
+          <td>{{ payment.paymentDate | date:'mediumDate' }}</td>
+          <td><span class="badge-mode">{{ payment.mode }}</span></td>
+          <td>
+            <span
+              class="status-badge"
+              [class.status-paid]="payment.status === 'PAID'"
+              [class.status-pending]="payment.status === 'PENDING'"
+            >
+              {{ payment.status }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button (click)="deletePayment(payment.id!)" class="btn-action btn-delete">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="payments.length === 0 && !loading">
+          <td colspan="7" class="no-data">No payment records found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

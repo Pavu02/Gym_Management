@@ -1,0 +1,56 @@
+<div class="payments-container">
+  <div class="payments-header">
+    <h1>Payment <span>History</span></h1>
+    <p>Review your membership transaction records and payment receipts</p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Total Paid Summary Card -->
+  <div class="summary-card" *ngIf="!loading">
+    <div class="summary-info">
+      <h3>Total Amount Paid</h3>
+      <div class="total-value">₹{{ totalPaid | number:'1.2-2' }}</div>
+    </div>
+    <div class="summary-count">
+      <span>{{ payments.length }} Total Transactions</span>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Receipt ID</th>
+          <th>Amount</th>
+          <th>Payment Date</th>
+          <th>Payment Mode</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of payments">
+          <td>#{{ payment.id }}</td>
+          <td class="amount-cell">₹{{ payment.amount | number:'1.2-2' }}</td>
+          <td>{{ payment.paymentDate | date:'mediumDate' }}</td>
+          <td><span class="mode-badge">{{ payment.mode }}</span></td>
+          <td>
+            <span
+              class="status-badge"
+              [class.status-paid]="payment.status === 'PAID'"
+              [class.status-pending]="payment.status === 'PENDING'"
+            >
+              {{ payment.status }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="payments.length === 0 && !loading">
+          <td colspan="5" class="no-data">No payment history found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

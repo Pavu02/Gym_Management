@@ -1,0 +1,80 @@
+<div class="attendance-container">
+  <div class="attendance-header">
+    <h1>Workout <span>Attendance</span></h1>
+    <p>Mark your gym attendance and track your consistency</p>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Today's Attendance Action Card -->
+  <div class="today-card">
+    <div class="today-info">
+      <h2>Today's <span>Session</span></h2>
+      <p class="today-date">{{ todayRecord ? (todayRecord.date | date:'fullDate') : 'Ready to work out today?' }}</p>
+      <div class="today-status" *ngIf="todayRecord">
+        <span>Check-In: <strong>{{ todayRecord.checkIn }}</strong></span>
+        <span>Check-Out: <strong>{{ todayRecord.checkOut || 'In Progress' }}</strong></span>
+      </div>
+    </div>
+
+    <div class="today-actions">
+      <button
+        *ngIf="!todayRecord"
+        (click)="checkIn()"
+        class="btn-attend btn-in"
+        [disabled]="actionLoading"
+      >
+        {{ actionLoading ? 'Processing...' : '⚡ Check In' }}
+      </button>
+
+      <button
+        *ngIf="todayRecord && !todayRecord.checkOut"
+        (click)="checkOut()"
+        class="btn-attend btn-out"
+        [disabled]="actionLoading"
+      >
+        {{ actionLoading ? 'Processing...' : '🏁 Check Out' }}
+      </button>
+
+      <div class="completed-badge" *ngIf="todayRecord && todayRecord.checkOut">
+        ✓ Today's workout completed
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance History Table -->
+  <div class="table-card">
+    <h2>Attendance <span>History</span></h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Check-In Time</th>
+          <th>Check-Out Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let record of attendanceList">
+          <td>{{ record.date | date:'mediumDate' }}</td>
+          <td class="time-in">{{ record.checkIn }}</td>
+          <td class="time-out">{{ record.checkOut || 'Working Out' }}</td>
+          <td>
+            <span class="status-badge" [class.badge-active]="!record.checkOut" [class.badge-completed]="!!record.checkOut">
+              {{ record.checkOut ? 'Completed' : 'Active' }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="attendanceList.length === 0 && !loading">
+          <td colspan="4" class="no-data">No attendance records found yet. Mark your first check-in above!</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

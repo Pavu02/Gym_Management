@@ -1,0 +1,44 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Transform Your <span>Body</span></h1>
+      <p class="hero-subtitle">
+        Reach your peak physical fitness with top-tier equipment, customized training plans, and expert trainers dedicated to your goals.
+      </p>
+      <div class="hero-buttons" *ngIf="!authService.isLoggedIn()">
+        <a routerLink="/signup" class="btn btn-primary">Join Now</a>
+        <a routerLink="/login" class="btn btn-secondary">Login</a>
+      </div>
+      <div class="hero-buttons" *ngIf="authService.isLoggedIn()">
+        <a *ngIf="authService.getRole() === 'ADMIN'" routerLink="/admin/dashboard" class="btn btn-primary">Go to Dashboard</a>
+        <a *ngIf="authService.getRole() === 'MEMBER'" routerLink="/member/profile" class="btn btn-primary">My Profile</a>
+        <a *ngIf="authService.getRole() === 'TRAINER'" routerLink="/trainer/members" class="btn btn-primary">My Members</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <h2 class="section-title">Why Choose <span>GymPro</span></h2>
+    <div class="features-grid">
+      <div class="card feature-card">
+        <div class="feature-icon">🏋️</div>
+        <h3>Custom Plans</h3>
+        <p>Flexible 1, 3, 6, and 12-month membership options designed to match your fitness and lifestyle goals.</p>
+      </div>
+
+      <div class="card feature-card">
+        <div class="feature-icon">🥊</div>
+        <h3>Expert Trainers</h3>
+        <p>Certified personal trainers in bodybuilding, cardio, CrossFit, and nutrition to fast-track your progress.</p>
+      </div>
+
+      <div class="card feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Seamless Attendance</h3>
+        <p>Easy daily digital check-in and check-out tracking to monitor workout consistency and membership status.</p>
+      </div>
+    </div>
+  </section>
+</div>
