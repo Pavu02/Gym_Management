@@ -8,3 +8,6 @@ springapp/target/
 *.iml
 .vscode/
 Thumbs.db
+
+springapp/src/main/resources/google-credentials.json
+springapp/src/main/resources/application-secrets.properties

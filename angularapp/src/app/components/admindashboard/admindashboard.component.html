@@ -78,6 +78,11 @@
     </div>
   </div>
 
+  <!-- Live Face Recognition Auto Check-In Scanner -->
+  <div class="scanner-section" *ngIf="!loading">
+    <app-facescanner></app-facescanner>
+  </div>
+
   <!-- Quick Actions Section -->
   <div class="quick-actions" *ngIf="!loading">
     <h2>Quick <span>Management</span></h2>

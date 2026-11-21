@@ -1,0 +1,86 @@
+<div class="enroll-overlay" (click)="closeModal()">
+  <div class="enroll-modal" (click)="$event.stopPropagation()">
+    
+    <div class="enroll-header">
+      <div class="header-titles">
+        <h2>FACE <span>ENROLLMENT</span></h2>
+        <p class="subtitle">Enrolling biometric face template for: <strong>{{ userName }}</strong> ({{ role }})</p>
+      </div>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <div class="enroll-body">
+      <!-- Camera Viewport Container -->
+      <div class="camera-wrapper">
+        <video #videoElement autoplay muted playsinline class="video-feed"></video>
+        <canvas #canvasElement class="canvas-overlay"></canvas>
+
+        <!-- Face Guide Oval -->
+        <div class="face-guide-oval" [class.aligned]="detectionStatus === 'FACE_DETECTED'" [class.warning]="detectionStatus === 'MULTIPLE_FACES'">
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
+        </div>
+
+        <!-- Camera Status Badge -->
+        <div class="detection-badge" [ngClass]="{
+          'badge-detected': detectionStatus === 'FACE_DETECTED',
+          'badge-none': detectionStatus === 'NO_FACE',
+          'badge-warning': detectionStatus === 'MULTIPLE_FACES'
+        }">
+          <span class="dot"></span>
+          <span *ngIf="detectionStatus === 'FACE_DETECTED'">✓ Face Detected</span>
+          <span *ngIf="detectionStatus === 'NO_FACE'">No Face Detected</span>
+          <span *ngIf="detectionStatus === 'MULTIPLE_FACES'">⚠ Multiple Faces</span>
+        </div>
+
+        <!-- Progress Overlay during Capture -->
+        <div class="capture-overlay" *ngIf="capturing">
+          <div class="spinner"></div>
+          <p class="progress-text">Capturing Sample {{ captureProgress }} of 3</p>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(captureProgress / 3) * 100"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Status Banner -->
+      <div class="status-banner">
+        <p>{{ statusMessage }}</p>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-error" *ngIf="cameraError || errorMessage">
+        {{ cameraError || errorMessage }}
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <!-- Consent & Actions -->
+      <div class="enroll-controls">
+        <label class="consent-checkbox">
+          <input type="checkbox" [(ngModel)]="consentGiven" [disabled]="capturing">
+          <span class="custom-check"></span>
+          <span class="consent-text">I agree to store my face data for gym attendance.</span>
+        </label>
+
+        <div class="action-buttons">
+          <button 
+            type="button" 
+            class="btn-capture" 
+            (click)="startCapture()"
+            [disabled]="!consentGiven || detectionStatus !== 'FACE_DETECTED' || capturing || !modelsLoaded"
+          >
+            <span *ngIf="!capturing">⚡ CAPTURE FACE (3 SAMPLES)</span>
+            <span *ngIf="capturing">PROCESSING SAMPLES...</span>
+          </button>
+          <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="capturing">CANCEL</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

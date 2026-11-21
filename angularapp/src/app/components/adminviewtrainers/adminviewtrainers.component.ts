@@ -12,11 +12,25 @@ export class AdminviewtrainersComponent implements OnInit {
   loading: boolean = true;
   errorMessage: string = '';
   successMessage: string = '';
+  selectedTrainerForFaceEnroll: Trainer | null = null;
 
   constructor(private trainerService: TrainerService) {}
 
   ngOnInit(): void {
     this.loadTrainers();
+  }
+
+  openFaceEnroll(trainer: Trainer): void {
+    this.selectedTrainerForFaceEnroll = trainer;
+  }
+
+  closeFaceEnroll(): void {
+    this.selectedTrainerForFaceEnroll = null;
+  }
+
+  onFaceEnrolled(): void {
+    this.successMessage = `Face template registered successfully for ${this.selectedTrainerForFaceEnroll?.user?.name || 'Trainer'}!`;
+    this.selectedTrainerForFaceEnroll = null;
   }
 
   loadTrainers(): void {

@@ -17,6 +17,7 @@ export class AdminviewmembersComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
   selectedMemberForModal: MemberResponse | null = null;
+  selectedMemberForFaceEnroll: MemberResponse | null = null;
 
   constructor(
     private memberService: MemberService,
@@ -62,6 +63,19 @@ export class AdminviewmembersComponent implements OnInit {
 
   closeDetailsModal(): void {
     this.selectedMemberForModal = null;
+  }
+
+  openFaceEnroll(member: MemberResponse): void {
+    this.selectedMemberForFaceEnroll = member;
+  }
+
+  closeFaceEnroll(): void {
+    this.selectedMemberForFaceEnroll = null;
+  }
+
+  onFaceEnrolled(): void {
+    this.successMessage = `Face template registered successfully for ${this.selectedMemberForFaceEnroll?.name}!`;
+    this.selectedMemberForFaceEnroll = null;
   }
 
   getAge(dob?: string): number | string {

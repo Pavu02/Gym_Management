@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface TrainerRepo extends JpaRepository<Trainer, Long> {
     Optional<Trainer> findByUserEmail(String email);
+    Optional<Trainer> findByUserId(Long userId);
     Optional<Trainer> findByUserEmailAndDeletedFalse(String email);
     Optional<Trainer> findByIdAndDeletedFalse(Long id);
     List<Trainer> findByDeletedFalse();

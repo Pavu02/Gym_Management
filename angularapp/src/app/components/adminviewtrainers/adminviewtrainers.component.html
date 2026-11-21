@@ -38,6 +38,7 @@
           <td class="fee-cell">₹{{ trainer.monthlyFee || 0 | number:'1.0-0' }}</td>
           <td><span class="rating-badge">⭐ {{ trainer.rating || 4.5 | number:'1.1-1' }}</span></td>
           <td class="actions-cell">
+            <button (click)="openFaceEnroll(trainer)" class="btn-action btn-face" title="Enroll Face Template">👤 Face</button>
             <a [routerLink]="['/admin/trainers/edit', trainer.id]" class="btn-action btn-edit">Edit</a>
             <button (click)="deleteTrainer(trainer.id!, trainer.user?.name || '')" class="btn-action btn-delete">Delete</button>
           </td>
@@ -48,4 +49,14 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Face Enrollment Modal Component -->
+  <app-face-enroll
+    *ngIf="selectedTrainerForFaceEnroll"
+    [userId]="selectedTrainerForFaceEnroll.user?.id || selectedTrainerForFaceEnroll.id!"
+    [userName]="selectedTrainerForFaceEnroll.user?.name || 'Trainer'"
+    role="TRAINER"
+    (enrolled)="onFaceEnrolled()"
+    (close)="closeFaceEnroll()"
+  ></app-face-enroll>
 </div>

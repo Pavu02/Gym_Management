@@ -32,6 +32,8 @@ import { OnboardingprofileComponent } from './components/onboardingprofile/onboa
 import { OnboardingpaymentComponent } from './components/onboardingpayment/onboardingpayment.component';
 import { OnboardingsuccessComponent } from './components/onboardingsuccess/onboardingsuccess.component';
 import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
+import { FaceEnrollComponent } from './components/faceenroll/faceenroll.component';
+import { FaceScannerComponent } from './components/facescanner/facescanner.component';
 
 @NgModule({
   declarations: [
@@ -61,7 +63,9 @@ import { MembertrainerComponent } from './components/membertrainer/membertrainer
     OnboardingprofileComponent,
     OnboardingpaymentComponent,
     OnboardingsuccessComponent,
-    MembertrainerComponent
+    MembertrainerComponent,
+    FaceEnrollComponent,
+    FaceScannerComponent
   ],
   imports: [
     BrowserModule,

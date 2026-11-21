@@ -1,0 +1,153 @@
+<div class="scanner-card">
+  <div class="scanner-header">
+    <div class="header-left">
+      <span class="live-indicator" [class.active]="cameraActive"></span>
+      <h3>LIVE <span>CHECK-IN SCANNER</span></h3>
+      <span class="enrolled-badge">{{ enrolledCount }} Enrolled</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-toggle-cam" (click)="toggleCamera()" [class.active]="cameraActive">
+        {{ cameraActive ? '⏹ Stop Scanner' : '▶ Start Scanner' }}
+      </button>
+      <button class="btn-refresh-db" (click)="loadDescriptorsAndBuildMatcher()" title="Refresh Enrolled Faces">
+        🔄 Reload Faces
+      </button>
+    </div>
+  </div>
+
+  <div class="scanner-body">
+    <!-- Camera Viewport -->
+    <div class="camera-container">
+      <video #videoElement autoplay muted playsinline class="video-stream"></video>
+      <canvas #canvasElement class="canvas-layer"></canvas>
+
+      <div class="scanner-status-overlay">
+        <span>{{ statusText }}</span>
+      </div>
+
+      <div class="camera-placeholder" *ngIf="!cameraActive">
+        <div class="placeholder-content">
+          <span class="icon">📷</span>
+          <p>Camera is currently stopped</p>
+          <button class="btn-start" (click)="startCamera()">Activate Camera</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Auto Check-in Result Popup / Modal (auto-closing in 6s) -->
+    <div class="scan-popup" *ngIf="activePopup" [ngClass]="{
+      'popup-success': activePopup.status === 'CHECKED_IN',
+      'popup-info': activePopup.status === 'ALREADY_CHECKED_IN',
+      'popup-danger': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN'
+    }">
+      <button class="popup-close-btn" (click)="closePopup()">&times;</button>
+      
+      <div class="popup-top">
+        <div class="user-avatar-circle">
+          <span class="avatar-initial">{{ activePopup.name ? activePopup.name.charAt(0) : 'U' }}</span>
+        </div>
+        <div class="user-meta">
+          <div class="name-badge-row">
+            <h4>{{ activePopup.name }}</h4>
+            <span class="role-badge" [class.badge-member]="activePopup.role === 'MEMBER'" [class.badge-trainer]="activePopup.role === 'TRAINER'">
+              {{ activePopup.role }}
+            </span>
+          </div>
+          <span class="status-pill" [ngClass]="{
+            'pill-in': activePopup.status === 'CHECKED_IN',
+            'pill-already': activePopup.status === 'ALREADY_CHECKED_IN',
+            'pill-expired': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN'
+          }">
+            <span *ngIf="activePopup.status === 'CHECKED_IN'">✓ Check-In Recorded</span>
+            <span *ngIf="activePopup.status === 'ALREADY_CHECKED_IN'">Already Checked In Today</span>
+            <span *ngIf="activePopup.status === 'MEMBERSHIP_EXPIRED'">Access Denied: Membership Expired</span>
+            <span *ngIf="activePopup.status === 'NO_PLAN'">Access Denied: No Active Plan</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Member Specific Info -->
+      <div class="popup-details" *ngIf="activePopup.role === 'MEMBER'">
+        <div class="detail-item" *ngIf="activePopup.planName">
+          <label>Plan</label>
+          <strong>{{ activePopup.planName }}</strong>
+        </div>
+        <div class="detail-item" *ngIf="activePopup.remainingDays !== undefined && activePopup.remainingDays !== null">
+          <label>Remaining Days</label>
+          <strong [ngClass]="{
+            'days-green': activePopup.remainingDays > 5,
+            'days-orange': activePopup.remainingDays <= 5 && activePopup.remainingDays >= 0,
+            'days-red': activePopup.remainingDays < 0
+          }">
+            {{ activePopup.remainingDays >= 0 ? activePopup.remainingDays + ' Days' : 'Expired' }}
+          </strong>
+        </div>
+        <div class="detail-item" *ngIf="activePopup.assignedTrainerName">
+          <label>Trainer</label>
+          <strong>{{ activePopup.assignedTrainerName }}</strong>
+        </div>
+      </div>
+
+      <!-- Time & Attendance Count Footer -->
+      <div class="popup-footer">
+        <div class="footer-stat">
+          <span class="label">Check-In Time:</span>
+          <span class="val">{{ activePopup.checkInTime | date:'shortTime' }}</span>
+        </div>
+        <div class="footer-stat">
+          <span class="label">Monthly Visits:</span>
+          <span class="val">{{ activePopup.totalAttendanceThisMonth }} days</span>
+        </div>
+      </div>
+
+      <div class="expiring-warning" *ngIf="activePopup.expiringSoon">
+        ⚠ Attention: Plan expiring in {{ activePopup.remainingDays }} day(s)! Please renew soon.
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Today's Check-Ins Table -->
+  <div class="today-section">
+    <div class="section-title-row">
+      <h4>TODAY'S <span>LIVE CHECK-INS</span></h4>
+      <span class="count-pill">{{ todayCheckins.length }} Present</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="live-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Check-In Time</th>
+            <th>Plan Info</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of todayCheckins">
+            <td class="user-cell">
+              <strong>{{ item.name }}</strong>
+            </td>
+            <td>
+              <span class="badge" [class.badge-member]="item.role === 'MEMBER'" [class.badge-trainer]="item.role === 'TRAINER'">
+                {{ item.role }}
+              </span>
+            </td>
+            <td class="time-cell">{{ item.checkInTime | date:'mediumTime' }}</td>
+            <td class="plan-cell">
+              <span *ngIf="item.role === 'MEMBER'">{{ item.planName || 'N/A' }} ({{ item.remainingDays || 0 }}d left)</span>
+              <span *ngIf="item.role !== 'MEMBER'">Staff / Coach</span>
+            </td>
+            <td>
+              <span class="status-tag status-success">Present</span>
+            </td>
+          </tr>
+          <tr *ngIf="todayCheckins.length === 0">
+            <td colspan="5" class="empty-state">No check-ins recorded yet today. Stand in front of the camera to check in!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

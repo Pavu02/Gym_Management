@@ -28,6 +28,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage()));
     }
 
+    @ExceptionHandler(BiometricMismatchException.class)
+    public ResponseEntity<Map<String, String>> handleBiometricMismatch(BiometricMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MembershipExpiredException.class)
+    public ResponseEntity<Map<String, String>> handleMembershipExpired(MembershipExpiredException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(GymClosedException.class)
+    public ResponseEntity<Map<String, String>> handleGymClosed(GymClosedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(BadRequestException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));

@@ -70,6 +70,7 @@
           </td>
           <td class="actions-cell">
             <button (click)="openDetailsModal(member)" class="btn-action btn-view" title="View Full Details">View</button>
+            <button (click)="openFaceEnroll(member)" class="btn-action btn-face" title="Enroll Face Template">👤 Face</button>
             <button (click)="checkIn(member)" class="btn-action btn-checkin" title="Check In">In</button>
             <button (click)="checkOut(member)" class="btn-action btn-checkout" title="Check Out">Out</button>
             <a [routerLink]="['/admin/members/edit', member.id]" class="btn-action btn-edit">Edit</a>
@@ -156,4 +157,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Face Enrollment Modal Component -->
+  <app-face-enroll
+    *ngIf="selectedMemberForFaceEnroll"
+    [userId]="selectedMemberForFaceEnroll.id"
+    [userName]="selectedMemberForFaceEnroll.name"
+    role="MEMBER"
+    (enrolled)="onFaceEnrolled()"
+    (close)="closeFaceEnroll()"
+  ></app-face-enroll>
 </div>

@@ -1,11 +1,60 @@
 <div class="trainer-page-container">
   <div class="trainer-header">
-    <h1>My Assigned <span>Members</span></h1>
+    <h1>Trainer <span>Dashboard</span></h1>
     <p>Manage training progress, fitness goals, and workout safety for your trainees</p>
   </div>
 
   <div class="alert alert-error" *ngIf="errorMessage">
     {{ errorMessage }}
+  </div>
+
+  <!-- Trainer My Attendance Card -->
+  <div class="attendance-card">
+    <div class="attendance-card-header">
+      <div class="header-text">
+        <h3>My <span>Attendance</span></h3>
+        <p>Your biometric attendance records and coaching days this month</p>
+      </div>
+      <div class="stats-pills">
+        <div class="pill">
+          <span class="pill-label">Days Attended This Month</span>
+          <strong class="pill-val">{{ visitsThisMonth }} Days</strong>
+        </div>
+        <div class="pill" *ngIf="lastCheckinTime">
+          <span class="pill-label">Last Check-In</span>
+          <strong class="pill-val">{{ lastCheckinTime | date:'mediumDate' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="attendance-mini-table" *ngIf="trainerAttendance.length > 0">
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Check-In Time</th>
+            <th>Method</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of trainerAttendance.slice(0, 5)">
+            <td>{{ record.checkInTime | date:'mediumDate' }}</td>
+            <td class="font-mono">{{ record.checkInTime | date:'mediumTime' }}</td>
+            <td><span class="badge-method">FACE</span></td>
+            <td><span class="badge-present">✓ Present</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="no-records-note" *ngIf="trainerAttendance.length === 0">
+      No attendance recorded yet this month. Look into the Admin Live Scanner when arriving at the gym!
+    </div>
+  </div>
+
+  <!-- Trainees / Assigned Members Table -->
+  <div class="section-title">
+    <h2>My Assigned <span>Members</span></h2>
   </div>
 
   <div class="table-card">

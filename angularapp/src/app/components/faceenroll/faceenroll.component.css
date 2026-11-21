@@ -1,0 +1,335 @@
+.enroll-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.enroll-modal {
+  background: #141414;
+  border: 1px solid #ff4500;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 0 35px rgba(255, 69, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.enroll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid #222;
+  background: #0d0d0d;
+}
+
+.header-titles h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+  margin: 0;
+}
+
+.header-titles h2 span {
+  color: #ff4500;
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.subtitle strong {
+  color: #fff;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.btn-close:hover {
+  color: #ff4500;
+}
+
+.enroll-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+
+.video-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+.face-guide-oval {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 280px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  transition: all 0.3s;
+}
+
+.face-guide-oval.aligned {
+  border-color: #00e676;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.3);
+}
+
+.face-guide-oval.warning {
+  border-color: #ff9100;
+}
+
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #ff4500;
+  border-style: solid;
+}
+
+.top-left { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+.top-right { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
+.bottom-left { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
+.bottom-right { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+
+.detection-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #333;
+}
+
+.detection-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.badge-detected {
+  color: #00e676;
+  border-color: #00e676;
+}
+.badge-detected .dot { background: #00e676; box-shadow: 0 0 8px #00e676; }
+
+.badge-none {
+  color: #ff5252;
+  border-color: #ff5252;
+}
+.badge-none .dot { background: #ff5252; }
+
+.badge-warning {
+  color: #ffab00;
+  border-color: #ffab00;
+}
+.badge-warning .dot { background: #ffab00; }
+
+.capture-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 10;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #333;
+  border-top-color: #ff4500;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.progress-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 8px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4500, #ff8c00);
+  transition: width 0.3s;
+}
+
+.status-banner {
+  background: #1b1b1b;
+  border-left: 3px solid #ff4500;
+  padding: 8px 14px;
+  border-radius: 4px;
+}
+
+.status-banner p {
+  margin: 0;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.alert {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.alert-error {
+  background: rgba(255, 69, 0, 0.15);
+  border: 1px solid #ff4500;
+  color: #ff7043;
+}
+
+.alert-success {
+  background: rgba(0, 230, 118, 0.15);
+  border: 1px solid #00e676;
+  color: #69f0ae;
+}
+
+.enroll-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: #ddd;
+}
+
+.consent-checkbox input {
+  accent-color: #ff4500;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-capture {
+  flex: 2;
+  background: linear-gradient(135deg, #ff4500, #d83a00);
+  border: none;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.btn-capture:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+}
+
+.btn-capture:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: #252525;
+  border: 1px solid #333;
+  color: #bbb;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #333;
+  color: #fff;
+}

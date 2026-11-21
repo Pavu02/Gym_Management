@@ -16,6 +16,33 @@
     <p>Mark your gym attendance and track your consistency</p>
   </div>
 
+  <!-- My Attendance Summary Cards -->
+  <div class="stats-overview">
+    <div class="stat-box">
+      <span class="stat-icon">🔥</span>
+      <div>
+        <h4>Visits This Month</h4>
+        <p class="stat-number">{{ visitsThisMonth }} Days</p>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <span class="stat-icon">🕒</span>
+      <div>
+        <h4>Last Check-In</h4>
+        <p class="stat-number">{{ lastCheckInDate ? (lastCheckInDate | date:'mediumDate') : 'None' }}</p>
+      </div>
+    </div>
+
+    <div class="stat-box" [class.stat-warning]="daysLeft <= 5">
+      <span class="stat-icon">⏳</span>
+      <div>
+        <h4>Remaining Days</h4>
+        <p class="stat-number" [class.text-expired]="isExpired">{{ isExpired ? 'Expired' : (daysLeft + ' Days') }}</p>
+      </div>
+    </div>
+  </div>
+
   <div class="alert alert-success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
@@ -28,10 +55,10 @@
   <div class="today-card">
     <div class="today-info">
       <h2>Today's <span>Session</span></h2>
-      <p class="today-date">{{ todayRecord ? (todayRecord.date | date:'fullDate') : 'Ready to work out today?' }}</p>
+      <p class="today-date">{{ todayRecord ? (getDate(todayRecord) | date:'fullDate') : 'Ready to work out today?' }}</p>
       <div class="today-status" *ngIf="todayRecord">
-        <span>Check-In: <strong>{{ todayRecord.checkIn }}</strong></span>
-        <span>Check-Out: <strong>{{ todayRecord.checkOut || 'In Progress' }}</strong></span>
+        <span>Check-In: <strong>{{ getCheckIn(todayRecord) }}</strong></span>
+        <span>Check-Out: <strong>{{ getCheckOut(todayRecord) || 'In Progress' }}</strong></span>
       </div>
     </div>
 
@@ -46,7 +73,7 @@
       </button>
 
       <button
-        *ngIf="todayRecord && !todayRecord.checkOut"
+        *ngIf="todayRecord && !getCheckOut(todayRecord)"
         (click)="checkOut()"
         class="btn-attend btn-out"
         [disabled]="actionLoading"
@@ -54,7 +81,7 @@
         {{ actionLoading ? 'Processing...' : '🏁 Check Out' }}
       </button>
 
-      <div class="completed-badge" *ngIf="todayRecord && todayRecord.checkOut">
+      <div class="completed-badge" *ngIf="todayRecord && getCheckOut(todayRecord)">
         ✓ Today's workout completed
       </div>
     </div>
@@ -74,12 +101,12 @@
       </thead>
       <tbody>
         <tr *ngFor="let record of attendanceList">
-          <td>{{ record.date | date:'mediumDate' }}</td>
-          <td class="time-in">{{ record.checkIn }}</td>
-          <td class="time-out">{{ record.checkOut || 'Working Out' }}</td>
+          <td>{{ getDate(record) | date:'mediumDate' }}</td>
+          <td class="time-in">{{ getCheckIn(record) }}</td>
+          <td class="time-out">{{ getCheckOut(record) || 'Working Out' }}</td>
           <td>
-            <span class="status-badge" [class.badge-active]="!record.checkOut" [class.badge-completed]="!!record.checkOut">
-              {{ record.checkOut ? 'Completed' : 'Active' }}
+            <span class="status-badge" [class.badge-active]="!getCheckOut(record)" [class.badge-completed]="!!getCheckOut(record)">
+              {{ getCheckOut(record) ? 'Completed' : 'Active' }}
             </span>
           </td>
         </tr>

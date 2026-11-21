@@ -71,6 +71,52 @@
   color: #888888;
 }
 
+/* My Attendance Stats Overview */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 2rem;
+}
+
+.stat-box {
+  background: #141414;
+  border: 1px solid #222;
+  border-left: 4px solid #ff4500;
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-box.stat-warning {
+  border-left-color: #ff9100;
+}
+
+.stat-box .stat-icon {
+  font-size: 28px;
+}
+
+.stat-box h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 4px;
+}
+
+.stat-number {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.stat-number.text-expired {
+  color: #ff5252;
+}
+
 .today-card {
   background-color: #1a1a1a;
   border: 1px solid #2a2a2a;

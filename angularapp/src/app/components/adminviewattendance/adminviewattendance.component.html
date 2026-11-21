@@ -1,60 +1,154 @@
 <div class="view-page-container">
   <div class="view-header">
     <div>
-      <h1>Attendance <span>Logs</span></h1>
-      <p>Real-time check-in and check-out logs for all gym members</p>
+      <h1>Attendance <span>Dashboard & Logs</span></h1>
+      <p>Real-time biometric and manual check-in tracking for all members and trainers</p>
     </div>
+    <button class="btn-manual-checkin" (click)="openManualModal()">
+      + Manual Check-In
+    </button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
   </div>
 
   <div class="alert alert-error" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
 
-  <div class="toolbar">
-    <div class="date-filter">
-      <label for="dateFilter">Filter by Date:</label>
-      <input
-        type="date"
-        id="dateFilter"
-        [(ngModel)]="selectedDate"
-        (change)="filterByDate()"
-        class="date-input"
-      />
-      <button *ngIf="selectedDate" (click)="resetFilter()" class="btn-clear">Clear Filter</button>
+  <!-- Summary Cards -->
+  <div class="summary-cards-grid">
+    <div class="summary-card">
+      <div class="card-icon">👥</div>
+      <div class="card-info">
+        <h3>Total Check-Ins Today</h3>
+        <p class="card-value">{{ totalToday }}</p>
+      </div>
+    </div>
+
+    <div class="summary-card card-members">
+      <div class="card-icon">⚡</div>
+      <div class="card-info">
+        <h3>Members Present Today</h3>
+        <p class="card-value">{{ membersPresentToday }}</p>
+      </div>
+    </div>
+
+    <div class="summary-card card-trainers">
+      <div class="card-icon">🥊</div>
+      <div class="card-info">
+        <h3>Trainers Present Today</h3>
+        <p class="card-value">{{ trainersPresentToday }}</p>
+      </div>
     </div>
   </div>
 
+  <!-- Filter Toolbar -->
+  <div class="toolbar-card">
+    <div class="filter-group">
+      <label>From Date:</label>
+      <input type="date" [(ngModel)]="fromDate" (change)="onFilterChange()" class="filter-input">
+    </div>
+
+    <div class="filter-group">
+      <label>To Date:</label>
+      <input type="date" [(ngModel)]="toDate" (change)="onFilterChange()" class="filter-input">
+    </div>
+
+    <div class="filter-group">
+      <label>Role:</label>
+      <select [(ngModel)]="selectedRole" (change)="onFilterChange()" class="filter-select">
+        <option value="ALL">All Roles</option>
+        <option value="MEMBER">Members Only</option>
+        <option value="TRAINER">Trainers Only</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-group">
+      <label>Search Name:</label>
+      <input type="text" [(ngModel)]="searchName" (input)="onFilterChange()" placeholder="Search by name..." class="filter-input">
+    </div>
+
+    <button class="btn-clear" (click)="resetFilters()" title="Reset Filters">
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Attendance Table -->
   <div class="table-card">
     <table class="data-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Member Name</th>
-          <th>Email</th>
+          <th>Name</th>
+          <th>Role</th>
           <th>Date</th>
           <th>Check-In Time</th>
-          <th>Check-Out Time</th>
+          <th>Method</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let record of filteredRecords">
-          <td>{{ record.id }}</td>
-          <td class="font-bold">{{ record.member?.user?.name }}</td>
-          <td>{{ record.member?.user?.email }}</td>
-          <td>{{ record.date | date:'mediumDate' }}</td>
-          <td class="time-in">{{ record.checkIn }}</td>
-          <td class="time-out">{{ record.checkOut || 'Active In-Gym' }}</td>
+        <tr *ngFor="let record of records">
+          <td class="font-bold">
+            <div>{{ record.name }}</div>
+            <div class="sub-text">{{ record.email || record.phone }}</div>
+          </td>
           <td>
-            <span class="status-badge" [class.badge-active]="!record.checkOut" [class.badge-completed]="!!record.checkOut">
-              {{ record.checkOut ? 'Completed' : 'Working Out' }}
+            <span class="role-badge" [class.badge-member]="record.role === 'MEMBER'" [class.badge-trainer]="record.role === 'TRAINER'">
+              {{ record.role }}
+            </span>
+          </td>
+          <td>{{ record.checkInTime | date:'mediumDate' }}</td>
+          <td class="time-in">{{ record.checkInTime | date:'shortTime' }}</td>
+          <td>
+            <span class="method-badge">FACE</span>
+          </td>
+          <td>
+            <span class="status-badge status-present">
+              ✓ Present
             </span>
           </td>
         </tr>
-        <tr *ngIf="filteredRecords.length === 0 && !loading">
-          <td colspan="7" class="no-data">No attendance records found for this date.</td>
+        <tr *ngIf="records.length === 0 && !loading">
+          <td colspan="6" class="no-data">No attendance records found matching criteria.</td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Manual Check-In Modal -->
+  <div class="modal-overlay" *ngIf="showManualModal" (click)="closeManualModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Manual <span>Check-In</span></h3>
+        <button class="btn-close" (click)="closeManualModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">Manually record gym check-in for a member or trainer without camera scanning.</p>
+
+        <div class="form-group">
+          <label>Select User:</label>
+          <select [(ngModel)]="selectedManualUserId" class="form-select">
+            <option [ngValue]="null">-- Choose Member or Trainer --</option>
+            <option *ngFor="let u of availableUsers" [ngValue]="u.id">
+              {{ u.name }} ({{ u.role }}) - {{ u.email }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeManualModal()" [disabled]="manualLoading">Cancel</button>
+        <button 
+          class="btn-confirm" 
+          (click)="submitManualCheckin()" 
+          [disabled]="!selectedManualUserId || manualLoading"
+        >
+          {{ manualLoading ? 'Recording...' : 'Mark Present' }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

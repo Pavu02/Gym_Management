@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AttendanceService } from '../../services/attendance.service';
 import { MemberService } from '../../services/member.service';
-import { Attendance } from '../../models/attendance.model';
+import { Attendance, getAttendanceDate, getCheckInTime, getCheckOutTime } from '../../models/attendance.model';
 
 @Component({
   selector: 'app-memberattendance',
@@ -18,6 +18,16 @@ export class MemberattendanceComponent implements OnInit {
   successMessage: string = '';
   isExpired: boolean = false;
 
+  // Monthly stats
+  visitsThisMonth: number = 0;
+  lastCheckInDate: string = '';
+  daysLeft: number = 0;
+
+  // Helper methods exposed to template
+  getDate = getAttendanceDate;
+  getCheckIn = getCheckInTime;
+  getCheckOut = getCheckOutTime;
+
   constructor(
     private attendanceService: AttendanceService,
     private memberService: MemberService,
@@ -32,6 +42,7 @@ export class MemberattendanceComponent implements OnInit {
   checkMembershipStatus(): void {
     this.memberService.getMyProfile().subscribe({
       next: (profile) => {
+        this.daysLeft = profile.daysLeft ?? 0;
         if (profile.status === 'EXPIRED' || (profile.daysLeft !== undefined && profile.daysLeft <= 0)) {
           this.isExpired = true;
         }
@@ -48,6 +59,7 @@ export class MemberattendanceComponent implements OnInit {
     this.attendanceService.getMyAttendance().subscribe({
       next: (data) => {
         this.attendanceList = data;
+        this.computeStats();
         this.checkTodayStatus();
         this.loading = false;
       },
@@ -58,9 +70,28 @@ export class MemberattendanceComponent implements OnInit {
     });
   }
 
+  computeStats(): void {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    this.visitsThisMonth = this.attendanceList.filter(a => {
+      const dStr = getAttendanceDate(a);
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }).length;
+
+    if (this.attendanceList.length > 0) {
+      const sorted = [...this.attendanceList].sort((a, b) =>
+        (getAttendanceDate(b) || '').localeCompare(getAttendanceDate(a) || '')
+      );
+      this.lastCheckInDate = getAttendanceDate(sorted[0]);
+    }
+  }
+
   checkTodayStatus(): void {
     const today = new Date().toISOString().split('T')[0];
-    const match = this.attendanceList.find(a => a.date === today);
+    const match = this.attendanceList.find(a => getAttendanceDate(a) === today);
     this.todayRecord = match || null;
   }
 

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap');
 
 /* ==========================================================================
-   HOMEPAGE STYLES - PIXEL-PERFECT RECREATION OF ALL SCREENSHOTS
+   HOMEPAGE STYLES - PIXEL-PERFECT RECREATION OF BEASTX DESIGN SYSTEM
    ========================================================================== */
 
 :host {
@@ -19,7 +19,7 @@
 .section-inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
   width: 100%;
 }
 
@@ -43,9 +43,9 @@
 
 .section-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(44px, 5.5vw, 76px);
+  font-size: clamp(48px, 6vw, 84px);
   color: #111111;
-  line-height: 0.98;
+  line-height: 0.96;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   font-weight: 400;
@@ -62,10 +62,13 @@
   margin-bottom: 14px;
 }
 
+.dash-mark {
+  color: #FF5A00;
+  margin-right: 4px;
+}
+
 .pill-tag {
   position: absolute;
-  top: 20px;
-  left: 20px;
   background-color: #FFFFFF;
   color: #111111;
   font-family: 'Rajdhani', sans-serif;
@@ -73,14 +76,19 @@
   font-size: 0.8125rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 8px 18px;
+  padding: 8px 20px;
   border-radius: 9999px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   z-index: 2;
 }
 
+.pill-tag-left {
+  top: 20px;
+  left: 20px;
+}
+
 .pill-tag-right {
-  left: auto;
+  top: 20px;
   right: 20px;
 }
 
@@ -155,7 +163,7 @@
   max-width: 1500px;
   width: 100%;
   margin: 0 auto;
-  padding: 40px 24px 80px;
+  padding: 40px 32px 80px;
   position: relative;
   min-height: calc(100vh - 80px);
   display: flex;
@@ -166,12 +174,12 @@
 .hero-text-wrap {
   position: relative;
   z-index: 5;
-  max-width: 700px;
+  max-width: 720px;
 }
 
 .hero-heading {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(80px, 11vw, 150px);
+  font-size: clamp(84px, 11vw, 154px);
   line-height: 0.88;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -189,7 +197,7 @@
   right: 6%;
   bottom: 0;
   height: 94%;
-  max-width: 620px;
+  max-width: 640px;
   z-index: 3;
   display: flex;
   align-items: flex-end;
@@ -199,7 +207,7 @@
 .hero-athlete-img {
   width: 100%;
   height: 100%;
-  max-height: 720px;
+  max-height: 740px;
   object-fit: contain;
   object-position: bottom right;
 }
@@ -221,26 +229,33 @@
 
 
 /* ==========================================================================
-   2. ABOUT SECTION (Screenshot 2: media_1795197816687_8c9b0467.jpg)
+   2. ABOUT SECTION - BENTO GRID (Screenshot 2: media_1795197816687_8c9b0467.jpg)
    ========================================================================== */
 .about-section {
-  padding: 110px 0;
+  padding: 100px 0;
   background-color: #FFFFFF;
 }
 
-.about-top-grid {
+.about-bento-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 48px;
-  align-items: center;
-  margin-bottom: 48px;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-items: stretch;
 }
 
+.about-col-left,
+.about-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* Equipment Image Card */
 .equipment-card {
   position: relative;
   width: 100%;
-  height: 320px;
-  background-color: #F4F4F4;
+  height: 280px;
+  background-color: #111111;
   overflow: hidden;
 }
 
@@ -248,62 +263,71 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
-.about-heading-box {
-  padding-left: 20px;
+.equipment-card:hover .card-img {
+  transform: scale(1.03);
 }
 
-.about-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  gap: 48px;
-  align-items: start;
-}
-
+/* About Copy Box */
 .about-copy-box {
-  padding-right: 30px;
+  padding: 10px 0;
 }
 
 .about-paragraph {
   font-size: 1.125rem;
   line-height: 1.7;
   color: #5F6B70;
-  margin-top: 10px;
+  margin: 0;
 }
 
-.about-features-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+/* About Icon Card (Clipboard) */
+.about-icon-card {
+  background-color: #F8F8F8;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  border: 1px solid #EFEFEF;
 }
 
+/* Heading Box in Right Column */
+.about-heading-box {
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+}
+
+/* Flexible Memberships Feature Box */
 .feature-box {
-  background-color: #F4F4F4;
-  padding: 40px 32px;
+  background-color: #F8F8F8;
+  padding: 36px 36px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 220px;
+  min-height: 190px;
+  border: 1px solid #EFEFEF;
 }
 
 .feature-icon-badge {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .feature-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.875rem;
+  font-size: 2.125rem;
   color: #111111;
   margin: 0;
   letter-spacing: 0.5px;
   line-height: 1;
 }
 
+/* Professional Trainers Image Card */
 .trainer-preview-card {
   position: relative;
-  height: 220px;
-  background-color: #F4F4F4;
+  height: 280px;
+  background-color: #111111;
   overflow: hidden;
 }
 
@@ -311,30 +335,35 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.trainer-preview-card:hover .card-img {
+  transform: scale(1.03);
 }
 
 
 /* ==========================================================================
-   3. MORE THAN A GYM & STATS (Screenshot: media_1795198253222_f52caa49.jpg)
+   3. MORE THAN A GYM & STATS (Screenshot 10: media_1795198253222_f52caa49.jpg)
    ========================================================================== */
 .transformation-section {
-  padding: 80px 0 0;
+  padding: 60px 0 0;
   background-color: #FFFFFF;
 }
 
 .curved-banner-wrap {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
 }
 
 .curved-banner-canvas {
   position: relative;
   width: 100%;
-  height: 480px;
+  height: 460px;
   overflow: hidden;
-  border-radius: 0 0 50% 50% / 0 0 90px 90px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 50% 50% / 0 0 80px 80px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
 }
 
 .curved-banner-img {
@@ -346,31 +375,31 @@
 .curved-banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 50px;
+  padding-bottom: 40px;
 }
 
 .curved-overlay-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(48px, 6vw, 84px);
+  font-size: clamp(52px, 6.5vw, 88px);
   color: #FFFFFF;
   letter-spacing: 1px;
   margin: 0;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .transform-copy-wrap {
-  padding: 50px 24px 70px;
+  padding: 44px 32px 54px;
   max-width: 960px;
 }
 
 .outline-transformation-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(44px, 5.5vw, 78px);
-  -webkit-text-stroke: 2px #FF5A00;
+  font-size: clamp(48px, 6vw, 84px);
+  -webkit-text-stroke: 1.5px #FF5A00;
   color: transparent;
   letter-spacing: 1px;
   margin: 0 0 16px;
@@ -384,11 +413,17 @@
   margin: 0 auto;
 }
 
-/* Stats Strip */
+/* Solid Orange Full-Width Divider */
+.orange-full-divider {
+  width: 100%;
+  height: 6px;
+  background-color: #FF5A00;
+}
+
+/* Stats Strip (Black Background) */
 .stats-strip {
   width: 100%;
-  background-color: #111111;
-  border-top: 6px solid #FF5A00;
+  background-color: #0F0F0F;
   padding: 54px 0;
 }
 
@@ -405,7 +440,7 @@
 
 .stat-number {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(54px, 6vw, 84px);
+  font-size: clamp(58px, 6.5vw, 88px);
   color: #FFFFFF;
   line-height: 0.95;
   letter-spacing: 1px;
@@ -423,23 +458,98 @@
 
 .stat-divider {
   width: 1px;
-  height: 60px;
-  background-color: #2D3748;
+  height: 64px;
+  background-color: #262626;
 }
 
 
 /* ==========================================================================
-   4. PROGRAMS HERO FEATURE (Screenshot: media_1795198253231_9ace8506.jpg)
+   4. FITNESS PROGRAMS DESIGNED AROUND YOUR GOALS (Screenshot 3: media_1795197823206_3f90f0b4.jpg)
+   ========================================================================== */
+.programs-section {
+  padding: 100px 0;
+  background-color: #FFFFFF;
+}
+
+.programs-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  gap: 24px;
+}
+
+.programs-2x2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.program-text-card {
+  background-color: #F8F8F8;
+  padding: 48px 40px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #EFEFEF;
+}
+
+.program-card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.25rem;
+  color: #111111;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.program-card-desc {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #5F6B70;
+  margin: 0;
+}
+
+.program-image-card {
+  height: 320px;
+  overflow: hidden;
+  background-color: #111111;
+}
+
+.program-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.program-image-card:hover .program-img {
+  transform: scale(1.04);
+}
+
+.program-stretching-card {
+  background-color: #F8F8F8;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  padding: 0 48px;
+  border: 1px solid #EFEFEF;
+}
+
+
+/* ==========================================================================
+   5. PROGRAMS BUILT FOR EVERY GOAL (Screenshot 8: media_1795198253231_9ace8506.jpg)
    ========================================================================== */
 .programs-feature-section {
-  padding: 110px 0;
+  padding: 90px 0 110px;
   background-color: #FFFFFF;
 }
 
 .programs-feature-subtitle {
   font-size: 1.125rem;
   color: #5F6B70;
-  max-width: 720px;
+  max-width: 740px;
   margin: 16px auto 0;
   line-height: 1.6;
 }
@@ -453,7 +563,7 @@
 }
 
 .program-split-left {
-  height: 520px;
+  min-height: 520px;
   background-color: #111111;
 }
 
@@ -489,15 +599,16 @@
 .numbered-feature-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 28px;
+  gap: 16px 24px;
 }
 
 .num-feature-item {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid #F0F0F0;
+  padding: 14px 18px;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
 }
 
 .num-idx {
@@ -509,161 +620,17 @@
 
 .num-text {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #111111;
 }
 
 
 /* ==========================================================================
-   5. A DECADE OF MILESTONES (Screenshot: media_1795198253099_74fda8a1.png)
-   ========================================================================== */
-.milestones-section {
-  padding: 110px 0;
-  background-color: #FFFFFF;
-}
-
-.timeline-container {
-  max-width: 900px;
-  margin: 70px auto 0;
-  position: relative;
-  padding: 20px 0;
-}
-
-.timeline-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background-color: #E6E6E6;
-  transform: translateX(-50%);
-}
-
-.timeline-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 70px;
-  position: relative;
-}
-
-.timeline-left,
-.timeline-right {
-  flex: 1;
-  padding: 0 40px;
-}
-
-.timeline-left {
-  text-align: right;
-}
-
-.timeline-center {
-  position: relative;
-  z-index: 2;
-  width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.timeline-marker {
-  width: 8px;
-  height: 8px;
-  background-color: #FF5A00;
-  position: absolute;
-  transform: translateX(-50%);
-}
-
-.milestone-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2rem;
-  color: #111111;
-  letter-spacing: 0.5px;
-  margin: 0;
-}
-
-.milestone-year {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 4rem;
-  color: #FFC9A8;
-  line-height: 1;
-}
-
-
-/* ==========================================================================
-   6. PROGRAMS OVERVIEW (Screenshot 3: media_1795197823206_3f90f0b4.jpg)
-   ========================================================================== */
-.programs-section {
-  padding: 100px 0;
-  background-color: #FFFFFF;
-}
-
-.programs-header-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 48px;
-  gap: 24px;
-}
-
-.programs-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-}
-
-.program-text-card {
-  background-color: #F8F8F8;
-  padding: 48px 40px;
-  min-height: 340px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 1px solid #EAEAEA;
-}
-
-.program-card-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.25rem;
-  color: #111111;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
-  line-height: 1;
-}
-
-.program-card-desc {
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  color: #5F6B70;
-}
-
-.program-icon-wrap {
-  margin-top: 24px;
-}
-
-.program-image-card {
-  height: 340px;
-  overflow: hidden;
-  background-color: #111111;
-}
-
-.program-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.program-image-card:hover .program-img {
-  transform: scale(1.04);
-}
-
-
-/* ==========================================================================
-   7. TRAINERS SECTION (Screenshot 4: media_1795197843744_0fe7976e.jpg)
+   6. MEET OUR PROFESSIONAL TRAINERS (Screenshot 4: media_1795197843744_0fe7976e.jpg)
    ========================================================================== */
 .trainers-section {
-  padding: 110px 0;
+  padding: 100px 0;
   background-color: #FFFFFF;
 }
 
@@ -686,7 +653,7 @@
 }
 
 .spec-item {
-  border-left: 4px solid #FF5A00;
+  border-left: 5px solid #FF5A00;
   background: linear-gradient(to right, #F5F5F5, #FFFFFF);
   padding: 18px 24px;
   cursor: pointer;
@@ -695,7 +662,7 @@
 
 .spec-item:hover,
 .spec-item.active {
-  background: linear-gradient(to right, #FFF3EB, #FFFFFF);
+  background: linear-gradient(to right, #FFF2EA, #FFFFFF);
   transform: translateX(4px);
 }
 
@@ -735,11 +702,11 @@
 
 
 /* ==========================================================================
-   8. PRICING SECTION (Screenshot 5: media_1795197848752_e36f5e37.jpg)
+   7. CHOOSE THE PERFECT MEMBERSHIP PLAN (Screenshot 5: media_1795197848752_e36f5e37.jpg)
    ========================================================================== */
 .pricing-section {
   position: relative;
-  padding: 120px 0 140px;
+  padding: 110px 0 130px;
   background-color: #FFFFFF;
   overflow: hidden;
 }
@@ -748,7 +715,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 60%;
+  width: 55%;
   height: 100%;
   pointer-events: none;
   z-index: 1;
@@ -763,13 +730,13 @@
   background-image: url('https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1200&auto=format&fit=crop');
   background-size: cover;
   background-position: center right;
-  opacity: 0.65;
+  opacity: 0.7;
 }
 
 .pricing-gradient-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, #FFFFFF 0%, #FFFFFF 30%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(to right, #FFFFFF 0%, #FFFFFF 35%, rgba(255, 255, 255, 0.45) 100%);
 }
 
 .pricing-content-wrap {
@@ -936,16 +903,91 @@
 
 
 /* ==========================================================================
-   9. FAQ SECTION (Screenshot: media_1795198253216_44838b23.jpg)
+   8. A DECADE OF MILESTONES (Screenshot 6: media_1795198253099_74fda8a1.png)
+   ========================================================================== */
+.milestones-section {
+  padding: 100px 0;
+  background-color: #FFFFFF;
+}
+
+.timeline-container {
+  max-width: 900px;
+  margin: 70px auto 0;
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: #E6E6E6;
+  transform: translateX(-50%);
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 70px;
+  position: relative;
+}
+
+.timeline-left,
+.timeline-right {
+  flex: 1;
+  padding: 0 40px;
+}
+
+.timeline-left {
+  text-align: right;
+}
+
+.timeline-center {
+  position: relative;
+  z-index: 2;
+  width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-marker {
+  width: 8px;
+  height: 8px;
+  background-color: #FF5A00;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.milestone-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: #111111;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.milestone-year {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4.5rem;
+  color: #FFC8A8;
+  line-height: 1;
+}
+
+
+/* ==========================================================================
+   9. GOT QUESTIONS? WE'VE GOT ANSWERS (Screenshot 7: media_1795198253216_44838b23.jpg)
    ========================================================================== */
 .faq-section {
-  padding: 110px 0;
+  padding: 100px 0;
   background-color: #FFFFFF;
 }
 
 .faq-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 1.15fr 1fr;
   gap: 60px;
   align-items: start;
 }
@@ -958,14 +1000,21 @@
 
 .faq-box {
   border: 1px solid #E6E6E6;
-  padding: 20px 24px;
+  padding: 22px 26px;
   cursor: pointer;
   background-color: #FFFFFF;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .faq-box:hover {
   border-color: #FF5A00;
+}
+
+.faq-box.open {
+  border-color: #FF5A00;
+  background-image: radial-gradient(circle at 10% 20%, rgba(255, 90, 0, 0.03) 0%, transparent 60%),
+                    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.015) 0px, rgba(0, 0, 0, 0.015) 2px, transparent 2px, transparent 10px);
 }
 
 .faq-question-row {
@@ -1023,10 +1072,10 @@
 
 
 /* ==========================================================================
-   10. FOOTER & CTA (Screenshot: media_1795198253229_2e4f502e.jpg)
+   10. FOOTER & CTA (Screenshot 9: media_1795198253229_2e4f502e.jpg)
    ========================================================================== */
 .site-footer {
-  background-color: #111111;
+  background-color: #0F0F0F;
   color: #FFFFFF;
   padding: 60px 0 40px;
   position: relative;
@@ -1037,7 +1086,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 0 24px 40px;
+  padding: 0 32px 30px;
   max-width: 1440px;
   margin: 0 auto;
 }
@@ -1054,8 +1103,8 @@
 }
 
 .cta-diagonal-accent {
-  width: 40px;
-  height: 4px;
+  width: 44px;
+  height: 5px;
   background-color: #FF5A00;
   transform: rotate(-45deg);
 }
@@ -1063,19 +1112,17 @@
 .footer-marquee-wrap {
   overflow: hidden;
   white-space: nowrap;
-  border-top: 1px solid #1F2937;
-  border-bottom: 1px solid #1F2937;
-  padding: 16px 0;
-  margin-bottom: 60px;
+  padding: 12px 0;
+  margin-bottom: 50px;
 }
 
 .footer-marquee-track {
   display: inline-block;
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(48px, 6vw, 76px);
-  color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.06);
   letter-spacing: 2px;
-  animation: marquee 25s linear infinite;
+  animation: marquee 30s linear infinite;
 }
 
 .footer-marquee-track span {
@@ -1101,10 +1148,13 @@
   letter-spacing: 2px;
   color: #FFFFFF;
   margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-logo .logo-x {
   color: #FF5A00;
+  margin-left: 2px;
 }
 
 .footer-description {
@@ -1130,6 +1180,7 @@
   justify-content: center;
   color: #9CA3AF;
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 
 .social-link:hover {
@@ -1185,20 +1236,32 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  opacity: 0.7;
+  opacity: 0.8;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.icon-ill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.icon-ill:hover {
+  transform: translateY(-4px);
 }
 
 
 /* ==========================================================================
-   RESPONSIVE DESIGN (320px, 768px, 1280px+)
+   RESPONSIVE DESIGN (320px, 768px, 1024px, 1280px+)
    ========================================================================== */
 @media (max-width: 1024px) {
   .hero-athlete-wrap {
     opacity: 0.45;
     right: 0;
   }
-  .about-top-grid,
-  .about-bottom-grid {
+  .about-bento-grid {
     grid-template-columns: 1fr;
     gap: 32px;
   }
@@ -1206,7 +1269,7 @@
     grid-template-columns: 1fr;
   }
   .program-split-left {
-    height: 360px;
+    min-height: 360px;
   }
   .pricing-cards-grid {
     grid-template-columns: 1fr;
@@ -1240,14 +1303,11 @@
   .hero-heading {
     font-size: 64px;
   }
-  .about-features-col {
-    grid-template-columns: 1fr;
-  }
   .programs-header-row {
     flex-direction: column;
     align-items: flex-start;
   }
-  .programs-grid {
+  .programs-2x2-grid {
     grid-template-columns: 1fr;
   }
   .timeline-line {
@@ -1270,7 +1330,7 @@
     top: 10px;
   }
   .milestone-year {
-    font-size: 2.75rem;
+    font-size: 3rem;
   }
   .pricing-section {
     padding: 80px 0;

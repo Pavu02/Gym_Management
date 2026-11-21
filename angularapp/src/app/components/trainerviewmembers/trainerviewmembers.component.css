@@ -20,6 +20,138 @@
   color: #888888;
 }
 
+/* Trainer Attendance Card */
+.attendance-card {
+  background: #141414;
+  border: 1px solid #282828;
+  border-left: 4px solid #ff4500;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.attendance-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-text h3 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.header-text h3 span {
+  color: #ff4500;
+}
+
+.header-text p {
+  color: #888;
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.stats-pills {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pill-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #888;
+  font-weight: 700;
+}
+
+.pill-val {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  color: #00e676;
+}
+
+.attendance-mini-table {
+  overflow-x: auto;
+}
+
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.mini-table th {
+  background: #0d0d0d;
+  color: #888;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #222;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.mini-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #1f1f1f;
+  color: #ccc;
+}
+
+.font-mono {
+  font-family: monospace;
+}
+
+.badge-method {
+  background: #222;
+  color: #ff9100;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-present {
+  color: #00e676;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.no-records-note {
+  color: #777;
+  font-style: italic;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.section-title {
+  margin-bottom: 16px;
+}
+
+.section-title h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  color: #fff;
+  margin: 0;
+}
+
+.section-title h2 span {
+  color: #ff4500;
+}
+
 .table-card {
   background-color: #1a1a1a;
   border: 1px solid #2a2a2a;
@@ -40,25 +172,44 @@
 }
 
 .data-table th {
-  background-color: #222222;
-  color: #a0a0a0;
-  font-weight: 600;
+  background-color: #141414;
+  color: #aaaaaa;
   font-size: 0.85rem;
   text-transform: uppercase;
-}
-
-.data-table tbody tr:hover {
-  background-color: #202020;
+  letter-spacing: 0.05em;
 }
 
 .font-bold {
   font-weight: 600;
-  color: #ffffff;
+}
+
+.member-sub {
+  font-size: 0.8rem;
+  color: #888888;
+  font-weight: normal;
+  margin-top: 0.2rem;
+}
+
+.badge-goal,
+.badge-bmi {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background-color: #262626;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #dddddd;
+}
+
+.medical-cell {
+  max-width: 200px;
+  color: #aaaaaa;
+  font-size: 0.85rem;
 }
 
 .status-badge {
-  padding: 0.3rem 0.7rem;
-  border-radius: 20px;
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -66,64 +217,32 @@
 .status-active {
   background-color: rgba(76, 175, 80, 0.2);
   color: #81c784;
-  border: 1px solid #4caf50;
-}
-
-.status-expired {
-  background-color: rgba(239, 83, 80, 0.2);
-  color: #e57373;
-  border: 1px solid #ef5350;
 }
 
 .status-pending {
-  background-color: rgba(255, 167, 38, 0.2);
-  color: #ffa726;
-  border: 1px solid #ffa726;
+  background-color: rgba(255, 152, 0, 0.2);
+  color: #ffb74d;
 }
 
-.member-sub {
-  color: #888888;
-  font-size: 0.8rem;
-  font-weight: normal;
-  margin-top: 2px;
-}
-
-.badge-goal {
-  background-color: rgba(255, 107, 0, 0.15);
-  color: #ff8533;
-  padding: 0.25rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.badge-bmi {
-  background-color: #262626;
-  border: 1px solid #3d3d3d;
-  color: #ffffff;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.medical-cell {
-  color: #aaaaaa;
-  font-size: 0.85rem;
-  max-width: 250px;
+.status-expired {
+  background-color: rgba(229, 57, 53, 0.2);
+  color: #e57373;
 }
 
 .no-data {
   text-align: center;
-  padding: 2.5rem;
-  color: #888888;
+  color: #777777;
+  padding: 3rem;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
 }
 
 .alert-error {
-  background-color: rgba(211, 47, 47, 0.2);
-  border: 1px solid #d32f2f;
-  color: #ef5350;
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 1.5rem;
+  background-color: rgba(229, 57, 53, 0.2);
+  border: 1px solid #e53935;
+  color: #ff8a80;
 }

@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MemberService } from '../../services/member.service';
 import { MemberResponse } from '../../models/member.model';
+import { PasskeyService, WebAuthnDevice } from '../../services/passkey.service';
+import { BiometricService, BiometricStatusResponse } from '../../services/biometric.service';
 
 @Component({
   selector: 'app-memberprofile',
@@ -18,6 +20,15 @@ export class MemberprofileComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
 
+  // Passkey & Biometrics
+  webAuthnSupported: boolean = false;
+  passkeyDevices: WebAuthnDevice[] = [];
+  biometricStatus: BiometricStatusResponse | null = null;
+  registeringPasskey: boolean = false;
+  passkeyMessage: string = '';
+  passkeyError: string = '';
+  showFaceEnrollModal: boolean = false;
+
   editForm!: FormGroup;
 
   fitnessGoals = [
@@ -29,13 +40,17 @@ export class MemberprofileComponent implements OnInit {
 
   constructor(
     private memberService: MemberService,
+    private passkeyService: PasskeyService,
+    private biometricService: BiometricService,
     private fb: FormBuilder,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.webAuthnSupported = this.passkeyService.isWebAuthnSupported();
     this.initForm();
     this.loadProfile();
+    this.loadBiometricsAndPasskeys();
   }
 
   initForm(): void {
@@ -66,6 +81,71 @@ export class MemberprofileComponent implements OnInit {
       error: (err) => {
         this.errorMessage = err.error?.message || 'Failed to load member profile';
         this.loading = false;
+      }
+    });
+  }
+
+  loadBiometricsAndPasskeys(): void {
+    this.biometricService.getBiometricStatus().subscribe({
+      next: (status) => {
+        this.biometricStatus = status;
+      },
+      error: () => {}
+    });
+
+    if (this.webAuthnSupported) {
+      this.passkeyService.getDevices().subscribe({
+        next: (devices) => {
+          this.passkeyDevices = devices;
+        },
+        error: () => {}
+      });
+    }
+  }
+
+  async addPasskey(): Promise<void> {
+    this.registeringPasskey = true;
+    this.passkeyMessage = '';
+    this.passkeyError = '';
+
+    try {
+      const deviceName = prompt('Enter a name for this biometric passkey (e.g. My iPhone, Pixel 8):') || 'My Biometric Device';
+      const created = await this.passkeyService.registerPasskey(deviceName);
+      this.passkeyMessage = 'Fingerprint passkey registered successfully on ' + created.deviceName + '!';
+      this.registeringPasskey = false;
+      this.loadBiometricsAndPasskeys();
+    } catch (err: any) {
+      this.registeringPasskey = false;
+      this.passkeyError = err.error?.message || err.message || 'Passkey enrollment was cancelled or failed.';
+    }
+  }
+
+  openFaceEnroll(): void {
+    this.showFaceEnrollModal = true;
+  }
+
+  closeFaceEnroll(): void {
+    this.showFaceEnrollModal = false;
+  }
+
+  onFaceEnrolled(): void {
+    this.showFaceEnrollModal = false;
+    this.successMessage = 'Your face has been successfully registered for auto check-in!';
+    this.loadBiometricsAndPasskeys();
+  }
+
+  deletePasskey(credentialId: string): void {
+    if (!confirm('Are you sure you want to remove this passkey device?')) {
+      return;
+    }
+
+    this.passkeyService.deleteDevice(credentialId).subscribe({
+      next: () => {
+        this.passkeyMessage = 'Passkey removed successfully.';
+        this.loadBiometricsAndPasskeys();
+      },
+      error: (err) => {
+        this.passkeyError = err.error?.message || 'Failed to delete passkey device.';
       }
     });
   }

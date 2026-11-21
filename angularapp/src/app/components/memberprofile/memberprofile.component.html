@@ -133,6 +133,92 @@
           <span class="detail-value">{{ profile.emergencyContactPhone || 'Not provided' }}</span>
         </div>
       </div>
+
+      <!-- Biometric & Passkey Access Management Card -->
+      <div class="profile-divider"></div>
+      <div class="biometric-section">
+        <div class="section-title-row">
+          <div>
+            <h3 class="section-subtitle">BIOMETRIC & PASSKEY ACCESS</h3>
+            <p class="section-subtext">Manage your enrolled face template and biometric fingerprint passkeys</p>
+          </div>
+          <span class="device-pill">{{ passkeyDevices.length }} / 2 Devices</span>
+        </div>
+
+        <div class="alert alert-error" *ngIf="passkeyError">{{ passkeyError }}</div>
+        <div class="alert alert-success" *ngIf="passkeyMessage">{{ passkeyMessage }}</div>
+
+        <div class="biometric-grid">
+          <!-- Face Recognition Card -->
+          <div class="bio-card">
+            <div class="bio-header">
+              <span class="bio-icon">👤</span>
+              <div>
+                <h4>Face Print Check-in</h4>
+                <p>Kiosk facial recognition template</p>
+              </div>
+            </div>
+            <div class="bio-status-row">
+              <span class="status-indicator" [class.enrolled]="biometricStatus?.faceEnrolled">
+                {{ biometricStatus?.faceEnrolled ? 'Enrolled' : 'Not Enrolled' }}
+              </span>
+              <span class="enrolled-date" *ngIf="biometricStatus?.faceEnrolledAt">
+                {{ biometricStatus?.faceEnrolledAt | date:'mediumDate' }}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="btn-bracket btn-sm"
+              style="margin-top: 12px; width: 100%;"
+              (click)="openFaceEnroll()"
+            >
+              {{ biometricStatus?.faceEnrolled ? 'Re-enroll My Face 👤' : 'Register My Face 👤' }}
+            </button>
+          </div>
+
+          <!-- WebAuthn Fingerprint Card -->
+          <div class="bio-card" *ngIf="webAuthnSupported">
+            <div class="bio-header">
+              <span class="bio-icon">👆</span>
+              <div>
+                <h4>Fingerprint Passkey</h4>
+                <p>WebAuthn biometric check-in (Touch ID / Face ID)</p>
+              </div>
+            </div>
+
+            <div class="passkey-devices-list" *ngIf="passkeyDevices.length > 0">
+              <div class="device-row" *ngFor="let dev of passkeyDevices">
+                <div class="dev-info">
+                  <strong>{{ dev.deviceName }}</strong>
+                  <span class="dev-meta">Added: {{ dev.createdAt | date:'shortDate' }} | Checks: {{ dev.signCount }}</span>
+                </div>
+                <button type="button" class="btn-del-device" (click)="deletePasskey(dev.credentialId)" title="Remove device">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div class="passkey-empty" *ngIf="passkeyDevices.length === 0">
+              No fingerprint devices registered yet.
+            </div>
+
+            <button 
+              type="button" 
+              class="btn-bracket btn-sm" 
+              style="margin-top: 12px; width: 100%;"
+              (click)="addPasskey()" 
+              [disabled]="registeringPasskey || passkeyDevices.length >= 2"
+            >
+              {{ registeringPasskey ? 'Verifying Biometrics...' : (passkeyDevices.length >= 2 ? 'Device Limit Reached (2/2)' : 'Add Fingerprint Login ↗') }}
+            </button>
+          </div>
+        </div>
+
+        <div class="lan-help-note">
+          ℹ️ <strong>LAN Testing Note:</strong> WebAuthn passkeys require <code>localhost</code> or a valid <code>HTTPS</code> origin. To test biometric passkeys on a physical smartphone connected via local Wi-Fi, run an HTTPS tunnel (e.g. cloudflared or ngrok) mapped to port 8081.
+        </div>
+      </div>
     </div>
 
     <!-- Inline Edit Form -->
@@ -211,5 +297,15 @@
         </div>
       </form>
     </div>
+
+    <!-- Face Enrollment Modal Component -->
+    <app-face-enroll
+      *ngIf="showFaceEnrollModal && profile"
+      [userId]="profile.id"
+      [userName]="profile.name"
+      role="MEMBER"
+      (enrolled)="onFaceEnrolled()"
+      (close)="closeFaceEnroll()"
+    ></app-face-enroll>
   </div>
 </div>
