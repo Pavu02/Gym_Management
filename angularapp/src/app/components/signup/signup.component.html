@@ -1,104 +1,221 @@
 <div class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <h2>Create <span>Account</span></h2>
-      <p>Join GymPro today and start your journey</p>
-    </div>
+  <div class="auth-card" [class.wide-card]="currentStep === 'FACE_SCAN'">
 
-    <div class="alert alert-error" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
+    <!-- STEP 1: FORM -->
+    <ng-container *ngIf="currentStep === 'FORM'">
+      <div class="auth-header">
+        <div class="brand-sub">BEAST<span class="text-orange">X</span> PERFORMANCE</div>
+        <h2>CREATE <span class="text-orange">ACCOUNT</span></h2>
+        <p>Join BeastX today and begin your transformation</p>
+      </div>
 
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input
-          type="text"
-          id="name"
-          formControlName="name"
-          placeholder="Enter your full name"
-          [class.is-invalid]="signupForm.get('name')?.touched && signupForm.get('name')?.invalid"
-        />
-        <div class="error-text" *ngIf="signupForm.get('name')?.touched && signupForm.get('name')?.errors?.['required']">
-          Name is required
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="name">FULL NAME</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="ENTER YOUR FULL NAME"
+            class="form-input-line"
+            [class.is-invalid]="signupForm.get('name')?.touched && signupForm.get('name')?.invalid"
+          />
+          <div class="error-text" *ngIf="signupForm.get('name')?.touched && signupForm.get('name')?.errors?.['required']">
+            Name is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">EMAIL ADDRESS</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="ENTER YOUR EMAIL"
+            class="form-input-line"
+            [class.is-invalid]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid"
+          />
+          <div class="error-text" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.errors?.['required']">
+            Email is required
+          </div>
+          <div class="error-text" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.errors?.['email']">
+            Please enter a valid email address
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">PHONE NUMBER (10 DIGITS)</label>
+          <input
+            type="text"
+            id="phone"
+            formControlName="phone"
+            placeholder="ENTER 10-DIGIT PHONE"
+            class="form-input-line"
+            [class.is-invalid]="signupForm.get('phone')?.touched && signupForm.get('phone')?.invalid"
+          />
+          <div class="error-text" *ngIf="signupForm.get('phone')?.touched && signupForm.get('phone')?.errors?.['required']">
+            Phone number is required
+          </div>
+          <div class="error-text" *ngIf="signupForm.get('phone')?.touched && signupForm.get('phone')?.errors?.['pattern']">
+            Phone must be exactly 10 digits
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">PASSWORD</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="MIN 6 CHARACTERS"
+            class="form-input-line"
+            [class.is-invalid]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
+          />
+          <div class="error-text" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.errors?.['required']">
+            Password is required
+          </div>
+          <div class="error-text" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.errors?.['minlength']">
+            Password must be at least 6 characters
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">CONFIRM PASSWORD</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="RE-ENTER PASSWORD"
+            class="form-input-line"
+            [class.is-invalid]="(signupForm.get('confirmPassword')?.touched && signupForm.get('confirmPassword')?.invalid) || (signupForm.touched && signupForm.errors?.['passwordMismatch'])"
+          />
+          <div class="error-text" *ngIf="signupForm.get('confirmPassword')?.touched && signupForm.get('confirmPassword')?.errors?.['required']">
+            Confirm password is required
+          </div>
+          <div class="error-text" *ngIf="signupForm.touched && signupForm.errors?.['passwordMismatch']">
+            Passwords do not match
+          </div>
+        </div>
+
+        <button type="submit" class="btn-bracket" style="width: 100%; margin-top: 10px;" [disabled]="loading">
+          {{ loading ? 'CREATING ACCOUNT...' : 'PROCEED TO BIOMETRICS ↗' }}
+        </button>
+
+        <p class="auth-footer">
+          Already have an account? <a routerLink="/login" class="text-orange">Sign in here</a>
+        </p>
+      </form>
+    </ng-container>
+
+    <!-- STEP 2: FACE SCAN -->
+    <ng-container *ngIf="currentStep === 'FACE_SCAN'">
+      <div class="auth-header">
+        <div class="brand-sub">BIOMETRIC ENROLLMENT</div>
+        <h2>FACE <span class="text-orange">PRINT</span> SCAN</h2>
+        <p>Step 2 of 2: Enroll your face for seamless kiosk check-in</p>
+      </div>
+
+      <!-- Sample Progress Pills -->
+      <div class="samples-progress">
+        <div class="sample-dot" [class.active]="scanSamples.length >= 1">
+          <span>1</span> Sample 1
+        </div>
+        <div class="progress-line" [class.active]="scanSamples.length >= 1"></div>
+        <div class="sample-dot" [class.active]="scanSamples.length >= 2">
+          <span>2</span> Liveness
+        </div>
+        <div class="progress-line" [class.active]="scanSamples.length >= 2"></div>
+        <div class="sample-dot" [class.active]="scanSamples.length >= 3">
+          <span>3</span> Verified
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          placeholder="Enter your email"
-          [class.is-invalid]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid"
-        />
-        <div class="error-text" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.errors?.['required']">
-          Email is required
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="alert alert-warning" *ngIf="scanQualityWarning && !errorMessage">
+        {{ scanQualityWarning }}
+      </div>
+
+      <!-- Camera Viewport / Overlays -->
+      <div class="camera-wrapper">
+        <video #videoPlayer autoplay playsinline muted class="camera-video"></video>
+
+        <!-- Face Outline Overlay Guide -->
+        <div class="face-guide-overlay">
+          <svg viewBox="0 0 300 360" class="face-svg">
+            <ellipse cx="150" cy="170" rx="85" ry="115" class="guide-ellipse" />
+            <!-- Corner Brackets -->
+            <path d="M 40,60 L 40,40 L 60,40" class="corner-bracket" />
+            <path d="M 260,60 L 260,40 L 240,40" class="corner-bracket" />
+            <path d="M 40,300 L 40,320 L 60,320" class="corner-bracket" />
+            <path d="M 260,300 L 260,320 L 240,320" class="corner-bracket" />
+          </svg>
         </div>
-        <div class="error-text" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.errors?.['email']">
-          Please enter a valid email address
+
+        <div class="camera-banner" *ngIf="scanStatusMessage">
+          {{ scanStatusMessage }}
+        </div>
+
+        <!-- Camera Loading or Error Overlay -->
+        <div class="camera-backdrop" *ngIf="cameraLoading || cameraDenied || noCamera">
+          <div *ngIf="cameraLoading" class="loader-box">
+            <div class="spinner"></div>
+            <p>Initializing camera and neural models...</p>
+          </div>
+
+          <div *ngIf="cameraDenied" class="error-box">
+            <span class="error-icon">⚠️</span>
+            <h4>Camera Permission Denied</h4>
+            <p>{{ cameraError }}</p>
+            <button type="button" class="btn-bracket btn-sm" (click)="retryCamera()">Retry Camera</button>
+          </div>
+
+          <div *ngIf="noCamera" class="error-box">
+            <span class="error-icon">📷</span>
+            <h4>No Camera Found</h4>
+            <p>{{ cameraError }}</p>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="phone">Phone Number (10 digits)</label>
-        <input
-          type="text"
-          id="phone"
-          formControlName="phone"
-          placeholder="Enter 10-digit phone number"
-          [class.is-invalid]="signupForm.get('phone')?.touched && signupForm.get('phone')?.invalid"
-        />
-        <div class="error-text" *ngIf="signupForm.get('phone')?.touched && signupForm.get('phone')?.errors?.['required']">
-          Phone number is required
-        </div>
-        <div class="error-text" *ngIf="signupForm.get('phone')?.touched && signupForm.get('phone')?.errors?.['pattern']">
-          Phone must be exactly 10 digits
-        </div>
+      <!-- Biometric Consent Checkbox -->
+      <div class="consent-group">
+        <label class="consent-checkbox">
+          <input type="checkbox" [(ngModel)]="biometricConsent" />
+          <span class="checkmark"></span>
+          <span class="consent-text">
+            I agree to the encrypted storage of my 128-point face descriptor for gym check-in and attendance purposes.
+          </span>
+        </label>
       </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          formControlName="password"
-          placeholder="Min 6 characters"
-          [class.is-invalid]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid"
-        />
-        <div class="error-text" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.errors?.['required']">
-          Password is required
-        </div>
-        <div class="error-text" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.errors?.['minlength']">
-          Password must be at least 6 characters
-        </div>
+      <!-- Action Buttons -->
+      <div class="scan-actions">
+        <button
+          type="button"
+          class="btn-bracket"
+          style="flex: 1;"
+          (click)="captureSample()"
+          [disabled]="capturing || cameraLoading || cameraDenied || noCamera || !biometricConsent"
+        >
+          {{ capturing ? 'ANALYZING FACE...' : ('CAPTURE SAMPLE ' + (scanSamples.length + 1) + ' / 3') }}
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="skipFaceEnrollment()"
+        >
+          Enroll Later at Gym Desk ↗
+        </button>
       </div>
+    </ng-container>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          formControlName="confirmPassword"
-          placeholder="Re-enter password"
-          [class.is-invalid]="(signupForm.get('confirmPassword')?.touched && signupForm.get('confirmPassword')?.invalid) || (signupForm.touched && signupForm.errors?.['passwordMismatch'])"
-        />
-        <div class="error-text" *ngIf="signupForm.get('confirmPassword')?.touched && signupForm.get('confirmPassword')?.errors?.['required']">
-          Confirm password is required
-        </div>
-        <div class="error-text" *ngIf="signupForm.touched && signupForm.errors?.['passwordMismatch']">
-          Passwords do not match
-        </div>
-      </div>
-
-      <button type="submit" class="btn-submit" [disabled]="loading">
-        {{ loading ? 'Creating Account...' : 'Create Account' }}
-      </button>
-
-      <p class="auth-footer">
-        Already have an account? <a routerLink="/login">Sign in</a>
-      </p>
-    </form>
   </div>
 </div>

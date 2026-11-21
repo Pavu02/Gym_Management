@@ -1,19 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  color: #111111;
+  background-color: #FFFFFF;
+}
+
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 100px);
-  padding: 2rem 1rem;
+  min-height: calc(100vh - 80px);
+  padding: 3rem 1.5rem;
+  background-color: #FFFFFF;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
 }
 
 .auth-card {
-  background-color: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
+  border-radius: 0;
   width: 100%;
-  max-width: 440px;
-  padding: 2.5rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-width: 460px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+}
+
+.brand-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #111111;
+  margin-bottom: 8px;
 }
 
 .auth-header {
@@ -22,113 +45,162 @@
 }
 
 .auth-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.auth-header h2 span {
-  color: #ff6b00;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.75rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: #111111;
+  margin: 0 0 6px;
+  line-height: 1;
 }
 
 .auth-header p {
-  color: #888888;
-  font-size: 0.95rem;
+  color: #5F6B70;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.text-orange {
+  color: #FF5A00;
 }
 
 .alert {
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 0;
   margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .alert-success {
-  background-color: rgba(46, 125, 50, 0.2);
-  border: 1px solid #2e7d32;
-  color: #81c784;
+  background-color: #ECFDF5;
+  border-left: 4px solid #16A34A;
+  color: #065F46;
 }
 
 .alert-error {
-  background-color: rgba(211, 47, 47, 0.2);
-  border: 1px solid #d32f2f;
-  color: #ef5350;
+  background-color: #FEF2F2;
+  border-left: 4px solid #DC2626;
+  color: #991B1B;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.5rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 6px;
 }
 
 .form-group label {
-  font-size: 0.9rem;
-  color: #cccccc;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #111111;
 }
 
-.form-group input {
-  background-color: #242424;
-  border: 1px solid #383838;
-  color: #ffffff;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus {
+.form-input-line {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #E6E6E6;
+  background: transparent;
+  padding: 12px 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #111111;
   outline: none;
-  border-color: #ff6b00;
+  transition: border-color 0.2s ease;
+  border-radius: 0;
 }
 
-.form-group input.is-invalid {
-  border-color: #d32f2f;
+.form-input-line:focus {
+  border-bottom-color: #FF5A00;
+}
+
+.form-input-line::placeholder {
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  letter-spacing: 1px;
+}
+
+.form-input-line.is-invalid {
+  border-bottom-color: #DC2626;
 }
 
 .error-text {
-  color: #ef5350;
-  font-size: 0.8rem;
-  margin-top: 0.2rem;
-}
-
-.btn-submit {
-  background-color: #ff6b00;
-  color: #ffffff;
-  padding: 0.8rem;
-  border-radius: 6px;
+  color: #DC2626;
+  font-size: 0.8125rem;
   font-weight: 600;
-  margin-top: 0.5rem;
-  transition: background-color 0.2s;
+  margin-top: 4px;
 }
 
-.btn-submit:hover:not(:disabled) {
-  background-color: #e05e00;
+/* 4-Corner Bracket Button */
+.btn-bracket {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background-color: #FF5A00;
+  color: #111111;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
 }
 
-.btn-submit:disabled {
-  opacity: 0.6;
+.btn-bracket:hover:not(:disabled) {
+  background-color: #E04E00;
+}
+
+.btn-bracket:disabled {
+  background-color: #CCCCCC;
   cursor: not-allowed;
+}
+
+.btn-bracket::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, #FFFFFF 6px, transparent 6px) top left,
+    linear-gradient(to bottom, #FFFFFF 6px, transparent 6px) top left,
+    linear-gradient(to left, #FFFFFF 6px, transparent 6px) top right,
+    linear-gradient(to bottom, #FFFFFF 6px, transparent 6px) top right,
+    linear-gradient(to right, #FFFFFF 6px, transparent 6px) bottom left,
+    linear-gradient(to top, #FFFFFF 6px, transparent 6px) bottom left,
+    linear-gradient(to left, #FFFFFF 6px, transparent 6px) bottom right,
+    linear-gradient(to top, #FFFFFF 6px, transparent 6px) bottom right;
+  background-size: 6px 2px, 2px 6px, 6px 2px, 2px 6px, 6px 2px, 2px 6px, 6px 2px, 2px 6px;
+  background-repeat: no-repeat;
+  transition: inset 0.2s ease;
+}
+
+.btn-bracket:hover:not(:disabled)::before {
+  inset: 2px;
 }
 
 .auth-footer {
   text-align: center;
-  color: #888888;
-  font-size: 0.9rem;
-  margin-top: 1rem;
+  font-size: 0.9375rem;
+  color: #5F6B70;
+  margin-top: 1.5rem;
 }
 
 .auth-footer a {
-  color: #ff6b00;
-  font-weight: 600;
-}
-
-.auth-footer a:hover {
-  text-decoration: underline;
+  font-weight: 700;
+  text-decoration: none;
 }

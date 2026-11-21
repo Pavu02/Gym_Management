@@ -1,87 +1,251 @@
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1a1a1a;
-  padding: 1rem 2rem;
-  border-bottom: 2px solid #ff6b00;
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap');
+
+:host {
+  display: block;
+  width: 100%;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-.logo {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: 1px;
+.header-nav {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E6E6E6;
+  width: 100%;
+  position: relative;
 }
 
-.logo span {
-  color: #ff6b00;
-}
-
-.nav-links {
+.nav-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 80px;
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
-.nav-links a {
-  color: #cccccc;
-  font-weight: 500;
-  transition: color 0.2s ease;
-  font-size: 0.95rem;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-  color: #ff6b00;
-}
-
-.btn-highlight {
-  background-color: #ff6b00;
-  color: #ffffff !important;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.btn-highlight:hover {
-  background-color: #e05e00;
-}
-
-.user-badge {
-  background-color: #2a2a2a;
-  color: #ff6b00;
-  padding: 0.35rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid #3a3a3a;
-}
-
-.onboarding-badge {
-  background-color: #ff6b00;
-  color: #ffffff;
-  padding: 0.35rem 0.9rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+/* Brand Wordmark with striped 'X' */
+.brand-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.25rem;
+  letter-spacing: 2px;
+  color: #111111;
+  text-decoration: none;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.brand-logo .logo-x {
+  color: #FF5A00;
+  margin-left: 2px;
+  position: relative;
+  display: inline-block;
+  -webkit-text-stroke: 1.5px #FF5A00;
+  background: repeating-linear-gradient(
+    45deg,
+    #FF5A00,
+    #FF5A00 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* User pill */
+.user-pill {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background-color: #F4F4F4;
+  color: #111111;
+  padding: 8px 14px;
+  border: 1px solid #E6E6E6;
+}
+
+/* 4-Corner Bracket Button */
+.btn-bracket {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  background-color: #FF5A00;
+  color: #111111;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.btn-bracket:hover {
+  background-color: #E04E00;
+}
+
+.btn-bracket::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, #FFFFFF 6px, transparent 6px) top left,
+    linear-gradient(to bottom, #FFFFFF 6px, transparent 6px) top left,
+    linear-gradient(to left, #FFFFFF 6px, transparent 6px) top right,
+    linear-gradient(to bottom, #FFFFFF 6px, transparent 6px) top right,
+    linear-gradient(to right, #FFFFFF 6px, transparent 6px) bottom left,
+    linear-gradient(to top, #FFFFFF 6px, transparent 6px) bottom left,
+    linear-gradient(to left, #FFFFFF 6px, transparent 6px) bottom right,
+    linear-gradient(to top, #FFFFFF 6px, transparent 6px) bottom right;
+  background-size: 6px 2px, 2px 6px, 6px 2px, 2px 6px, 6px 2px, 2px 6px, 6px 2px, 2px 6px;
+  background-repeat: no-repeat;
+  transition: inset 0.2s ease;
+}
+
+.btn-bracket:hover::before {
+  inset: 2px;
+}
+
+.btn-bracket-dark {
+  background-color: #111111;
+  color: #FFFFFF;
+}
+.btn-bracket-dark:hover {
+  background-color: #262626;
+  color: #FFFFFF;
+}
+
+/* 48px Square Black Hamburger Box */
+.hamburger-box {
+  width: 48px;
+  height: 48px;
+  background-color: #111111;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.hamburger-box:hover {
+  background-color: #262626;
+}
+
+.hamburger-box .bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: #FFFFFF;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* Active Hamburger transforms into 'X' */
+.hamburger-box.active .top-bar {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-box.active .mid-bar {
+  opacity: 0;
+}
+
+.hamburger-box.active .bot-bar {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Dropdown Overlay with blurred backdrop */
+.dropdown-overlay {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+  animation: fadeIn 0.25s ease;
+}
+
+.dropdown-panel {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  padding: 20px;
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.menu-links a {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111111;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.btn-logout {
-  background-color: #333333;
-  color: #ffffff;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: background-color 0.2s;
+.menu-links a:hover,
+.menu-links a.active {
+  color: #FF5A00;
+  transform: translateY(-2px);
 }
 
-.btn-logout:hover {
-  background-color: #e53935;
+.menu-links a.link-subtle {
+  font-size: 1.125rem;
+  color: #5F6B70;
+}
+
+.menu-divider {
+  width: 60px;
+  height: 2px;
+  background-color: #E6E6E6;
+  margin: 10px 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .nav-container {
+    height: 70px;
+    padding: 0 16px;
+  }
+  .dropdown-overlay {
+    top: 70px;
+  }
 }

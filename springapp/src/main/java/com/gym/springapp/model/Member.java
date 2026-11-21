@@ -48,6 +48,12 @@ public class Member {
 
     private String medicalConditions;
 
+    @Column(columnDefinition = "TEXT")
+    private String specialRequirements;
+
+    @Column(nullable = false)
+    private boolean emailRemindersEnabled = true;
+
     private String emergencyContactName;
 
     private String emergencyContactPhone;

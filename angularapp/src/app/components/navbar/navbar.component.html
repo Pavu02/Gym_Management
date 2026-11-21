@@ -1,51 +1,82 @@
-<nav class="navbar">
-  <div class="nav-brand">
-    <a routerLink="/home" class="logo">Gym<span>Pro</span></a>
+<header class="header-nav">
+  <div class="nav-container">
+    <!-- Brand Wordmark Logo -->
+    <a routerLink="/home" class="brand-logo" (click)="closeMenu()">
+      BEAST<span class="logo-x">X</span>
+    </a>
+
+    <!-- Right Controls: Join Now Bracket Button + Black Square Hamburger -->
+    <div class="nav-right">
+      <!-- Public Not Logged In -->
+      <ng-container *ngIf="!isLoggedIn()">
+        <a routerLink="/signup" class="btn-bracket">Join Now</a>
+      </ng-container>
+
+      <!-- Logged In Quick Action -->
+      <ng-container *ngIf="isLoggedIn()">
+        <span class="user-pill">{{ getName() }} ({{ getRole() }})</span>
+        <button class="btn-bracket btn-bracket-dark" (click)="logout()">Logout</button>
+      </ng-container>
+
+      <!-- 48px Square Black Hamburger Button -->
+      <button class="hamburger-box" (click)="toggleMenu()" [class.active]="isMenuOpen"
+        aria-label="Toggle navigation menu">
+        <span class="bar top-bar"></span>
+        <span class="bar mid-bar"></span>
+        <span class="bar bot-bar"></span>
+      </button>
+    </div>
   </div>
 
-  <!-- Onboarding Navbar View -->
-  <div class="nav-links" *ngIf="isLoggedIn() && isOnboarding">
-    <span class="onboarding-badge">Member Onboarding</span>
-    <button class="btn-logout" (click)="logout()">Logout</button>
+  <!-- Full-Width Dropdown Overlay with Blurred Backdrop -->
+  <div class="dropdown-overlay" *ngIf="isMenuOpen" (click)="closeMenu()">
+    <div class="dropdown-panel" (click)="$event.stopPropagation()">
+      <div class="menu-links">
+        <!-- Public Navigation -->
+        <ng-container *ngIf="!isLoggedIn()">
+          <a routerLink="/home" (click)="closeMenu()" routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}">Home</a>
+          <a href="#about" (click)="closeMenu()">About</a>
+          <a href="#programs" (click)="closeMenu()">Programs</a>
+          <a href="#trainers" (click)="closeMenu()">Trainers</a>
+          <a href="#pricing" (click)="closeMenu()">Pricing</a>
+          <a href="#contact" (click)="closeMenu()">Contact</a>
+          <div class="menu-divider"></div>
+          <a routerLink="/login" (click)="closeMenu()" class="link-subtle">Login</a>
+          <a routerLink="/signup" (click)="closeMenu()" class="btn-bracket" style="margin-top: 10px;">Join Now</a>
+        </ng-container>
+
+        <!-- ADMIN Navigation -->
+        <ng-container *ngIf="isLoggedIn() && getRole() === 'ADMIN'">
+          <a routerLink="/admin/dashboard" (click)="closeMenu()">Dashboard</a>
+          <a routerLink="/admin/plans" (click)="closeMenu()">Membership Plans</a>
+          <a routerLink="/admin/members" (click)="closeMenu()">Members Management</a>
+          <a routerLink="/admin/trainers" (click)="closeMenu()">Trainers Management</a>
+          <a routerLink="/admin/payments" (click)="closeMenu()">Payments & Billing</a>
+          <a routerLink="/admin/attendance" (click)="closeMenu()">Attendance Records</a>
+          <div class="menu-divider"></div>
+          <button class="btn-bracket btn-bracket-dark" (click)="logout()">Sign Out</button>
+        </ng-container>
+
+        <!-- MEMBER Navigation -->
+        <ng-container *ngIf="isLoggedIn() && getRole() === 'MEMBER'">
+          <a routerLink="/home" (click)="closeMenu()">Home</a>
+          <a routerLink="/member/profile" (click)="closeMenu()">My Profile</a>
+          <a routerLink="/member/plan" (click)="closeMenu()">My Membership Plan</a>
+          <a routerLink="/member/trainer" (click)="closeMenu()">My Personal Trainer</a>
+          <a routerLink="/member/attendance" (click)="closeMenu()">My Attendance</a>
+          <a routerLink="/member/payments" (click)="closeMenu()">Payment History</a>
+          <div class="menu-divider"></div>
+          <button class="btn-bracket btn-bracket-dark" (click)="logout()">Sign Out</button>
+        </ng-container>
+
+        <!-- TRAINER Navigation -->
+        <ng-container *ngIf="isLoggedIn() && getRole() === 'TRAINER'">
+          <a routerLink="/trainer/members" (click)="closeMenu()">My Assigned Members</a>
+          <div class="menu-divider"></div>
+          <button class="btn-bracket btn-bracket-dark" (click)="logout()">Sign Out</button>
+        </ng-container>
+      </div>
+    </div>
   </div>
-
-  <!-- Regular Navbar View -->
-  <div class="nav-links" *ngIf="!isOnboarding">
-    <!-- Public Links (Not Logged In) -->
-    <ng-container *ngIf="!isLoggedIn()">
-      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-      <a routerLink="/login" routerLinkActive="active">Login</a>
-      <a routerLink="/signup" routerLinkActive="active" class="btn-highlight">Sign Up</a>
-    </ng-container>
-
-    <!-- ADMIN Links -->
-    <ng-container *ngIf="isLoggedIn() && getRole() === 'ADMIN'">
-      <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/admin/plans" routerLinkActive="active">Plans</a>
-      <a routerLink="/admin/members" routerLinkActive="active">Members</a>
-      <a routerLink="/admin/trainers" routerLinkActive="active">Trainers</a>
-      <a routerLink="/admin/payments" routerLinkActive="active">Payments</a>
-      <a routerLink="/admin/attendance" routerLinkActive="active">Attendance</a>
-    </ng-container>
-
-    <!-- MEMBER Links -->
-    <ng-container *ngIf="isLoggedIn() && getRole() === 'MEMBER'">
-      <a routerLink="/member/profile" routerLinkActive="active">Profile</a>
-      <a routerLink="/member/plan" routerLinkActive="active">My Plan</a>
-      <a routerLink="/member/trainer" routerLinkActive="active">My Trainer</a>
-      <a routerLink="/member/attendance" routerLinkActive="active">Attendance</a>
-      <a routerLink="/member/payments" routerLinkActive="active">Payments</a>
-    </ng-container>
-
-    <!-- TRAINER Links -->
-    <ng-container *ngIf="isLoggedIn() && getRole() === 'TRAINER'">
-      <a routerLink="/trainer/members" routerLinkActive="active">My Members</a>
-    </ng-container>
-
-    <!-- Logout / User tag -->
-    <ng-container *ngIf="isLoggedIn()">
-      <span class="user-badge">{{ getName() }} ({{ getRole() }})</span>
-      <button class="btn-logout" (click)="logout()">Logout</button>
-    </ng-container>
-  </div>
-</nav>
+</header>

@@ -1,8 +1,9 @@
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
-      <h2>Welcome <span>Back</span></h2>
-      <p>Log in to access your GymPro dashboard</p>
+      <div class="brand-sub">BEAST<span class="text-orange">X</span> PERFORMANCE</div>
+      <h2>WELCOME <span class="text-orange">BACK</span></h2>
+      <p>Log in to access your personal dashboard</p>
     </div>
 
     <div class="alert alert-success" *ngIf="successMessage">
@@ -15,12 +16,13 @@
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
       <div class="form-group">
-        <label for="email">Email Address</label>
+        <label for="email">EMAIL ADDRESS</label>
         <input
           type="email"
           id="email"
           formControlName="email"
-          placeholder="Enter your email"
+          placeholder="ENTER YOUR EMAIL"
+          class="form-input-line"
           [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
         />
         <div class="error-text" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']">
@@ -32,12 +34,13 @@
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">PASSWORD</label>
         <input
           type="password"
           id="password"
           formControlName="password"
-          placeholder="Enter your password"
+          placeholder="ENTER YOUR PASSWORD"
+          class="form-input-line"
           [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
         />
         <div class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
@@ -45,12 +48,12 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="loading">
-        {{ loading ? 'Logging in...' : 'Sign In' }}
+      <button type="submit" class="btn-bracket" style="width: 100%; margin-top: 10px;" [disabled]="loading">
+        {{ loading ? 'Signing in...' : 'Sign In' }}
       </button>
 
       <p class="auth-footer">
-        Don't have an account? <a routerLink="/signup">Sign up here</a>
+        Don't have an account? <a routerLink="/signup" class="text-orange">Sign up here</a>
       </p>
     </form>
   </div>

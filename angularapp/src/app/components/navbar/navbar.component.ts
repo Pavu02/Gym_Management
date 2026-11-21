@@ -10,13 +10,23 @@ import { filter } from 'rxjs/operators';
 })
 export class NavbarComponent {
   isOnboarding: boolean = false;
+  isMenuOpen: boolean = false;
 
   constructor(private authService: AuthService, private router: Router) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.isOnboarding = event.urlAfterRedirects ? event.urlAfterRedirects.startsWith('/onboarding') : event.url.startsWith('/onboarding');
+      this.isMenuOpen = false;
     });
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  closeMenu(): void {
+    this.isMenuOpen = false;
   }
 
   isLoggedIn(): boolean {
@@ -32,6 +42,7 @@ export class NavbarComponent {
   }
 
   logout(): void {
+    this.isMenuOpen = false;
     this.authService.logout();
   }
 }

@@ -1,19 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  color: #111111;
+  background-color: #FFFFFF;
+}
+
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 100px);
-  padding: 2.5rem 1rem;
+  min-height: calc(100vh - 80px);
+  padding: 3rem 1.5rem;
+  background-color: #FFFFFF;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
 }
 
 .auth-card {
-  background-color: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
+  border-radius: 0;
   width: 100%;
-  max-width: 480px;
-  padding: 2.5rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-width: 500px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+  transition: max-width 0.3s ease;
+}
+
+.auth-card.wide-card {
+  max-width: 600px;
+}
+
+.brand-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #111111;
+  margin-bottom: 8px;
 }
 
 .auth-header {
@@ -22,107 +50,347 @@
 }
 
 .auth-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.auth-header h2 span {
-  color: #ff6b00;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.75rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: #111111;
+  margin: 0 0 6px;
+  line-height: 1;
 }
 
 .auth-header p {
-  color: #888888;
-  font-size: 0.95rem;
+  color: #5F6B70;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.text-orange {
+  color: #FF5A00;
 }
 
 .alert {
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 0;
   margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .alert-error {
-  background-color: rgba(211, 47, 47, 0.2);
-  border: 1px solid #d32f2f;
-  color: #ef5350;
+  background-color: #FEF2F2;
+  border-left: 4px solid #DC2626;
+  color: #991B1B;
+}
+
+.alert-warning {
+  background-color: #FFFBEB;
+  border-left: 4px solid #F59E0B;
+  color: #92400E;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.25rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
 }
 
 .form-group label {
-  font-size: 0.9rem;
-  color: #cccccc;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #111111;
 }
 
-.form-group input {
-  background-color: #242424;
-  border: 1px solid #383838;
-  color: #ffffff;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus {
+.form-input-line {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111111;
+  background-color: #F8F8F8;
+  border: 1px solid #E6E6E6;
+  border-radius: 0;
+  box-sizing: border-box;
   outline: none;
-  border-color: #ff6b00;
+  transition: all 0.2s ease;
 }
 
-.form-group input.is-invalid {
-  border-color: #d32f2f;
+.form-input-line:focus {
+  border-color: #FF5A00;
+  background-color: #FFFFFF;
+}
+
+.form-input-line.is-invalid {
+  border-color: #DC2626;
 }
 
 .error-text {
-  color: #ef5350;
-  font-size: 0.8rem;
-  margin-top: 0.15rem;
-}
-
-.btn-submit {
-  background-color: #ff6b00;
-  color: #ffffff;
-  padding: 0.8rem;
-  border-radius: 6px;
+  font-size: 0.8125rem;
   font-weight: 600;
-  margin-top: 0.5rem;
-  transition: background-color 0.2s;
+  color: #DC2626;
 }
 
-.btn-submit:hover:not(:disabled) {
-  background-color: #e05e00;
+/* Bracket Button */
+.btn-bracket {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #111111;
+  background-color: #FF5A00;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-submit:disabled {
+.btn-bracket:hover:not(:disabled) {
+  background-color: #E04F00;
+}
+
+.btn-bracket:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+.btn-secondary {
+  padding: 12px 16px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #5F6B70;
+  background: transparent;
+  border: 1px dashed #CCCCCC;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  color: #111111;
+  border-color: #111111;
+}
+
 .auth-footer {
   text-align: center;
-  color: #888888;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
+  color: #5F6B70;
   margin-top: 1rem;
 }
 
 .auth-footer a {
-  color: #ff6b00;
-  font-weight: 600;
+  text-decoration: none;
+  font-weight: 700;
 }
 
-.auth-footer a:hover {
-  text-decoration: underline;
+/* Sample Progress Indicator */
+.samples-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.sample-dot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.sample-dot span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #E5E7EB;
+  color: #111111;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.sample-dot.active {
+  color: #FF5A00;
+}
+
+.sample-dot.active span {
+  background-color: #FF5A00;
+  color: #FFFFFF;
+}
+
+.progress-line {
+  flex: 1;
+  height: 2px;
+  background-color: #E5E7EB;
+  margin: 0 12px;
+}
+
+.progress-line.active {
+  background-color: #FF5A00;
+}
+
+/* Camera Viewport */
+.camera-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #111111;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  border: 2px solid #111111;
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror */
+}
+
+.face-guide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-svg {
+  width: 80%;
+  height: 80%;
+}
+
+.guide-ellipse {
+  fill: none;
+  stroke: rgba(255, 90, 0, 0.7);
+  stroke-width: 2.5;
+  stroke-dasharray: 8 6;
+}
+
+.corner-bracket {
+  fill: none;
+  stroke: #FF5A00;
+  stroke-width: 3.5;
+}
+
+.camera-banner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(17, 17, 17, 0.85);
+  color: #FFFFFF;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Camera Backdrop & Errors */
+.camera-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #FFFFFF;
+  text-align: center;
+}
+
+.loader-box p, .error-box p {
+  color: #9CA3AF;
+  font-size: 0.9375rem;
+  margin: 8px 0 16px;
+}
+
+.error-box h4 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.75rem;
+  margin: 0;
+  color: #FF5A00;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 90, 0, 0.2);
+  border-top-color: #FF5A00;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Consent Checkbox */
+.consent-group {
+  margin-bottom: 1.25rem;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.consent-checkbox input {
+  margin-top: 3px;
+  accent-color: #FF5A00;
+  width: 18px;
+  height: 18px;
+}
+
+.consent-text {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #5F6B70;
+}
+
+/* Scan Actions */
+.scan-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
