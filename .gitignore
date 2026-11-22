@@ -1,13 +1,20 @@
-﻿angularapp/node_modules/
+﻿# ===== Angular =====
+angularapp/node_modules/
 angularapp/dist/
 angularapp/.angular/
+
+# ===== Spring Boot / Java =====
 springapp/target/
 *.class
 *.log
+
+# ===== IDE / OS =====
 .idea/
 *.iml
 .vscode/
 Thumbs.db
 
-springapp/src/main/resources/google-credentials.json
-springapp/src/main/resources/application-secrets.properties
+# ===== Secrets (never push) =====
+application-local.properties
+application-secrets.properties
+google-credentials.json
