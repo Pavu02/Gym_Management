@@ -1,10 +1,14 @@
 package com.gym.springapp.service;
 
+import com.gym.springapp.automation.events.MemberChangedEvent;
+import com.gym.springapp.automation.events.MemberWelcomeEvent;
+import com.gym.springapp.automation.events.PaymentReceivedEvent;
 import com.gym.springapp.dto.*;
 import com.gym.springapp.exceptions.BadRequestException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,19 +25,22 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final TrainerRepo trainerRepo;
     private final PaymentRepo paymentRepo;
     private final MemberService memberService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OnboardingServiceImpl(MemberRepo memberRepo,
-                                 UserRepo userRepo,
-                                 PlanRepo planRepo,
-                                 TrainerRepo trainerRepo,
-                                 PaymentRepo paymentRepo,
-                                 MemberService memberService) {
+            UserRepo userRepo,
+            PlanRepo planRepo,
+            TrainerRepo trainerRepo,
+            PaymentRepo paymentRepo,
+            MemberService memberService,
+            ApplicationEventPublisher eventPublisher) {
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.planRepo = planRepo;
         this.trainerRepo = trainerRepo;
         this.paymentRepo = paymentRepo;
         this.memberService = memberService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -52,8 +59,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                 member.isOnboardingCompleted(),
                 member.getStatus(),
                 planId,
-                trainerId
-        );
+                trainerId);
     }
 
     @Override
@@ -79,7 +85,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         Trainer trainer = null;
         if (request.trainerId() != null) {
             trainer = trainerRepo.findById(request.trainerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
         }
 
         User user = userRepo.findByEmail(email)
@@ -98,7 +105,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         member.setExpiryDate(null);
         member.setOnboardingCompleted(false);
 
-        memberRepo.save(member);
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
     }
 
     @Override
@@ -120,7 +128,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         member.setEmergencyContactName(request.emergencyContactName());
         member.setEmergencyContactPhone(request.emergencyContactPhone());
 
-        memberRepo.save(member);
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
     }
 
     @Override
@@ -146,8 +155,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                 plan.getDurationMonths(),
                 trainerName,
                 trainerTotal,
-                totalAmount
-        );
+                totalAmount);
     }
 
     @Override
@@ -177,7 +185,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         payment.setMode(request.mode() != null && !request.mode().isBlank() ? request.mode().toUpperCase() : "UPI");
         payment.setStatus("PAID");
         payment.setPaymentDate(today);
-        paymentRepo.save(payment);
+        Payment savedPayment = paymentRepo.save(payment);
 
         member.setJoinDate(today);
         member.setExpiryDate(today.plusMonths(plan.getDurationMonths()));
@@ -185,6 +193,9 @@ public class OnboardingServiceImpl implements OnboardingService {
         member.setOnboardingCompleted(true);
 
         Member savedMember = memberRepo.save(member);
+        eventPublisher.publishEvent(new PaymentReceivedEvent(savedPayment.getId()));
+        eventPublisher.publishEvent(new MemberChangedEvent(savedMember.getId()));
+        eventPublisher.publishEvent(new MemberWelcomeEvent(savedMember.getId()));
         return memberService.toDTO(savedMember);
     }
 }

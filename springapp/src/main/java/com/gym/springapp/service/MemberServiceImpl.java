@@ -1,5 +1,8 @@
 package com.gym.springapp.service;
 
+import com.gym.springapp.automation.events.MemberChangedEvent;
+import com.gym.springapp.automation.events.MemberWelcomeEvent;
+import com.gym.springapp.automation.events.PaymentReceivedEvent;
 import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
@@ -8,6 +11,7 @@ import com.gym.springapp.exceptions.DuplicateResourceException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +31,16 @@ public class MemberServiceImpl implements MemberService {
     private final AttendanceRepo attendanceRepo;
     private final PaymentRepo paymentRepo;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MemberServiceImpl(MemberRepo memberRepo,
-                             UserRepo userRepo,
-                             PlanRepo planRepo,
-                             TrainerRepo trainerRepo,
-                             AttendanceRepo attendanceRepo,
-                             PaymentRepo paymentRepo,
-                             PasswordEncoder passwordEncoder) {
+            UserRepo userRepo,
+            PlanRepo planRepo,
+            TrainerRepo trainerRepo,
+            AttendanceRepo attendanceRepo,
+            PaymentRepo paymentRepo,
+            PasswordEncoder passwordEncoder,
+            ApplicationEventPublisher eventPublisher) {
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.planRepo = planRepo;
@@ -42,6 +48,7 @@ public class MemberServiceImpl implements MemberService {
         this.attendanceRepo = attendanceRepo;
         this.paymentRepo = paymentRepo;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -50,13 +57,15 @@ public class MemberServiceImpl implements MemberService {
             if (!"EXPIRED".equals(member.getStatus())) {
                 member.setStatus("EXPIRED");
                 member = memberRepo.save(member);
+                eventPublisher.publishEvent(new MemberChangedEvent(member.getId()));
             }
         }
 
         String planName = member.getPlan() != null ? member.getPlan().getName() : null;
         Long planId = member.getPlan() != null ? member.getPlan().getId() : null;
         String trainerName = (member.getTrainer() != null && member.getTrainer().getUser() != null)
-                ? member.getTrainer().getUser().getName() : null;
+                ? member.getTrainer().getUser().getName()
+                : null;
         Long trainerId = member.getTrainer() != null ? member.getTrainer().getId() : null;
 
         Double bmi = null;
@@ -93,8 +102,7 @@ public class MemberServiceImpl implements MemberService {
                 member.getEmergencyContactName(),
                 member.getEmergencyContactPhone(),
                 member.isOnboardingCompleted(),
-                daysLeft
-        );
+                daysLeft);
     }
 
     @Override
@@ -113,7 +121,8 @@ public class MemberServiceImpl implements MemberService {
         Trainer trainer = null;
         if (request.trainerId() != null) {
             trainer = trainerRepo.findById(request.trainerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
         }
 
         User user = new User();
@@ -137,6 +146,8 @@ public class MemberServiceImpl implements MemberService {
         member.setOnboardingCompleted(true);
 
         Member savedMember = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(savedMember.getId()));
+        eventPublisher.publishEvent(new MemberWelcomeEvent(savedMember.getId()));
         return toDTO(savedMember);
     }
 
@@ -162,12 +173,15 @@ public class MemberServiceImpl implements MemberService {
 
         User user = member.getUser();
         if (user != null) {
-            if (request.name() != null) user.setName(request.name());
-            if (request.phone() != null) user.setPhone(request.phone());
+            if (request.name() != null)
+                user.setName(request.name());
+            if (request.phone() != null)
+                user.setPhone(request.phone());
             userRepo.save(user);
         }
 
-        if (request.planId() != null && (member.getPlan() == null || !request.planId().equals(member.getPlan().getId()))) {
+        if (request.planId() != null
+                && (member.getPlan() == null || !request.planId().equals(member.getPlan().getId()))) {
             Plan plan = planRepo.findById(request.planId())
                     .orElseThrow(() -> new ResourceNotFoundException("Plan not found with id: " + request.planId()));
             member.setPlan(plan);
@@ -176,13 +190,15 @@ public class MemberServiceImpl implements MemberService {
 
         if (request.trainerId() != null) {
             Trainer trainer = trainerRepo.findById(request.trainerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Trainer not found with id: " + request.trainerId()));
             member.setTrainer(trainer);
         } else {
             member.setTrainer(null);
         }
 
         Member updatedMember = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(updatedMember.getId()));
         return toDTO(updatedMember);
     }
 
@@ -215,7 +231,9 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + trainerId));
 
         member.setTrainer(trainer);
-        return toDTO(memberRepo.save(member));
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
+        return toDTO(saved);
     }
 
     @Override
@@ -243,21 +261,33 @@ public class MemberServiceImpl implements MemberService {
 
         User user = member.getUser();
         if (user != null) {
-            if (request.name() != null && !request.name().isBlank()) user.setName(request.name());
-            if (request.phone() != null && !request.phone().isBlank()) user.setPhone(request.phone());
+            if (request.name() != null && !request.name().isBlank())
+                user.setName(request.name());
+            if (request.phone() != null && !request.phone().isBlank())
+                user.setPhone(request.phone());
             userRepo.save(user);
         }
 
-        if (request.gender() != null) member.setGender(request.gender());
-        if (request.dateOfBirth() != null) member.setDateOfBirth(request.dateOfBirth());
-        if (request.heightCm() > 0) member.setHeightCm(request.heightCm());
-        if (request.weightKg() > 0) member.setWeightKg(request.weightKg());
-        if (request.fitnessGoal() != null) member.setFitnessGoal(request.fitnessGoal());
-        if (request.medicalConditions() != null) member.setMedicalConditions(request.medicalConditions());
-        if (request.emergencyContactName() != null) member.setEmergencyContactName(request.emergencyContactName());
-        if (request.emergencyContactPhone() != null) member.setEmergencyContactPhone(request.emergencyContactPhone());
+        if (request.gender() != null)
+            member.setGender(request.gender());
+        if (request.dateOfBirth() != null)
+            member.setDateOfBirth(request.dateOfBirth());
+        if (request.heightCm() > 0)
+            member.setHeightCm(request.heightCm());
+        if (request.weightKg() > 0)
+            member.setWeightKg(request.weightKg());
+        if (request.fitnessGoal() != null)
+            member.setFitnessGoal(request.fitnessGoal());
+        if (request.medicalConditions() != null)
+            member.setMedicalConditions(request.medicalConditions());
+        if (request.emergencyContactName() != null)
+            member.setEmergencyContactName(request.emergencyContactName());
+        if (request.emergencyContactPhone() != null)
+            member.setEmergencyContactPhone(request.emergencyContactPhone());
 
-        return toDTO(memberRepo.save(member));
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
+        return toDTO(saved);
     }
 
     @Override
@@ -270,7 +300,9 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trainer not found with id: " + trainerId));
 
         member.setTrainer(trainer);
-        return toDTO(memberRepo.save(member));
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
+        return toDTO(saved);
     }
 
     @Override
@@ -280,7 +312,9 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + email));
 
         member.setTrainer(null);
-        return toDTO(memberRepo.save(member));
+        Member saved = memberRepo.save(member);
+        eventPublisher.publishEvent(new MemberChangedEvent(saved.getId()));
+        return toDTO(saved);
     }
 
     @Override
@@ -294,7 +328,8 @@ public class MemberServiceImpl implements MemberService {
 
         LocalDate today = LocalDate.now();
         LocalDate baseDate = (member.getExpiryDate() != null && member.getExpiryDate().isAfter(today))
-                ? member.getExpiryDate() : today;
+                ? member.getExpiryDate()
+                : today;
 
         member.setPlan(plan);
         member.setExpiryDate(baseDate.plusMonths(plan.getDurationMonths()));
@@ -310,8 +345,12 @@ public class MemberServiceImpl implements MemberService {
         payment.setMode(request.mode() != null ? request.mode().toUpperCase() : "UPI");
         payment.setStatus("PAID");
         payment.setPaymentDate(today);
-        paymentRepo.save(payment);
+        Payment savedPayment = paymentRepo.save(payment);
 
-        return toDTO(memberRepo.save(member));
+        Member savedMember = memberRepo.save(member);
+        eventPublisher.publishEvent(new PaymentReceivedEvent(savedPayment.getId()));
+        eventPublisher.publishEvent(new MemberChangedEvent(savedMember.getId()));
+
+        return toDTO(savedMember);
     }
 }

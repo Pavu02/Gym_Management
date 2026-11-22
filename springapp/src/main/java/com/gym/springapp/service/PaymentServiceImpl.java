@@ -1,11 +1,14 @@
 package com.gym.springapp.service;
 
+import com.gym.springapp.automation.events.MemberChangedEvent;
+import com.gym.springapp.automation.events.PaymentReceivedEvent;
 import com.gym.springapp.dto.PaymentRequestDTO;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.Payment;
 import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.PaymentRepo;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +20,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepo paymentRepo;
     private final MemberRepo memberRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public PaymentServiceImpl(PaymentRepo paymentRepo, MemberRepo memberRepo) {
+    public PaymentServiceImpl(PaymentRepo paymentRepo, MemberRepo memberRepo,
+            ApplicationEventPublisher eventPublisher) {
         this.paymentRepo = paymentRepo;
         this.memberRepo = memberRepo;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -48,6 +54,11 @@ public class PaymentServiceImpl implements PaymentService {
             member.setExpiryDate(baseDate.plusMonths(durationMonths));
             member.setStatus("ACTIVE");
             memberRepo.save(member);
+        }
+
+        eventPublisher.publishEvent(new PaymentReceivedEvent(savedPayment.getId()));
+        if (savedPayment.getMember() != null) {
+            eventPublisher.publishEvent(new MemberChangedEvent(savedPayment.getMember().getId()));
         }
 
         return savedPayment;

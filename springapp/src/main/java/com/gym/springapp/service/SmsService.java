@@ -23,7 +23,14 @@ public class SmsService {
     // Runs once when the app starts and logs in to Twilio
     @PostConstruct
     public void init() {
-        Twilio.init(accountSid, authToken);
+        if (accountSid != null && !accountSid.isBlank() && !accountSid.startsWith("PASTE_")
+                && authToken != null && !authToken.isBlank() && !authToken.startsWith("PASTE_")) {
+            try {
+                Twilio.init(accountSid, authToken);
+            } catch (Exception e) {
+                System.out.println("Twilio init failed: " + e.getMessage());
+            }
+        }
     }
 
     // Call this method from anywhere to send an SMS
