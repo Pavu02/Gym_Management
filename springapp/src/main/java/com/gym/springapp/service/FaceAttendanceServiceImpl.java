@@ -49,6 +49,12 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
 
     @Override
     @Transactional
+    public FaceCheckinResponseDTO fingerprintCheckin(Long userId) {
+        return processCheckin(userId, "FINGERPRINT");
+    }
+
+    @Override
+    @Transactional
     public FaceCheckinResponseDTO manualCheckin(Long userId) {
         return processCheckin(userId, "MANUAL");
     }
@@ -112,7 +118,13 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
                 att.setMember(member);
                 att.setAttendanceDate(today);
                 att.setCheckInTime(LocalTime.now(KOLKATA_ZONE));
-                att.setMethod("FACE".equalsIgnoreCase(method) ? AttendanceMethod.FACE : AttendanceMethod.MANUAL);
+                AttendanceMethod attMethod = AttendanceMethod.MANUAL;
+                if ("FACE".equalsIgnoreCase(method)) {
+                    attMethod = AttendanceMethod.FACE;
+                } else if ("FINGERPRINT".equalsIgnoreCase(method)) {
+                    attMethod = AttendanceMethod.FINGERPRINT;
+                }
+                att.setMethod(attMethod);
                 attendanceRepo.save(att);
             }
 

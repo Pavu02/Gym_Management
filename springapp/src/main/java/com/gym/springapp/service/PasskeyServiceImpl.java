@@ -39,7 +39,8 @@ public class PasskeyServiceImpl implements PasskeyService {
     @Value("${webauthn.rp.name:BeastX Gym Management}")
     private String rpName;
 
-    // Temporary storage for active challenges (keyed by user email or challenge Base64Url)
+    // Temporary storage for active challenges (keyed by user email or challenge
+    // Base64Url)
     private final Map<String, PublicKeyCredentialCreationOptions> registrationRequests = new ConcurrentHashMap<>();
     private final Map<String, AssertionRequest> assertionRequests = new ConcurrentHashMap<>();
 
@@ -69,7 +70,8 @@ public class PasskeyServiceImpl implements PasskeyService {
 
         long deviceCount = webAuthnCredentialRepo.countByMemberId(member.getId());
         if (deviceCount >= MAX_DEVICES_PER_MEMBER) {
-            throw new BadRequestException("Device limit reached (maximum " + MAX_DEVICES_PER_MEMBER + " devices). Please remove an existing device first.");
+            throw new BadRequestException("Device limit reached (maximum " + MAX_DEVICES_PER_MEMBER
+                    + " devices). Please remove an existing device first.");
         }
 
         UserIdentity userIdentity = UserIdentity.builder()
@@ -79,7 +81,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                 .build();
 
         AuthenticatorSelectionCriteria authSelection = AuthenticatorSelectionCriteria.builder()
-                .userVerification(UserVerificationRequirement.REQUIRED)
+                .userVerification(UserVerificationRequirement.PREFERRED)
                 .residentKey(ResidentKeyRequirement.PREFERRED)
                 .build();
 
@@ -87,8 +89,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                 StartRegistrationOptions.builder()
                         .user(userIdentity)
                         .authenticatorSelection(authSelection)
-                        .build()
-        );
+                        .build());
 
         String challengeBase64 = options.getChallenge().getBase64Url();
         registrationRequests.put(user.getEmail(), options);
@@ -101,8 +102,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                     challengeBase64,
                     user.getId().toString(),
                     user.getName(),
-                    options.toJson()
-            );
+                    options.toJson());
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize passkey creation options: " + e.getMessage(), e);
         }
@@ -132,15 +132,14 @@ public class PasskeyServiceImpl implements PasskeyService {
         }
 
         try {
-            PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> pkc =
-                    PublicKeyCredential.parseRegistrationResponseJson(verifyDTO.registrationResponseJson());
+            PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> pkc = PublicKeyCredential
+                    .parseRegistrationResponseJson(verifyDTO.registrationResponseJson());
 
             RegistrationResult result = relyingParty.finishRegistration(
                     FinishRegistrationOptions.builder()
                             .request(options)
                             .response(pkc)
-                            .build()
-            );
+                            .build());
 
             String credentialId = result.getKeyId().getId().getBase64Url();
             String publicKeyCose = result.getPublicKeyCose().getBase64();
@@ -167,8 +166,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                     saved.getCredentialId(),
                     saved.getDeviceName(),
                     saved.getSignCount(),
-                    saved.getCreatedAt()
-            );
+                    saved.getCreatedAt());
 
         } catch (Exception e) {
             throw new BadRequestException("Passkey verification failed: " + e.getMessage());
@@ -197,8 +195,7 @@ public class PasskeyServiceImpl implements PasskeyService {
             return new PasskeyAssertionOptionsDTO(
                     challengeBase64,
                     rpId,
-                    request.toCredentialsGetJson()
-            );
+                    request.toCredentialsGetJson());
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize passkey assertion options: " + e.getMessage(), e);
         }
@@ -212,8 +209,8 @@ public class PasskeyServiceImpl implements PasskeyService {
         }
 
         try {
-            PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc =
-                    PublicKeyCredential.parseAssertionResponseJson(verifyDTO.assertionResponseJson());
+            PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc = PublicKeyCredential
+                    .parseAssertionResponseJson(verifyDTO.assertionResponseJson());
 
             String challengeBase64 = pkc.getResponse().getClientData().getChallenge().getBase64Url();
             AssertionRequest request = assertionRequests.remove(challengeBase64);
@@ -230,8 +227,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                     FinishAssertionOptions.builder()
                             .request(request)
                             .response(pkc)
-                            .build()
-            );
+                            .build());
 
             if (!result.isSuccess()) {
                 throw new BadRequestException("WebAuthn assertion failed.");
@@ -239,7 +235,8 @@ public class PasskeyServiceImpl implements PasskeyService {
 
             String credentialId = result.getCredential().getCredentialId().getBase64Url();
             WebAuthnCredential cred = webAuthnCredentialRepo.findByCredentialId(credentialId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Registered credential not found in gym database"));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Registered credential not found in gym database"));
 
             long newSignCount = result.getSignatureCount();
             if (newSignCount <= cred.getSignCount() && cred.getSignCount() > 0) {
@@ -268,7 +265,8 @@ public class PasskeyServiceImpl implements PasskeyService {
                     .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
         } else {
             member = memberRepo.findByUserEmail(authEmail)
-                    .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
         }
 
         return webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
@@ -277,8 +275,7 @@ public class PasskeyServiceImpl implements PasskeyService {
                         c.getCredentialId(),
                         c.getDeviceName(),
                         c.getSignCount(),
-                        c.getCreatedAt()
-                ))
+                        c.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 

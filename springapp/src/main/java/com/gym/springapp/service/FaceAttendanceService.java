@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface FaceAttendanceService {
     FaceCheckinResponseDTO faceCheckin(Long userId);
+    FaceCheckinResponseDTO fingerprintCheckin(Long userId);
     FaceCheckinResponseDTO manualCheckin(Long userId);
     List<FaceCheckinResponseDTO> getTodayAttendance();
     List<FaceCheckinResponseDTO> getAllAttendance(LocalDate from, LocalDate to, String role, String name);

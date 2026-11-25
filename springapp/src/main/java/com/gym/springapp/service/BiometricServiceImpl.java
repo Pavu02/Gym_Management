@@ -6,9 +6,13 @@ import com.gym.springapp.dto.FaceEnrollmentRequestDTO;
 import com.gym.springapp.exceptions.BadRequestException;
 import com.gym.springapp.exceptions.DuplicateBiometricException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
+import com.gym.springapp.model.FaceProfile;
+import com.gym.springapp.model.FingerprintProfile;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.MemberBiometric;
 import com.gym.springapp.model.User;
+import com.gym.springapp.repository.FaceProfileRepo;
+import com.gym.springapp.repository.FingerprintProfileRepo;
 import com.gym.springapp.repository.MemberBiometricRepo;
 import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.UserRepo;
@@ -30,6 +34,8 @@ public class BiometricServiceImpl implements BiometricService {
     private static final double FACE_MATCH_THRESHOLD = 0.45;
 
     private final MemberBiometricRepo memberBiometricRepo;
+    private final FaceProfileRepo faceProfileRepo;
+    private final FingerprintProfileRepo fingerprintProfileRepo;
     private final WebAuthnCredentialRepo webAuthnCredentialRepo;
     private final MemberRepo memberRepo;
     private final UserRepo userRepo;
@@ -38,12 +44,16 @@ public class BiometricServiceImpl implements BiometricService {
 
     public BiometricServiceImpl(
             MemberBiometricRepo memberBiometricRepo,
+            FaceProfileRepo faceProfileRepo,
+            FingerprintProfileRepo fingerprintProfileRepo,
             WebAuthnCredentialRepo webAuthnCredentialRepo,
             MemberRepo memberRepo,
             UserRepo userRepo,
             BiometricEncryptionService encryptionService,
             PasswordEncoder passwordEncoder) {
         this.memberBiometricRepo = memberBiometricRepo;
+        this.faceProfileRepo = faceProfileRepo;
+        this.fingerprintProfileRepo = fingerprintProfileRepo;
         this.webAuthnCredentialRepo = webAuthnCredentialRepo;
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
@@ -77,7 +87,8 @@ public class BiometricServiceImpl implements BiometricService {
         Member member;
         if (isAdmin && request.memberId() != null) {
             member = memberRepo.findById(request.memberId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + request.memberId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Member not found with id: " + request.memberId()));
         } else {
             User user = userRepo.findByEmail(authEmail)
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + authEmail));
@@ -138,8 +149,7 @@ public class BiometricServiceImpl implements BiometricService {
                 "SUCCESS",
                 "Face biometric enrolled successfully",
                 member.getId(),
-                now
-        );
+                now);
     }
 
     @Override
@@ -151,24 +161,56 @@ public class BiometricServiceImpl implements BiometricService {
                     .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
         } else {
             member = memberRepo.findByUserEmail(authEmail)
-                    .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
         }
 
         Optional<MemberBiometric> bioOpt = memberBiometricRepo.findByMemberId(member.getId());
+        Optional<FaceProfile> faceOpt = Optional.empty();
+        if (member.getUser() != null) {
+            faceOpt = faceProfileRepo.findByUserId(member.getUser().getId());
+        }
+        if (faceOpt.isEmpty()) {
+            faceOpt = faceProfileRepo.findByUserId(member.getId());
+        }
+
         int passkeyCount = (int) webAuthnCredentialRepo.countByMemberId(member.getId());
 
-        boolean faceEnrolled = bioOpt.isPresent();
-        LocalDateTime faceEnrolledAt = faceEnrolled ? bioOpt.get().getFaceEnrolledAt() : null;
-        boolean consentGiven = faceEnrolled && bioOpt.get().getConsentAt() != null;
-        LocalDateTime consentAt = faceEnrolled ? bioOpt.get().getConsentAt() : null;
+        boolean faceEnrolled = bioOpt.isPresent() || faceOpt.isPresent();
+        LocalDateTime faceEnrolledAt = null;
+        if (faceOpt.isPresent()) {
+            faceEnrolledAt = faceOpt.get().getUpdatedAt() != null ? faceOpt.get().getUpdatedAt()
+                    : faceOpt.get().getCreatedAt();
+        } else if (bioOpt.isPresent()) {
+            faceEnrolledAt = bioOpt.get().getFaceEnrolledAt();
+        }
+
+        boolean consentGiven = faceEnrolled;
+        LocalDateTime consentAt = faceEnrolledAt;
+
+        Optional<FingerprintProfile> fpOpt = Optional.empty();
+        if (member.getUser() != null) {
+            fpOpt = fingerprintProfileRepo.findByUserId(member.getUser().getId());
+        }
+        if (fpOpt.isEmpty()) {
+            fpOpt = fingerprintProfileRepo.findByUserId(member.getId());
+        }
+
+        boolean fingerprintEnrolled = fpOpt.isPresent() || passkeyCount > 0;
+        LocalDateTime fingerprintEnrolledAt = null;
+        if (fpOpt.isPresent()) {
+            fingerprintEnrolledAt = fpOpt.get().getUpdatedAt() != null ? fpOpt.get().getUpdatedAt()
+                    : fpOpt.get().getCreatedAt();
+        }
 
         return new BiometricStatusResponseDTO(
                 faceEnrolled,
                 faceEnrolledAt,
                 consentGiven,
                 consentAt,
-                passkeyCount
-        );
+                passkeyCount,
+                fingerprintEnrolled,
+                fingerprintEnrolledAt);
     }
 
     @Override
@@ -180,11 +222,19 @@ public class BiometricServiceImpl implements BiometricService {
                     .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
         } else {
             member = memberRepo.findByUserEmail(authEmail)
-                    .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
         }
 
         memberBiometricRepo.deleteByMemberId(member.getId());
         webAuthnCredentialRepo.deleteByMemberId(member.getId());
+
+        if (member.getUser() != null) {
+            faceProfileRepo.deleteByUserId(member.getUser().getId());
+            fingerprintProfileRepo.deleteByUserId(member.getUser().getId());
+        }
+        faceProfileRepo.deleteByUserId(member.getId());
+        fingerprintProfileRepo.deleteByUserId(member.getId());
     }
 
     @Override

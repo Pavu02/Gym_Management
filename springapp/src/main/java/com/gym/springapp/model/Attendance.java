@@ -38,6 +38,10 @@ public class Attendance {
     @Column(name = "method", nullable = false, length = 30)
     private AttendanceMethod method = AttendanceMethod.MANUAL;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "check_in_method")
+    private CheckInMethod checkInMethod = CheckInMethod.MANUAL;
+
     // Backward compatibility helper methods
     public LocalDate getDate() {
         return attendanceDate;

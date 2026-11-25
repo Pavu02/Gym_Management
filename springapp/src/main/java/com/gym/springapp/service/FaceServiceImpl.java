@@ -7,8 +7,11 @@ import com.gym.springapp.dto.FaceProfileDescriptorDTO;
 import com.gym.springapp.exceptions.BadRequestException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.FaceProfile;
+import com.gym.springapp.model.Member;
+import com.gym.springapp.model.MemberBiometric;
 import com.gym.springapp.model.User;
 import com.gym.springapp.repository.FaceProfileRepo;
+import com.gym.springapp.repository.MemberBiometricRepo;
 import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.UserRepo;
 import org.springframework.stereotype.Service;
@@ -26,12 +29,20 @@ public class FaceServiceImpl implements FaceService {
     private final FaceProfileRepo faceProfileRepo;
     private final UserRepo userRepo;
     private final MemberRepo memberRepo;
+    private final MemberBiometricRepo memberBiometricRepo;
+    private final BiometricEncryptionService encryptionService;
     private final ObjectMapper objectMapper;
 
-    public FaceServiceImpl(FaceProfileRepo faceProfileRepo, UserRepo userRepo, MemberRepo memberRepo) {
+    public FaceServiceImpl(FaceProfileRepo faceProfileRepo,
+            UserRepo userRepo,
+            MemberRepo memberRepo,
+            MemberBiometricRepo memberBiometricRepo,
+            BiometricEncryptionService encryptionService) {
         this.faceProfileRepo = faceProfileRepo;
         this.userRepo = userRepo;
         this.memberRepo = memberRepo;
+        this.memberBiometricRepo = memberBiometricRepo;
+        this.encryptionService = encryptionService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -42,21 +53,24 @@ public class FaceServiceImpl implements FaceService {
             throw new BadRequestException("Face descriptor must contain exactly 128 float values");
         }
 
-        User user = userRepo.findById(userId).orElse(null);
-        if (user == null) {
-            // Check if memberId was passed instead of userId
-            var memberOpt = memberRepo.findById(userId);
-            if (memberOpt.isPresent() && memberOpt.get().getUser() != null) {
-                user = memberOpt.get().getUser();
-                userId = user.getId();
+        User user = null;
+        if (!isAdmin) {
+            user = userRepo.findByEmail(authEmail)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + authEmail));
+            userId = user.getId();
+        } else {
+            user = userRepo.findById(userId).orElse(null);
+            if (user == null) {
+                // Check if memberId was passed instead of userId
+                var memberOpt = memberRepo.findById(userId);
+                if (memberOpt.isPresent() && memberOpt.get().getUser() != null) {
+                    user = memberOpt.get().getUser();
+                    userId = user.getId();
+                }
             }
-        }
-        if (user == null) {
-            throw new ResourceNotFoundException("User not found with id: " + userId);
-        }
-
-        if (!isAdmin && !user.getEmail().equalsIgnoreCase(authEmail)) {
-            throw new BadRequestException("You are not authorized to enroll face for another user");
+            if (user == null) {
+                throw new ResourceNotFoundException("User not found with id: " + userId);
+            }
         }
 
         String descriptorJson;
@@ -78,7 +92,22 @@ public class FaceServiceImpl implements FaceService {
             profile.setCreatedAt(now);
         }
 
-        return faceProfileRepo.save(profile);
+        FaceProfile savedProfile = faceProfileRepo.save(profile);
+
+        // Also sync to MemberBiometric if user has a Member profile
+        var memberOpt = memberRepo.findByUserId(userId);
+        if (memberOpt.isPresent()) {
+            Member member = memberOpt.get();
+            MemberBiometric mb = memberBiometricRepo.findByMemberId(member.getId())
+                    .orElse(new MemberBiometric());
+            mb.setMember(member);
+            mb.setFaceDescriptorEncrypted(encryptionService.encryptDescriptor(descriptor));
+            mb.setFaceEnrolledAt(now);
+            mb.setConsentAt(now);
+            memberBiometricRepo.save(mb);
+        }
+
+        return savedProfile;
     }
 
     @Override
@@ -94,13 +123,13 @@ public class FaceServiceImpl implements FaceService {
             }
 
             try {
-                List<Double> descriptor = objectMapper.readValue(fp.getDescriptor(), new TypeReference<List<Double>>() {});
+                List<Double> descriptor = objectMapper.readValue(fp.getDescriptor(), new TypeReference<List<Double>>() {
+                });
                 result.add(new FaceProfileDescriptorDTO(
                         fp.getUserId(),
                         user.getName(),
                         fp.getRole(),
-                        descriptor
-                ));
+                        descriptor));
             } catch (Exception ignored) {
             }
         }
@@ -114,5 +143,10 @@ public class FaceServiceImpl implements FaceService {
         FaceProfile fp = faceProfileRepo.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Face profile not found for user: " + userId));
         faceProfileRepo.delete(fp);
+
+        var memberOpt = memberRepo.findByUserId(userId);
+        if (memberOpt.isPresent()) {
+            memberBiometricRepo.deleteByMemberId(memberOpt.get().getId());
+        }
     }
 }
