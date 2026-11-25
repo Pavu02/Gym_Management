@@ -2,12 +2,15 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
+# Use Google's Maven mirror (avoids 429 Too Many Requests)
+COPY settings.xml /root/.m2/settings.xml
+
 # Copy pom.xml and dependency definitions first for caching
 COPY pom.xml .
 COPY src ./src
 
 # Build production jar without running tests
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 # Stage 2: Minimal runtime image with Temurin JRE 17
 FROM eclipse-temurin:17-jre
