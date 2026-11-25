@@ -1,0 +1,106 @@
+<div class="checkin-page">
+  <div class="checkin-card">
+    <!-- Header -->
+    <div class="brand-header">
+      <span class="gym-badge">BEAST<span>X</span> GYM</span>
+      <h2>TOUCH <span>CHECK-IN</span></h2>
+    </div>
+
+    <!-- State: Missing / Expired Kiosk Token -->
+    <div class="token-alert" *ngIf="!kioskToken && status !== 'SUCCESS'">
+      <div class="alert-icon">⚠️</div>
+      <p>No gym kiosk token detected. Please scan the QR code displayed on the gym entrance screen.</p>
+    </div>
+
+    <!-- State: Member Has No Registered Devices -->
+    <div class="no-device-box" *ngIf="!loadingDevices && hasNoDevices && status !== 'SUCCESS'">
+      <div class="no-dev-icon">📱</div>
+      <h3>Enable Fingerprint First</h3>
+      <p>You haven't enrolled this phone for gym fingerprint check-in yet.</p>
+      <button type="button" class="btn-bracket" (click)="goToSetup()">
+        Register Fingerprint Now →
+      </button>
+    </div>
+
+    <!-- State: Ready to Touch Check In -->
+    <div class="touch-container" *ngIf="!loadingDevices && !hasNoDevices && (status === 'IDLE' || status === 'SCANNING')">
+      <p class="instruction-text">
+        Touch the sensor circle below, then verify with your phone's <strong>Touch ID</strong> or <strong>Fingerprint</strong> scanner.
+      </p>
+
+      <button
+        type="button"
+        class="touch-sensor-btn"
+        [class.scanning]="status === 'SCANNING'"
+        (click)="touchCheckIn()"
+        [disabled]="status === 'SCANNING'"
+      >
+        <div class="sensor-inner">
+          <div class="sensor-icon">👆</div>
+          <span class="sensor-lbl">
+            {{ status === 'SCANNING' ? 'Verifying...' : 'Touch to Check In' }}
+          </span>
+        </div>
+        <div class="pulse-ring" *ngIf="status === 'SCANNING'"></div>
+      </button>
+
+      <span class="secure-tag">
+        🔒 Biometric passkey secured with WebAuthn
+      </span>
+    </div>
+
+    <!-- State: Error Screen -->
+    <div class="result-box error-box" *ngIf="status === 'ERROR'">
+      <div class="icon-circle error-circle">✕</div>
+      <h3>Check-In Failed</h3>
+      <p class="error-msg">{{ errorMessage }}</p>
+
+      <div class="error-actions">
+        <button *ngIf="isExpiredPlan" type="button" class="btn-bracket btn-renew" (click)="goToRenew()">
+          Renew Membership Plan
+        </button>
+        <button *ngIf="!isTokenExpired" type="button" class="btn-bracket" (click)="retry()">
+          Try Again ↺
+        </button>
+      </div>
+    </div>
+
+    <!-- State: Success Screen -->
+    <div class="result-box success-box" *ngIf="status === 'SUCCESS' && checkinResult">
+      <div class="icon-circle success-circle">✓</div>
+      
+      <h3 class="success-title">
+        {{ checkinResult.action === 'CHECK_OUT' ? 'CHECKED OUT' : 'CHECKED IN' }}
+      </h3>
+      
+      <div class="check-time">
+        {{ checkinResult.time }}
+      </div>
+
+      <div class="member-info-card">
+        <div class="info-row">
+          <span class="info-label">Member</span>
+          <span class="info-val">{{ checkinResult.memberName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Active Plan</span>
+          <span class="info-val highlight-plan">{{ checkinResult.planName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Membership Validity</span>
+          <span class="info-val" [class.days-warning]="checkinResult.daysLeft < 7">
+            {{ checkinResult.daysLeft }} days left
+          </span>
+        </div>
+      </div>
+
+      <div class="welcome-message">
+        🔥 Have a beast workout! Your attendance is recorded on the gym kiosk.
+      </div>
+
+      <button type="button" class="btn-bracket btn-done" routerLink="/member/profile">
+        Go to My Profile
+      </button>
+    </div>
+  </div>
+</div>

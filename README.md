@@ -561,3 +561,8 @@ All client routes are configured in `angularapp/src/app/app-routing.module.ts`:
 * **Project Repository:** [BeastX Gym Management System](https://github.com/Pavu02/Gym_Management)
 
 *Crafted with passion for athletic excellence and high-performance engineering.* 🏋️‍♂️🔥
+
+
+
+
+

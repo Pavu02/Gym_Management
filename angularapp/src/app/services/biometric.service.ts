@@ -16,6 +16,8 @@ export interface BiometricStatusResponse {
   consentGiven: boolean;
   consentAt: string | null;
   passkeyCount: number;
+  fingerprintEnrolled?: boolean;
+  fingerprintEnrolledAt?: string | null;
 }
 
 export interface BiometricResponse {

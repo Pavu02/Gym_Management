@@ -23,9 +23,10 @@ export interface FaceCheckinResponseDTO {
   assignedTrainerName?: string;
   totalAttendanceThisMonth: number;
   checkInTime: string;
-  status: 'CHECKED_IN' | 'ALREADY_CHECKED_IN' | 'MEMBERSHIP_EXPIRED' | 'NO_PLAN';
-  expiringSoon: boolean;
-  alreadyCheckedIn: boolean;
+  status: 'CHECKED_IN' | 'ALREADY_CHECKED_IN' | 'MEMBERSHIP_EXPIRED' | 'NO_PLAN' | string;
+  expiringSoon?: boolean;
+  alreadyCheckedIn?: boolean;
+  method?: string;
 }
 
 @Injectable({

@@ -439,3 +439,317 @@
   color: #666;
   font-style: italic;
 }
+
+/* =========================================
+   PHASE 6: Camera Fallback & Fingerprint Kiosk
+   ========================================= */
+.camera-fallback-banner {
+  background: #ea580c;
+  color: #ffffff;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.banner-icon {
+  font-size: 16px;
+}
+
+/* Mode switch buttons [ 📷 Face ] [ 👆 Fingerprint ] */
+.mode-switch-group {
+  display: flex;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.btn-mode {
+  background: transparent;
+  color: #a1a1aa;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-mode:hover {
+  color: #fff;
+}
+
+.btn-mode.active {
+  background: #ff6b00;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(255, 107, 0, 0.4);
+}
+
+/* Fingerprint Kiosk Viewport */
+.fingerprint-kiosk-container {
+  padding: 28px 24px;
+  background: #141416;
+}
+
+.kiosk-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .kiosk-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.qr-display-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-frame {
+  width: 280px;
+  height: 280px;
+  background: #ffffff;
+  border: 4px solid #ff6b00;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(255, 107, 0, 0.35);
+  box-sizing: border-box;
+}
+
+.kiosk-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.qr-loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #555;
+  font-size: 13px;
+}
+
+.spinner-icon {
+  font-size: 30px;
+  animation: spin 1.2s infinite linear;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.countdown-badge {
+  margin-top: 14px;
+  background: #1f1f23;
+  border: 1px solid #333;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulse 1s infinite;
+}
+
+.countdown-badge strong {
+  color: #ff6b00;
+}
+
+.kiosk-instruction-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.instruction-badge {
+  align-self: flex-start;
+  background: rgba(255, 107, 0, 0.15);
+  border: 1px solid #ff6b00;
+  color: #ff6b00;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.kiosk-instruction-box h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.kiosk-instruction-box h2 span {
+  color: #ff6b00;
+}
+
+.guide-lead {
+  color: #a1a1aa;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #1a1a1d;
+  border: 1px solid #27272a;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.f-num {
+  background: #ff6b00;
+  color: #fff;
+  font-weight: 800;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.flow-step strong {
+  display: block;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.flow-step p {
+  margin: 0;
+  font-size: 11px;
+  color: #888;
+}
+
+/* Dev Simulator Bar */
+.dev-simulator-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #111;
+  border: 1px dashed #3f3f46;
+  border-radius: 8px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.sim-label {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 700;
+}
+
+.sim-select {
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  flex: 1;
+}
+
+.btn-sim {
+  background: #ff6b00;
+  color: #fff;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sim:hover {
+  background: #e05e00;
+}
+
+.sim-msg {
+  font-size: 11px;
+  color: #00e676;
+}
+
+/* Method badge in popup and table */
+.method-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid #a855f7;
+}
+
+.method-pill.method-fp {
+  background: rgba(255, 107, 0, 0.2);
+  color: #ff6b00;
+  border-color: #ff6b00;
+}
+
+.badge-method-table {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.bm-face {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.bm-fp {
+  background: rgba(255, 107, 0, 0.15);
+  color: #ff6b00;
+}

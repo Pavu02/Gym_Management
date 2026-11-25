@@ -164,6 +164,19 @@
   color: #ffffff;
 }
 
+.btn-fingerprint {
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  color: #ffffff;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 180, 216, 0.3);
+}
+
+.btn-fingerprint:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0096c7, #023e8a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 180, 216, 0.45);
+}
+
 .btn-in:hover:not(:disabled) {
   background-color: #e05e00;
   transform: translateY(-2px);

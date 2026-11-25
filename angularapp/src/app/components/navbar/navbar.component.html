@@ -62,6 +62,7 @@
         <ng-container *ngIf="isLoggedIn() && getRole() === 'MEMBER'">
           <a routerLink="/home" (click)="closeMenu()">Home</a>
           <a routerLink="/member/profile" (click)="closeMenu()">My Profile</a>
+          <a routerLink="/member/fingerprint" (click)="closeMenu()">Fingerprint Check-in</a>
           <a routerLink="/member/plan" (click)="closeMenu()">My Membership Plan</a>
           <a routerLink="/member/trainer" (click)="closeMenu()">My Personal Trainer</a>
           <a routerLink="/member/attendance" (click)="closeMenu()">My Attendance</a>

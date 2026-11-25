@@ -39,10 +39,9 @@
         <div class="user-main">
           <div class="name-row">
             <h2>{{ profile.name }}</h2>
-            <span class="status-badge" 
-                  [class.badge-active]="profile.status === 'ACTIVE'"
-                  [class.badge-expired]="profile.status === 'EXPIRED'"
-                  [class.badge-pending]="profile.status === 'PENDING_PAYMENT'">
+            <span class="status-badge" [class.badge-active]="profile.status === 'ACTIVE'"
+              [class.badge-expired]="profile.status === 'EXPIRED'"
+              [class.badge-pending]="profile.status === 'PENDING_PAYMENT'">
               {{ profile.status }}
             </span>
           </div>
@@ -63,9 +62,8 @@
           </div>
         </div>
         <div class="progress-bar-bg">
-          <div class="progress-fill" 
-               [style.width.%]="daysLeft > 30 ? 100 : (daysLeft / 30) * 100"
-               [class.fill-danger]="daysLeft < 7"></div>
+          <div class="progress-fill" [style.width.%]="daysLeft > 30 ? 100 : (daysLeft / 30) * 100"
+            [class.fill-danger]="daysLeft < 7"></div>
         </div>
       </div>
 
@@ -115,7 +113,8 @@
 
         <div class="detail-item">
           <span class="detail-label">Date of Birth</span>
-          <span class="detail-value">{{ profile.dateOfBirth ? (profile.dateOfBirth | date:'mediumDate') : 'Not provided' }}</span>
+          <span class="detail-value">{{ profile.dateOfBirth ? (profile.dateOfBirth | date:'mediumDate') : 'Not provided'
+            }}</span>
         </div>
 
         <div class="detail-item full-width">
@@ -167,56 +166,76 @@
               </span>
             </div>
 
-            <button
-              type="button"
-              class="btn-bracket btn-sm"
-              style="margin-top: 12px; width: 100%;"
-              (click)="openFaceEnroll()"
-            >
+            <button type="button" class="btn-bracket btn-sm" style="margin-top: 12px; width: 100%;"
+              (click)="openFaceEnroll()">
               {{ biometricStatus?.faceEnrolled ? 'Re-enroll My Face 👤' : 'Register My Face 👤' }}
             </button>
           </div>
 
-          <!-- WebAuthn Fingerprint Card -->
-          <div class="bio-card" *ngIf="webAuthnSupported">
+          <!-- Fingerprint Biometric Card -->
+          <div class="bio-card">
             <div class="bio-header">
               <span class="bio-icon">👆</span>
               <div>
-                <h4>Fingerprint Passkey</h4>
-                <p>WebAuthn biometric check-in (Touch ID / Face ID)</p>
+                <h4>Fingerprint Biometric Check-in</h4>
+                <p>Optical sensor template & device passkeys</p>
               </div>
             </div>
 
-            <div class="passkey-devices-list" *ngIf="passkeyDevices.length > 0">
+            <div class="bio-status-row">
+              <span class="status-indicator" [class.enrolled]="fingerprintStatus?.enrolled || biometricStatus?.fingerprintEnrolled">
+                {{ (fingerprintStatus?.enrolled || biometricStatus?.fingerprintEnrolled) ? 'Enrolled' : 'Not Enrolled' }}
+              </span>
+              <span class="enrolled-date" *ngIf="fingerprintStatus?.enrolledAt || biometricStatus?.fingerprintEnrolledAt">
+                {{ (fingerprintStatus?.enrolledAt || biometricStatus?.fingerprintEnrolledAt) | date:'mediumDate' }}
+              </span>
+            </div>
+
+            <!-- Primary: Optical / Touch Fingerprint Scanner -->
+            <button type="button" class="btn-bracket btn-sm" style="margin-top: 12px; width: 100%;"
+              (click)="openFingerprintEnroll()">
+              {{ (fingerprintStatus?.enrolled || biometricStatus?.fingerprintEnrolled) ? 'Re-enroll My Fingerprint 👆' : 'Register My Fingerprint 👆' }}
+            </button>
+
+            <!-- Secondary: Passkey Devices List -->
+            <div class="passkey-devices-list" *ngIf="passkeyDevices.length > 0" style="margin-top: 12px;">
               <div class="device-row" *ngFor="let dev of passkeyDevices">
                 <div class="dev-info">
                   <strong>{{ dev.deviceName }}</strong>
                   <span class="dev-meta">Added: {{ dev.createdAt | date:'shortDate' }} | Checks: {{ dev.signCount }}</span>
                 </div>
-                <button type="button" class="btn-del-device" (click)="deletePasskey(dev.credentialId)" title="Remove device">
+                <button type="button" class="btn-del-device" (click)="deletePasskey(dev.credentialId)"
+                  title="Remove device">
                   🗑️
                 </button>
               </div>
             </div>
 
-            <div class="passkey-empty" *ngIf="passkeyDevices.length === 0">
-              No fingerprint devices registered yet.
-            </div>
-
-            <button 
-              type="button" 
-              class="btn-bracket btn-sm" 
-              style="margin-top: 12px; width: 100%;"
-              (click)="addPasskey()" 
-              [disabled]="registeringPasskey || passkeyDevices.length >= 2"
-            >
-              {{ registeringPasskey ? 'Verifying Biometrics...' : (passkeyDevices.length >= 2 ? 'Device Limit Reached (2/2)' : 'Add Fingerprint Login ↗') }}
+            <!-- Optional: WebAuthn Passkey button -->
+            <button *ngIf="webAuthnSupported" type="button" class="btn-bracket btn-sm" style="margin-top: 8px; width: 100%; opacity: 0.85;"
+              (click)="addPasskey()" [disabled]="registeringPasskey || passkeyDevices.length >= 2">
+              {{ registeringPasskey ? 'Verifying Device...' : (passkeyDevices.length >= 2 ? 'Passkey Devices (2/2)' : 'Add WebAuthn Passkey ↗') }}
             </button>
           </div>
         </div>
 
         <div class="lan-help-note">
-          ℹ️ <strong>LAN Testing Note:</strong> WebAuthn passkeys require <code>localhost</code> or a valid <code>HTTPS</code> origin. To test biometric passkeys on a physical smartphone connected via local Wi-Fi, run an HTTPS tunnel (e.g. cloudflared or ngrok) mapped to port 8081.
+          ℹ️ <strong>Check-In Note:</strong> You can check in at the gym using either <strong>Face Print</strong> or your unique <strong>Fingerprint</strong> sensor. WebAuthn passkeys also allow touch login from compatible smartphones.
+        </div>
+
+        <!-- Camera Fallback Fingerprint Banner -->
+        <div class="kiosk-fallback-card" style="margin-top: 1.25rem; background: #1c1917; border: 1px solid #ff6b00; border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div>
+            <h4 style="margin: 0 0 4px; color: #ff6b00; font-size: 1rem; display: flex; align-items: center; gap: 6px;">
+              <span>👆</span> Camera not working at the gym? Enable fingerprint check-in
+            </h4>
+            <p style="margin: 0; color: #a1a1aa; font-size: 0.85rem;">
+              Register your phone's fingerprint sensor once to check in effortlessly via kiosk QR code.
+            </p>
+          </div>
+          <a routerLink="/member/fingerprint" class="btn-bracket btn-sm" style="text-decoration: none; padding: 0.6rem 1.2rem; font-size: 0.88rem; white-space: nowrap;">
+            Set Up Fingerprint →
+          </a>
         </div>
       </div>
     </div>
@@ -299,13 +318,11 @@
     </div>
 
     <!-- Face Enrollment Modal Component -->
-    <app-face-enroll
-      *ngIf="showFaceEnrollModal && profile"
-      [userId]="profile.id"
-      [userName]="profile.name"
-      role="MEMBER"
-      (enrolled)="onFaceEnrolled()"
-      (close)="closeFaceEnroll()"
-    ></app-face-enroll>
+    <app-face-enroll *ngIf="showFaceEnrollModal && profile" [userId]="currentUserId" [userName]="profile.name"
+      role="MEMBER" (enrolled)="onFaceEnrolled()" (close)="closeFaceEnroll()"></app-face-enroll>
+
+    <!-- Fingerprint Enrollment Modal Component -->
+    <app-fingerprintenroll *ngIf="showFingerprintEnrollModal && profile" [userId]="currentUserId" [userName]="profile.name"
+      role="MEMBER" (enrolled)="onFingerprintEnrolled()" (close)="closeFingerprintEnroll()"></app-fingerprintenroll>
   </div>
 </div>

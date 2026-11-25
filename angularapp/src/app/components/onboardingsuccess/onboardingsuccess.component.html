@@ -34,8 +34,23 @@
       </div>
     </div>
 
+    <!-- Biometric Setup Prompt for Fast-Track Kiosk Check-In -->
+    <div class="biometrics-callout" style="margin: 1.5rem 0; padding: 1.2rem; background: #1c1c1c; border-radius: 10px; border: 1px solid rgba(255,107,0,0.4); text-align: left;">
+      <h3 style="margin: 0 0 6px; font-size: 1rem; color: #ff6b00; display: flex; align-items: center; gap: 8px;">
+        <span>👆</span> Camera not working at the gym? Enable fingerprint check-in
+      </h3>
+      <p style="margin: 0 0 10px; font-size: 0.85rem; color: #bbb; line-height: 1.4;">
+        Add your <strong>Unique Phone Fingerprint</strong> and <strong>Face Print</strong> to enable instant automated check-in when entering the gym!
+      </p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+        <a routerLink="/member/fingerprint" class="btn-bracket" style="text-decoration: none; font-size: 0.85rem; padding: 0.5rem 1rem; display: inline-block;">
+          👆 Set Up Fingerprint
+        </a>
+      </div>
+    </div>
+
     <button type="button" class="btn-dashboard" (click)="goToDashboard()">
-      Go to My Dashboard →
+      Proceed to Profile & Register Biometrics →
     </button>
   </div>
 </div>

@@ -80,6 +80,57 @@
   color: #ef5350;
 }
 
+/* Method breakdown card */
+.stat-methods {
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .stat-methods {
+    grid-column: span 1;
+  }
+}
+
+.method-counts-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.m-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.m-pill strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.m-face {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid #a855f7;
+  color: #d8b4fe;
+}
+
+.m-fingerprint {
+  background: rgba(255, 107, 0, 0.15);
+  border: 1px solid #ff6b00;
+  color: #ff6b00;
+}
+
+.m-manual {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #444;
+  color: #ccc;
+}
+
 .stat-revenue .stat-value {
   color: #ffb300;
 }

@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import * as faceapi from '@vladmandic/face-api';
 import { FaceService, FaceProfileDescriptorDTO, FaceCheckinResponseDTO } from '../../services/face.service';
+import { KioskService, RecentCheckinDTO } from '../../services/kiosk.service';
+import { MemberService } from '../../services/member.service';
+import { MemberResponse } from '../../models/member.model';
 
 @Component({
   selector: 'app-facescanner',
@@ -11,6 +14,10 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
   @ViewChild('videoElement') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasElement') canvasRef!: ElementRef<HTMLCanvasElement>;
 
+  // Mode: FACE or FINGERPRINT
+  scanMode: 'FACE' | 'FINGERPRINT' = 'FACE';
+  cameraFallbackBanner: string = '';
+
   cameraActive = false;
   cameraLoading = false;
   cameraError = '';
@@ -18,6 +25,19 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
 
   enrolledCount = 0;
   todayCheckins: FaceCheckinResponseDTO[] = [];
+
+  // Fingerprint Kiosk Mode State
+  kioskToken: string = '';
+  qrImageUrl: string = '';
+  qrCountdown: number = 30;
+  private qrTimer: any = null;
+  private pollInterval: any = null;
+  private lastPolledTime: string = '';
+
+  // Simulator
+  membersList: MemberResponse[] = [];
+  selectedSimulateMemberId: number | null = null;
+  simulatorMessage: string = '';
 
   // Popup modal state
   activePopup: FaceCheckinResponseDTO | null = null;
@@ -29,24 +49,43 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
   private userProfilesMap = new Map<number, { name: string; role: string }>();
 
   // State tracking for consecutive matches & cooldown
-  private matchStreakMap = new Map<number, number>(); // userId -> consecutive match count
-  private cooldownMap = new Map<number, number>(); // userId -> timestamp of last check-in
+  private matchStreakMap = new Map<number, number>();
+  private cooldownMap = new Map<number, number>();
   private audioCtx: AudioContext | null = null;
 
-  constructor(private faceService: FaceService) {}
+  constructor(
+    private faceService: FaceService,
+    private kioskService: KioskService,
+    private memberService: MemberService
+  ) { }
 
   async ngOnInit(): Promise<void> {
     await this.initScanner();
     this.loadTodayCheckins();
+    this.loadMembersForSimulator();
   }
 
   ngOnDestroy(): void {
     this.stopCamera();
+    this.stopFingerprintKiosk();
     if (this.popupTimer) {
       clearTimeout(this.popupTimer);
     }
     if (this.audioCtx) {
-      try { this.audioCtx.close(); } catch (_) {}
+      try { this.audioCtx.close(); } catch (_) { }
+    }
+  }
+
+  switchMode(mode: 'FACE' | 'FINGERPRINT'): void {
+    this.scanMode = mode;
+    this.cameraFallbackBanner = '';
+
+    if (mode === 'FACE') {
+      this.stopFingerprintKiosk();
+      this.startCamera();
+    } else {
+      this.stopCamera();
+      this.startFingerprintKiosk();
     }
   }
 
@@ -62,8 +101,17 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       await this.startCamera();
     } catch (err: any) {
       this.cameraError = 'Initialization failed: ' + (err.message || '');
-      this.statusText = 'Error initializing scanner.';
+      this.statusText = 'Error initializing camera scanner.';
+      // Fallback auto-switch to Fingerprint
+      this.triggerCameraFallback('Camera unavailable - switched to fingerprint check-in');
     }
+  }
+
+  triggerCameraFallback(reason: string): void {
+    this.cameraFallbackBanner = reason;
+    this.scanMode = 'FINGERPRINT';
+    this.stopCamera();
+    this.startFingerprintKiosk();
   }
 
   async loadDescriptorsAndBuildMatcher(): Promise<void> {
@@ -87,7 +135,6 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
         labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(d.userId.toString(), [floatArray]));
       }
 
-      // Distance threshold 0.5 (as specified)
       this.faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5);
       this.statusText = `Loaded ${this.enrolledCount} enrolled face templates. Scanner active.`;
     } catch (err: any) {
@@ -116,6 +163,8 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       this.cameraLoading = false;
       this.cameraError = 'Webcam access failed: ' + (err.message || '');
       this.statusText = 'Webcam unavailable.';
+      // Phase 6 Requirement: if camera fails / getUserMedia rejects, auto-switch to Fingerprint mode
+      this.triggerCameraFallback('Camera unavailable - switched to fingerprint check-in');
     }
   }
 
@@ -145,7 +194,6 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       clearInterval(this.scanInterval);
     }
 
-    // Run detection every 1 second (as specified)
     this.scanInterval = setInterval(async () => {
       if (!this.cameraActive || !this.videoRef || !this.videoRef.nativeElement) {
         return;
@@ -162,7 +210,7 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
 
         this.processDetections(detections);
       } catch (e) {
-        // Silently catch transient frame read errors
+        // Silently catch transient frame errors
       }
     }, 1000);
   }
@@ -205,12 +253,10 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
         }
       }
 
-      // Draw bounding box
       ctx.lineWidth = 3;
       ctx.strokeStyle = isKnown ? '#00e676' : '#ff1744';
       ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-      // Draw label background & text
       ctx.font = 'bold 15px Rajdhani, sans-serif';
       const textWidth = ctx.measureText(recognizedName).width;
       ctx.fillStyle = isKnown ? 'rgba(0, 230, 118, 0.85)' : 'rgba(255, 23, 68, 0.85)';
@@ -219,19 +265,16 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       ctx.fillStyle = '#000';
       ctx.fillText(recognizedName, box.x + 6, box.y > 25 ? box.y - 8 : box.y + 16);
 
-      // Check-in logic: requires 3 consecutive scans for the same recognizedUserId
       if (isKnown && recognizedUserId !== null) {
-        // Check cooldown (60 seconds)
         const lastCheckinTime = this.cooldownMap.get(recognizedUserId) || 0;
         if (now - lastCheckinTime < 60000) {
-          continue; // Currently in cooldown, skip triggering API
+          continue;
         }
 
         const currentStreak = (this.matchStreakMap.get(recognizedUserId) || 0) + 1;
         this.matchStreakMap.set(recognizedUserId, currentStreak);
 
         if (currentStreak >= 3) {
-          // Trigger API check-in
           this.matchStreakMap.delete(recognizedUserId);
           this.cooldownMap.set(recognizedUserId, now);
           this.executeCheckin(recognizedUserId);
@@ -258,15 +301,157 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ==========================================
+  // PHASE 6: Fingerprint Kiosk Mode Logic
+  // ==========================================
+  startFingerprintKiosk(): void {
+    this.lastPolledTime = new Date().toISOString();
+    this.refreshKioskToken();
+    this.startPollingCheckins();
+  }
+
+  stopFingerprintKiosk(): void {
+    if (this.qrTimer) {
+      clearInterval(this.qrTimer);
+      this.qrTimer = null;
+    }
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+    if (this.qrImageUrl) {
+      URL.revokeObjectURL(this.qrImageUrl);
+      this.qrImageUrl = '';
+    }
+  }
+
+  refreshKioskToken(): void {
+    this.kioskService.createToken().subscribe({
+      next: (tokenRes) => {
+        this.kioskToken = tokenRes.token;
+        this.loadQrCode(tokenRes.token);
+        this.startQrCountdown();
+      },
+      error: (err) => {
+        console.error('Failed to create kiosk token:', err);
+      }
+    });
+  }
+
+  loadQrCode(token: string): void {
+    this.kioskService.getQrImageBlob(token).subscribe({
+      next: (blob) => {
+        if (this.qrImageUrl) {
+          URL.revokeObjectURL(this.qrImageUrl);
+        }
+        this.qrImageUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => {
+        console.error('Failed to load QR code image:', err);
+      }
+    });
+  }
+
+  startQrCountdown(): void {
+    if (this.qrTimer) {
+      clearInterval(this.qrTimer);
+    }
+    this.qrCountdown = 30;
+    this.qrTimer = setInterval(() => {
+      this.qrCountdown--;
+      if (this.qrCountdown <= 0) {
+        clearInterval(this.qrTimer);
+        this.refreshKioskToken();
+      }
+    }, 1000);
+  }
+
+  startPollingCheckins(): void {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+    // Poll every 3 seconds for new check-ins via kiosk
+    this.pollInterval = setInterval(() => {
+      this.kioskService.getRecentCheckins(this.lastPolledTime).subscribe({
+        next: (recentList) => {
+          if (recentList && recentList.length > 0) {
+            for (const rec of recentList) {
+              this.lastPolledTime = rec.time || new Date().toISOString();
+              const popupDTO: FaceCheckinResponseDTO = {
+                status: rec.status as any,
+                userId: 0,
+                name: rec.memberName,
+                role: 'MEMBER',
+                planName: rec.planName,
+                remainingDays: rec.daysLeft,
+                checkInTime: rec.time,
+                totalAttendanceThisMonth: 0,
+                method: rec.checkInMethod || 'FINGERPRINT',
+                expiringSoon: (rec.daysLeft !== undefined && rec.daysLeft !== null && rec.daysLeft <= 5),
+                alreadyCheckedIn: rec.status === 'ALREADY_CHECKED_IN'
+              };
+              this.showPopup(popupDTO);
+              this.playBeep(rec.status === 'CHECKED_IN');
+              this.loadTodayCheckins();
+            }
+          }
+        },
+        error: () => { }
+      });
+    }, 3000);
+  }
+
+  loadMembersForSimulator(): void {
+    this.memberService.getAllMembers().subscribe({
+      next: (members) => {
+        this.membersList = members || [];
+      },
+      error: () => { }
+    });
+  }
+
+  runSimulator(): void {
+    if (!this.selectedSimulateMemberId) {
+      this.simulatorMessage = 'Select a member first';
+      return;
+    }
+
+    this.simulatorMessage = 'Simulating check-in...';
+    this.kioskService.simulateCheckin(this.selectedSimulateMemberId).subscribe({
+      next: (result) => {
+        this.simulatorMessage = `Simulated ${result.action} for ${result.memberName}`;
+        const popupDTO: FaceCheckinResponseDTO = {
+          status: result.status as any,
+          userId: this.selectedSimulateMemberId || 0,
+          name: result.memberName,
+          role: 'MEMBER',
+          planName: result.planName,
+          remainingDays: result.daysLeft,
+          checkInTime: result.time,
+          totalAttendanceThisMonth: 0,
+          method: 'FINGERPRINT',
+          expiringSoon: (result.daysLeft !== undefined && result.daysLeft !== null && result.daysLeft <= 5),
+          alreadyCheckedIn: false
+        };
+        this.showPopup(popupDTO);
+        this.playBeep(true);
+        this.loadTodayCheckins();
+      },
+      error: (err) => {
+        this.simulatorMessage = err.error?.message || 'Simulator disabled or failed';
+      }
+    });
+  }
+
   showPopup(record: FaceCheckinResponseDTO): void {
     if (this.popupTimer) {
       clearTimeout(this.popupTimer);
     }
     this.activePopup = record;
-    // Auto-close after 6 seconds (as specified)
+    // Auto-close after 5 seconds (as specified)
     this.popupTimer = setTimeout(() => {
       this.activePopup = null;
-    }, 6000);
+    }, 5000);
   }
 
   closePopup(): void {
@@ -281,11 +466,10 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       next: (list) => {
         this.todayCheckins = list;
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
-  // Web Audio API tone generator (pleasant beep on success, low buzz on denied)
   playBeep(success: boolean): void {
     try {
       if (!this.audioCtx) {
@@ -304,7 +488,6 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       gain.connect(this.audioCtx.destination);
 
       if (success) {
-        // High pleasant chime (880Hz to 1046Hz)
         osc.type = 'sine';
         osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(1046, this.audioCtx.currentTime + 0.15);
@@ -313,7 +496,6 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
         osc.start();
         osc.stop(this.audioCtx.currentTime + 0.3);
       } else {
-        // Low tone buzz (160Hz)
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(160, this.audioCtx.currentTime);
         gain.gain.setValueAtTime(0.25, this.audioCtx.currentTime);
@@ -321,8 +503,6 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
         osc.start();
         osc.stop(this.audioCtx.currentTime + 0.4);
       }
-    } catch (_) {
-      // Audio autoplay may be blocked in some browser policies
-    }
+    } catch (_) { }
   }
 }

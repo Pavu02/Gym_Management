@@ -34,6 +34,9 @@ import { OnboardingsuccessComponent } from './components/onboardingsuccess/onboa
 import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
 import { FaceEnrollComponent } from './components/faceenroll/faceenroll.component';
 import { FaceScannerComponent } from './components/facescanner/facescanner.component';
+import { FingerprintenrollComponent } from './components/fingerprintenroll/fingerprintenroll.component';
+import { MemberfingerprintComponent } from './components/memberfingerprint/memberfingerprint.component';
+import { FingerprintcheckinComponent } from './components/fingerprintcheckin/fingerprintcheckin.component';
 
 @NgModule({
   declarations: [
@@ -65,7 +68,10 @@ import { FaceScannerComponent } from './components/facescanner/facescanner.compo
     OnboardingsuccessComponent,
     MembertrainerComponent,
     FaceEnrollComponent,
-    FaceScannerComponent
+    FaceScannerComponent,
+    FingerprintenrollComponent,
+    MemberfingerprintComponent,
+    FingerprintcheckinComponent
   ],
   imports: [
     BrowserModule,

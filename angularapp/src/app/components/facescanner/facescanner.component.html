@@ -1,11 +1,38 @@
 <div class="scanner-card">
+  <!-- Orange Banner when camera failed and auto-switched to fingerprint -->
+  <div class="camera-fallback-banner" *ngIf="cameraFallbackBanner">
+    <span class="banner-icon">⚠️</span>
+    <span class="banner-text">{{ cameraFallbackBanner }}</span>
+  </div>
+
   <div class="scanner-header">
     <div class="header-left">
-      <span class="live-indicator" [class.active]="cameraActive"></span>
-      <h3>LIVE <span>CHECK-IN SCANNER</span></h3>
-      <span class="enrolled-badge">{{ enrolledCount }} Enrolled</span>
+      <span class="live-indicator" [class.active]="scanMode === 'FACE' ? cameraActive : true"></span>
+      <h3>KIOSK <span>{{ scanMode === 'FACE' ? 'FACE SCANNER' : 'FINGERPRINT CHECK-IN' }}</span></h3>
+      <span class="enrolled-badge">{{ scanMode === 'FACE' ? (enrolledCount + ' Enrolled') : 'WebAuthn QR Kiosk' }}</span>
     </div>
-    <div class="header-right">
+
+    <!-- Mode Switch Buttons: [ 📷 Face ] [ 👆 Fingerprint ] -->
+    <div class="mode-switch-group">
+      <button
+        type="button"
+        class="btn-mode"
+        [class.active]="scanMode === 'FACE'"
+        (click)="switchMode('FACE')"
+      >
+        📷 Face
+      </button>
+      <button
+        type="button"
+        class="btn-mode"
+        [class.active]="scanMode === 'FINGERPRINT'"
+        (click)="switchMode('FINGERPRINT')"
+      >
+        👆 Fingerprint
+      </button>
+    </div>
+
+    <div class="header-right" *ngIf="scanMode === 'FACE'">
       <button class="btn-toggle-cam" (click)="toggleCamera()" [class.active]="cameraActive">
         {{ cameraActive ? '⏹ Stop Scanner' : '▶ Start Scanner' }}
       </button>
@@ -13,11 +40,17 @@
         🔄 Reload Faces
       </button>
     </div>
+
+    <div class="header-right" *ngIf="scanMode === 'FINGERPRINT'">
+      <button class="btn-refresh-db" (click)="refreshKioskToken()" title="Generate New QR Token">
+        🔄 Refresh QR ({{ qrCountdown }}s)
+      </button>
+    </div>
   </div>
 
   <div class="scanner-body">
-    <!-- Camera Viewport -->
-    <div class="camera-container">
+    <!-- View 1: FACE SCANNER (Camera Viewport) -->
+    <div class="camera-container" *ngIf="scanMode === 'FACE'">
       <video #videoElement autoplay muted playsinline class="video-stream"></video>
       <canvas #canvasElement class="canvas-layer"></canvas>
 
@@ -34,7 +67,74 @@
       </div>
     </div>
 
-    <!-- Live Auto Check-in Result Popup / Modal (auto-closing in 6s) -->
+    <!-- View 2: FINGERPRINT QR KIOSK -->
+    <div class="fingerprint-kiosk-container" *ngIf="scanMode === 'FINGERPRINT'">
+      <div class="kiosk-grid">
+        <div class="qr-display-box">
+          <div class="qr-frame">
+            <img *ngIf="qrImageUrl" [src]="qrImageUrl" alt="Kiosk Check-in QR Code" class="kiosk-qr-image" />
+            <div class="qr-loading-placeholder" *ngIf="!qrImageUrl">
+              <span class="spinner-icon">🔄</span>
+              <p>Generating dynamic QR code...</p>
+            </div>
+          </div>
+
+          <div class="countdown-badge">
+            <span class="timer-dot"></span>
+            <span>Rotating QR in <strong>{{ qrCountdown }}s</strong></span>
+          </div>
+        </div>
+
+        <div class="kiosk-instruction-box">
+          <div class="instruction-badge">FAST PHONE CHECK-IN</div>
+          <h2>SCAN & <span>TOUCH</span></h2>
+          <p class="guide-lead">
+            Scan this QR code using your smartphone camera. Touch your phone's fingerprint sensor to instantly record attendance.
+          </p>
+
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="f-num">1</span>
+              <div>
+                <strong>Point Phone Camera</strong>
+                <p>Scan the live QR code on screen</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="f-num">2</span>
+              <div>
+                <strong>Open Check-In Link</strong>
+                <p>Launches touch verification page</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="f-num">3</span>
+              <div>
+                <strong>Touch Fingerprint</strong>
+                <p>Verify via Touch ID or Android sensor</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dev Simulator Dropdown -->
+          <div class="dev-simulator-bar">
+            <div class="sim-label">🛠️ Dev Simulator:</div>
+            <select [(ngModel)]="selectedSimulateMemberId" class="sim-select">
+              <option [ngValue]="null">-- Select Member to Test --</option>
+              <option *ngFor="let m of membersList" [ngValue]="m.id">
+                {{ m.name }} ({{ m.planName || 'Active' }})
+              </option>
+            </select>
+            <button type="button" class="btn-sim" (click)="runSimulator()">
+              Simulate Touch
+            </button>
+            <span class="sim-msg" *ngIf="simulatorMessage">{{ simulatorMessage }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Auto Check-in Result Popup / Modal (auto-closing in 5s) -->
     <div class="scan-popup" *ngIf="activePopup" [ngClass]="{
       'popup-success': activePopup.status === 'CHECKED_IN',
       'popup-info': activePopup.status === 'ALREADY_CHECKED_IN',
@@ -51,6 +151,9 @@
             <h4>{{ activePopup.name }}</h4>
             <span class="role-badge" [class.badge-member]="activePopup.role === 'MEMBER'" [class.badge-trainer]="activePopup.role === 'TRAINER'">
               {{ activePopup.role }}
+            </span>
+            <span class="method-pill" [class.method-fp]="activePopup.method === 'FINGERPRINT'">
+              {{ activePopup.method === 'FINGERPRINT' ? '👆 via Fingerprint' : '📷 via Face' }}
             </span>
           </div>
           <span class="status-pill" [ngClass]="{
@@ -94,7 +197,7 @@
           <span class="label">Check-In Time:</span>
           <span class="val">{{ activePopup.checkInTime | date:'shortTime' }}</span>
         </div>
-        <div class="footer-stat">
+        <div class="footer-stat" *ngIf="activePopup.totalAttendanceThisMonth">
           <span class="label">Monthly Visits:</span>
           <span class="val">{{ activePopup.totalAttendanceThisMonth }} days</span>
         </div>
@@ -120,6 +223,7 @@
             <th>User</th>
             <th>Role</th>
             <th>Check-In Time</th>
+            <th>Method</th>
             <th>Plan Info</th>
             <th>Status</th>
           </tr>
@@ -135,6 +239,11 @@
               </span>
             </td>
             <td class="time-cell">{{ item.checkInTime | date:'mediumTime' }}</td>
+            <td>
+              <span class="badge-method-table" [ngClass]="item.method === 'FINGERPRINT' ? 'bm-fp' : 'bm-face'">
+                {{ item.method === 'FINGERPRINT' ? '👆 Fingerprint' : '📷 Face' }}
+              </span>
+            </td>
             <td class="plan-cell">
               <span *ngIf="item.role === 'MEMBER'">{{ item.planName || 'N/A' }} ({{ item.remainingDays || 0 }}d left)</span>
               <span *ngIf="item.role !== 'MEMBER'">Staff / Coach</span>
@@ -144,7 +253,7 @@
             </td>
           </tr>
           <tr *ngIf="todayCheckins.length === 0">
-            <td colspan="5" class="empty-state">No check-ins recorded yet today. Stand in front of the camera to check in!</td>
+            <td colspan="6" class="empty-state">No check-ins recorded yet today. Stand in front of the camera or scan the fingerprint QR to check in!</td>
           </tr>
         </tbody>
       </table>

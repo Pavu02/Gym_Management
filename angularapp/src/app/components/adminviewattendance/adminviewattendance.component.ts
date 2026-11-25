@@ -23,6 +23,7 @@ export class AdminviewattendanceComponent implements OnInit {
   fromDate: string = '';
   toDate: string = '';
   selectedRole: string = 'ALL';
+  selectedMethod: string = 'ALL';
   searchName: string = '';
 
   loading: boolean = true;
@@ -68,7 +69,11 @@ export class AdminviewattendanceComponent implements OnInit {
       this.searchName || undefined
     ).subscribe({
       next: (data) => {
-        this.records = data;
+        let filtered = data || [];
+        if (this.selectedMethod !== 'ALL') {
+          filtered = filtered.filter(r => (r.method || 'FACE').toUpperCase() === this.selectedMethod);
+        }
+        this.records = filtered;
         this.loading = false;
       },
       error: (err) => {
@@ -86,6 +91,7 @@ export class AdminviewattendanceComponent implements OnInit {
     this.fromDate = '';
     this.toDate = '';
     this.selectedRole = 'ALL';
+    this.selectedMethod = 'ALL';
     this.searchName = '';
     this.loadAttendance();
   }

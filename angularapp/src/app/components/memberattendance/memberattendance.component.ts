@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AttendanceService } from '../../services/attendance.service';
 import { MemberService } from '../../services/member.service';
+import { FingerprintService } from '../../services/fingerprint.service';
 import { Attendance, getAttendanceDate, getCheckInTime, getCheckOutTime } from '../../models/attendance.model';
 
 @Component({
@@ -28,9 +29,13 @@ export class MemberattendanceComponent implements OnInit {
   getCheckIn = getCheckInTime;
   getCheckOut = getCheckOutTime;
 
+  memberId: number = 0;
+  memberName: string = '';
+
   constructor(
     private attendanceService: AttendanceService,
     private memberService: MemberService,
+    private fingerprintService: FingerprintService,
     private router: Router
   ) {}
 
@@ -42,6 +47,8 @@ export class MemberattendanceComponent implements OnInit {
   checkMembershipStatus(): void {
     this.memberService.getMyProfile().subscribe({
       next: (profile) => {
+        this.memberId = profile.id;
+        this.memberName = profile.name;
         this.daysLeft = profile.daysLeft ?? 0;
         if (profile.status === 'EXPIRED' || (profile.daysLeft !== undefined && profile.daysLeft <= 0)) {
           this.isExpired = true;
@@ -109,6 +116,29 @@ export class MemberattendanceComponent implements OnInit {
       error: (err) => {
         this.actionLoading = false;
         this.errorMessage = err.error?.message || 'Check-in failed';
+      }
+    });
+  }
+
+  checkInWithFingerprint(): void {
+    this.actionLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.fingerprintService.checkin({ userId: this.memberId }).subscribe({
+      next: (res: any) => {
+        this.actionLoading = false;
+        this.successMessage = `⚡ Checked in successfully via Biometric Fingerprint! Welcome, ${res.name || this.memberName}!`;
+        this.loadMyAttendance();
+      },
+      error: (err: any) => {
+        this.actionLoading = false;
+        const msg = err.error?.message || err.message || '';
+        if (msg.includes('No fingerprint enrolled')) {
+          this.errorMessage = 'No unique fingerprint enrolled yet. Please go to your Profile to register your fingerprint first.';
+        } else {
+          this.errorMessage = msg || 'Fingerprint biometric check-in failed';
+        }
       }
     });
   }

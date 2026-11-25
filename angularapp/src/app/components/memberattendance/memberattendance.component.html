@@ -65,6 +65,15 @@
     <div class="today-actions">
       <button
         *ngIf="!todayRecord"
+        (click)="checkInWithFingerprint()"
+        class="btn-attend btn-fingerprint"
+        [disabled]="actionLoading || isExpired"
+      >
+        {{ actionLoading ? 'Processing...' : '👆 Fingerprint Check-In' }}
+      </button>
+
+      <button
+        *ngIf="!todayRecord"
         (click)="checkIn()"
         class="btn-attend btn-in"
         [disabled]="actionLoading || isExpired"

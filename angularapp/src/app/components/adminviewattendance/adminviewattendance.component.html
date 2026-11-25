@@ -65,6 +65,16 @@
       </select>
     </div>
 
+    <div class="filter-group">
+      <label>Method:</label>
+      <select [(ngModel)]="selectedMethod" (change)="onFilterChange()" class="filter-select">
+        <option value="ALL">All Methods</option>
+        <option value="FACE">Face (📷)</option>
+        <option value="FINGERPRINT">Fingerprint (👆)</option>
+        <option value="MANUAL">Manual (📝)</option>
+      </select>
+    </div>
+
     <div class="filter-group search-group">
       <label>Search Name:</label>
       <input type="text" [(ngModel)]="searchName" (input)="onFilterChange()" placeholder="Search by name..." class="filter-input">
@@ -102,7 +112,9 @@
           <td>{{ record.checkInTime | date:'mediumDate' }}</td>
           <td class="time-in">{{ record.checkInTime | date:'shortTime' }}</td>
           <td>
-            <span class="method-badge">FACE</span>
+            <span class="method-badge" [ngClass]="'method-' + (record.method || 'face').toLowerCase()">
+              {{ (record.method || 'FACE').toUpperCase() === 'FINGERPRINT' ? '👆 Fingerprint' : ((record.method || 'FACE').toUpperCase() === 'MANUAL' ? '📝 Manual' : '📷 Face') }}
+            </span>
           </td>
           <td>
             <span class="status-badge status-present">

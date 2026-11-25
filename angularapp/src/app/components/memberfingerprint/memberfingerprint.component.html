@@ -1,0 +1,163 @@
+<div class="fingerprint-page">
+  <div class="fingerprint-container">
+    <div class="page-header">
+      <div class="header-icon">👆</div>
+      <div>
+        <h2>FINGERPRINT <span>CHECK-IN SETUP</span></h2>
+        <p class="subtitle">Use your smartphone's Touch ID or Fingerprint scanner for quick, touchless kiosk check-in</p>
+      </div>
+    </div>
+
+    <!-- Feedback Alerts -->
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <span class="alert-icon">⚠️</span>
+      <div>{{ errorMessage }}</div>
+    </div>
+    <div class="alert alert-success" *ngIf="successMessage">
+      <span class="alert-icon">✅</span>
+      <div>{{ successMessage }}</div>
+    </div>
+
+    <!-- Desktop Notice if platform authenticator not available or on PC -->
+    <div class="device-hint-box" *ngIf="!checkingSupport && !isSupported">
+      <div class="hint-header">
+        <span class="hint-icon">📱</span>
+        <h4>Mobile Phone Recommended</h4>
+      </div>
+      <p>
+        Your current browser or computer does not have a built-in platform biometric sensor (Touch ID or Fingerprint).
+        For the best experience, open this page on your <strong>iPhone</strong> or <strong>Android smartphone</strong>:
+      </p>
+      <div class="url-copy-box">
+        <code>{{ currentUrl }}</code>
+      </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="content-grid">
+      <!-- Registration Section -->
+      <div class="card setup-card">
+        <div class="card-title">
+          <span class="step-num">1</span>
+          <h3>Register This Device</h3>
+        </div>
+
+        <p class="desc-text">
+          Enroll your smartphone once. When you visit the gym kiosk, you can scan the kiosk QR and touch your fingerprint sensor to instantly record your attendance.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="deviceName">Device Nickname</label>
+          <input
+            id="deviceName"
+            type="text"
+            [(ngModel)]="deviceName"
+            placeholder="e.g. My iPhone 15, Pixel 8"
+            class="form-input"
+            [disabled]="registering"
+          />
+        </div>
+
+        <div class="consent-group">
+          <label class="consent-checkbox">
+            <input
+              type="checkbox"
+              [(ngModel)]="agreeConsent"
+              [disabled]="registering"
+            />
+            <span class="checkbox-custom"></span>
+            <span class="consent-text">
+              I agree to use my phone's biometric fingerprint for gym check-in. My biometric data remains securely stored on my own phone and is never sent to the gym server.
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          class="btn-bracket btn-enable"
+          (click)="registerFingerprint()"
+          [disabled]="registering || !agreeConsent"
+        >
+          <span *ngIf="!registering">👆 Enable Fingerprint Check-in</span>
+          <span *ngIf="registering">Authenticating Biometrics...</span>
+        </button>
+      </div>
+
+      <!-- Enrolled Devices Section -->
+      <div class="card devices-card">
+        <div class="card-title">
+          <span class="step-num">2</span>
+          <h3>Registered Devices</h3>
+          <span class="device-count-badge">{{ devices.length }} / 3</span>
+        </div>
+
+        <p class="desc-text">
+          Authorized smartphones that can check you in at the gym kiosk.
+        </p>
+
+        <div class="loading-state" *ngIf="loadingDevices">
+          Loading registered devices...
+        </div>
+
+        <div class="devices-list" *ngIf="!loadingDevices && devices.length > 0">
+          <div class="device-item" *ngFor="let dev of devices">
+            <div class="device-main">
+              <span class="device-icon">📱</span>
+              <div class="device-meta">
+                <h4>{{ dev.deviceName }}</h4>
+                <div class="device-dates">
+                  <span>Enrolled: {{ dev.createdAt | date:'mediumDate' }}</span>
+                  <span *ngIf="dev.lastUsedAt"> • Last used: {{ dev.lastUsedAt | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-delete-device"
+              (click)="deleteDevice(dev.id, dev.deviceName)"
+              title="Remove this device"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-devices" *ngIf="!loadingDevices && devices.length === 0">
+          <span class="empty-icon">🔒</span>
+          <p>No fingerprint devices enrolled yet.</p>
+          <span class="empty-sub">Follow step 1 on your smartphone to register.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works Footer Guide -->
+    <div class="how-it-works-bar">
+      <h4>How Gym Fingerprint Check-in Works</h4>
+      <div class="steps-row">
+        <div class="work-step">
+          <span class="step-icon">1️⃣</span>
+          <div>
+            <strong>Kiosk QR Code</strong>
+            <p>Admin kiosk displays a rotating 30-second check-in QR code</p>
+          </div>
+        </div>
+        <div class="step-arrow">➔</div>
+        <div class="work-step">
+          <span class="step-icon">2️⃣</span>
+          <div>
+            <strong>Scan with Phone</strong>
+            <p>Scan the QR with your phone camera to open the check-in screen</p>
+          </div>
+        </div>
+        <div class="step-arrow">➔</div>
+        <div class="work-step">
+          <span class="step-icon">3️⃣</span>
+          <div>
+            <strong>Touch Sensor</strong>
+            <p>Touch your phone's fingerprint sensor to confirm check-in instantly</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

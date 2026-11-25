@@ -5,6 +5,8 @@ import { MemberService } from '../../services/member.service';
 import { MemberResponse } from '../../models/member.model';
 import { PasskeyService, WebAuthnDevice } from '../../services/passkey.service';
 import { BiometricService, BiometricStatusResponse } from '../../services/biometric.service';
+import { FingerprintService, FingerprintStatusDTO } from '../../services/fingerprint.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-memberprofile',
@@ -24,10 +26,12 @@ export class MemberprofileComponent implements OnInit {
   webAuthnSupported: boolean = false;
   passkeyDevices: WebAuthnDevice[] = [];
   biometricStatus: BiometricStatusResponse | null = null;
+  fingerprintStatus: FingerprintStatusDTO | null = null;
   registeringPasskey: boolean = false;
   passkeyMessage: string = '';
   passkeyError: string = '';
   showFaceEnrollModal: boolean = false;
+  showFingerprintEnrollModal: boolean = false;
 
   editForm!: FormGroup;
 
@@ -42,9 +46,16 @@ export class MemberprofileComponent implements OnInit {
     private memberService: MemberService,
     private passkeyService: PasskeyService,
     private biometricService: BiometricService,
+    private fingerprintService: FingerprintService,
+    private authService: AuthService,
     private fb: FormBuilder,
     private router: Router
-  ) {}
+  ) { }
+
+  get currentUserId(): number {
+    const idStr = this.authService.getUserId();
+    return idStr ? Number(idStr) : (this.profile?.id || 0);
+  }
 
   ngOnInit(): void {
     this.webAuthnSupported = this.passkeyService.isWebAuthnSupported();
@@ -78,7 +89,7 @@ export class MemberprofileComponent implements OnInit {
         this.populateForm(data);
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.errorMessage = err.error?.message || 'Failed to load member profile';
         this.loading = false;
       }
@@ -90,7 +101,14 @@ export class MemberprofileComponent implements OnInit {
       next: (status) => {
         this.biometricStatus = status;
       },
-      error: () => {}
+      error: () => { }
+    });
+
+    this.fingerprintService.getMyStatus().subscribe({
+      next: (status: any) => {
+        this.fingerprintStatus = status;
+      },
+      error: () => { }
     });
 
     if (this.webAuthnSupported) {
@@ -98,7 +116,7 @@ export class MemberprofileComponent implements OnInit {
         next: (devices) => {
           this.passkeyDevices = devices;
         },
-        error: () => {}
+        error: () => { }
       });
     }
   }
@@ -116,7 +134,12 @@ export class MemberprofileComponent implements OnInit {
       this.loadBiometricsAndPasskeys();
     } catch (err: any) {
       this.registeringPasskey = false;
-      this.passkeyError = err.error?.message || err.message || 'Passkey enrollment was cancelled or failed.';
+      const msg = err.error?.message || err.message || '';
+      if (err.name === 'NotAllowedError' || msg.includes('timed out or was not allowed') || msg.includes('privacy-considerations')) {
+        this.passkeyError = 'Biometric prompt was cancelled or is not configured on this PC. To use fingerprint check-in at the gym, open /member/fingerprint on your smartphone (iPhone Touch ID / Android Fingerprint).';
+      } else {
+        this.passkeyError = msg || 'Passkey enrollment was cancelled or failed.';
+      }
     }
   }
 
@@ -134,6 +157,37 @@ export class MemberprofileComponent implements OnInit {
     this.loadBiometricsAndPasskeys();
   }
 
+  openFingerprintEnroll(): void {
+    this.showFingerprintEnrollModal = true;
+  }
+
+  closeFingerprintEnroll(): void {
+    this.showFingerprintEnrollModal = false;
+  }
+
+  onFingerprintEnrolled(): void {
+    this.showFingerprintEnrollModal = false;
+    this.successMessage = 'Your unique fingerprint has been enrolled successfully for gym check-in!';
+    this.loadBiometricsAndPasskeys();
+  }
+
+  deleteFingerprint(): void {
+    if (!confirm('Are you sure you want to remove your enrolled fingerprint biometric?')) {
+      return;
+    }
+
+    const userId = this.currentUserId;
+    this.fingerprintService.deleteFingerprint(userId).subscribe({
+      next: () => {
+        this.successMessage = 'Fingerprint removed successfully.';
+        this.loadBiometricsAndPasskeys();
+      },
+      error: (err: any) => {
+        this.errorMessage = err.error?.message || 'Failed to remove fingerprint biometric.';
+      }
+    });
+  }
+
   deletePasskey(credentialId: string): void {
     if (!confirm('Are you sure you want to remove this passkey device?')) {
       return;
@@ -144,7 +198,7 @@ export class MemberprofileComponent implements OnInit {
         this.passkeyMessage = 'Passkey removed successfully.';
         this.loadBiometricsAndPasskeys();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.passkeyError = err.error?.message || 'Failed to delete passkey device.';
       }
     });
@@ -209,7 +263,7 @@ export class MemberprofileComponent implements OnInit {
         this.isEditing = false;
         this.successMessage = 'Profile updated successfully!';
       },
-      error: (err) => {
+      error: (err: any) => {
         this.savingProfile = false;
         this.errorMessage = err.error?.message || 'Failed to update profile';
       }

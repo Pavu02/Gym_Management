@@ -1,0 +1,101 @@
+<div class="fp-overlay" (click)="closeModal()">
+  <div class="fp-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="fp-header">
+      <div class="header-titles">
+        <h2>FINGERPRINT <span>ENROLLMENT</span></h2>
+        <p class="subtitle">Registering unique biometric template for: <strong>{{ userName }}</strong> ({{ role }})</p>
+      </div>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="fp-body">
+      <!-- Sensor Viewport -->
+      <div class="sensor-container" [ngClass]="scanState.toLowerCase()">
+        <!-- Outer Glowing Ring -->
+        <div class="sensor-pad" (mousedown)="startScanning()" (mouseup)="cancelScanning()" (touchstart)="startScanning()" (touchend)="cancelScanning()">
+          
+          <!-- Detailed SVG Fingerprint Pattern -->
+          <svg class="fingerprint-svg" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80 30 C50 30 35 50 35 85 C35 125 50 170 80 175 C110 170 125 125 125 85 C125 50 110 30 80 30 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 3"/>
+            <path d="M80 45 C60 45 48 60 48 90 C48 120 60 155 80 160 C100 155 112 120 112 90 C112 60 100 45 80 45 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M80 60 C68 60 60 72 60 95 C60 118 68 140 80 145 C92 140 100 118 100 95 C100 72 92 60 80 60 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 4"/>
+            <path d="M80 75 C74 75 70 82 70 100 C70 115 75 125 80 128 C85 125 90 115 90 100 C90 82 86 75 80 75 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="80" cy="100" r="4" fill="currentColor"/>
+            
+            <!-- Minutiae feature points (animated) -->
+            <g class="minutiae-layer" *ngIf="scanState === 'SCANNING' || scanState === 'SUCCESS'">
+              <circle cx="50" cy="75" r="3.5" class="minutiae-dot" />
+              <circle cx="110" cy="80" r="3.5" class="minutiae-dot" />
+              <circle cx="65" cy="130" r="3.5" class="minutiae-dot" />
+              <circle cx="95" cy="135" r="3.5" class="minutiae-dot" />
+              <circle cx="80" cy="40" r="3.5" class="minutiae-dot" />
+            </g>
+          </svg>
+
+          <!-- Laser Sweep Beam -->
+          <div class="laser-beam" *ngIf="scanState === 'SCANNING'"></div>
+
+          <!-- Pulsing Waves -->
+          <div class="sensor-ripple" *ngIf="scanState === 'SCANNING'"></div>
+        </div>
+
+        <!-- Sensor Status HUD -->
+        <div class="sensor-hud">
+          <div class="hud-status" [ngClass]="scanState.toLowerCase()">
+            <span class="hud-dot"></span>
+            <span *ngIf="scanState === 'IDLE'">Sensor Ready (Hold to Scan)</span>
+            <span *ngIf="scanState === 'SCANNING'">Scanning Ridges... {{ progress }}%</span>
+            <span *ngIf="scanState === 'SUCCESS'">✓ Biometric Verified (Quality: {{ qualityScore }}%)</span>
+            <span *ngIf="scanState === 'ERROR'">Scan Error</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-wrap" *ngIf="scanState === 'SCANNING'">
+            <div class="progress-bar-fill" [style.width.%]="progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Instruction / Status Text -->
+      <div class="status-box" [ngClass]="scanState.toLowerCase()">
+        <p class="status-text">{{ statusText }}</p>
+        <p class="status-sub" *ngIf="scanState === 'IDLE'">
+          👆 Press and hold the sensor pad above or click the button below to capture your unique fingerprint.
+        </p>
+        <p class="status-sub" *ngIf="scanState === 'SUCCESS'">
+          Fingerprint Template: <code>{{ uniqueFingerprintHash }}</code>
+        </p>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="fp-footer">
+      <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSaving">
+        Cancel
+      </button>
+
+      <button *ngIf="scanState === 'IDLE'" type="button" class="btn-primary" (click)="startScanning()">
+        ⚡ Start Fingerprint Scan
+      </button>
+
+      <button *ngIf="scanState === 'SCANNING'" type="button" class="btn-cancel" (click)="cancelScanning()">
+        Pause Scan
+      </button>
+
+      <button *ngIf="scanState === 'ERROR'" type="button" class="btn-primary" (click)="retry()">
+        🔄 Try Again
+      </button>
+
+      <button *ngIf="scanState === 'SUCCESS'" type="button" class="btn-primary" (click)="closeModal()">
+        ✓ Done
+      </button>
+    </div>
+  </div>
+</div>

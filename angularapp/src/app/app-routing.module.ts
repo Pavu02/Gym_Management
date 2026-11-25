@@ -18,6 +18,8 @@ import { MemberviewplanComponent } from './components/memberviewplan/memberviewp
 import { MemberattendanceComponent } from './components/memberattendance/memberattendance.component';
 import { MemberpaymentsComponent } from './components/memberpayments/memberpayments.component';
 import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
+import { MemberfingerprintComponent } from './components/memberfingerprint/memberfingerprint.component';
+import { FingerprintcheckinComponent } from './components/fingerprintcheckin/fingerprintcheckin.component';
 import { TrainerviewmembersComponent } from './components/trainerviewmembers/trainerviewmembers.component';
 import { OnboardingplansComponent } from './components/onboardingplans/onboardingplans.component';
 import { OnboardingtrainerComponent } from './components/onboardingtrainer/onboardingtrainer.component';
@@ -60,6 +62,8 @@ const routes: Routes = [
   { path: 'member/trainer', component: MembertrainerComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
   { path: 'member/attendance', component: MemberattendanceComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
   { path: 'member/payments', component: MemberpaymentsComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'member/fingerprint', component: MemberfingerprintComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'checkin/fingerprint', component: FingerprintcheckinComponent },
 
   // Trainer routes
   { path: 'trainer/members', component: TrainerviewmembersComponent, canActivate: [authGuard], data: { role: 'TRAINER' } },

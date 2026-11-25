@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MemberService } from '../../services/member.service';
 import { AttendanceService } from '../../services/attendance.service';
+import { FingerprintService, FingerprintDeviceDTO } from '../../services/fingerprint.service';
 import { MemberResponse } from '../../models/member.model';
 
 @Component({
@@ -19,9 +20,14 @@ export class AdminviewmembersComponent implements OnInit {
   selectedMemberForModal: MemberResponse | null = null;
   selectedMemberForFaceEnroll: MemberResponse | null = null;
 
+  // Member registered fingerprint devices
+  memberFingerprintDevices: FingerprintDeviceDTO[] = [];
+  loadingMemberDevices: boolean = false;
+
   constructor(
     private memberService: MemberService,
-    private attendanceService: AttendanceService
+    private attendanceService: AttendanceService,
+    private fingerprintService: FingerprintService
   ) {}
 
   ngOnInit(): void {
@@ -59,10 +65,37 @@ export class AdminviewmembersComponent implements OnInit {
 
   openDetailsModal(member: MemberResponse): void {
     this.selectedMemberForModal = member;
+    this.memberFingerprintDevices = [];
+    this.loadingMemberDevices = true;
+    this.fingerprintService.getMemberDevices(member.id).subscribe({
+      next: (devices) => {
+        this.memberFingerprintDevices = devices || [];
+        this.loadingMemberDevices = false;
+      },
+      error: () => {
+        this.loadingMemberDevices = false;
+      }
+    });
   }
 
   closeDetailsModal(): void {
     this.selectedMemberForModal = null;
+    this.memberFingerprintDevices = [];
+  }
+
+  revokeDevice(deviceId: number, deviceName: string): void {
+    if (!confirm(`Are you sure you want to revoke "${deviceName}" for this member?`)) {
+      return;
+    }
+    this.fingerprintService.adminDeleteDevice(deviceId).subscribe({
+      next: () => {
+        this.memberFingerprintDevices = this.memberFingerprintDevices.filter(d => d.id !== deviceId);
+        this.successMessage = `Device "${deviceName}" revoked successfully.`;
+      },
+      error: (err: any) => {
+        this.errorMessage = err.error?.message || 'Failed to revoke device';
+      }
+    });
   }
 
   openFaceEnroll(member: MemberResponse): void {

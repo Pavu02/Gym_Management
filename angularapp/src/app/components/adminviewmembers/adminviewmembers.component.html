@@ -149,6 +149,26 @@
             <span class="m-lbl">Emergency Phone</span>
             <span class="m-val">{{ selectedMemberForModal.emergencyContactPhone || 'N/A' }}</span>
           </div>
+
+          <!-- Registered Fingerprint Devices & Revocation -->
+          <div class="m-item m-full devices-section">
+            <span class="m-lbl">Registered Fingerprint Passkey Devices</span>
+            <div *ngIf="loadingMemberDevices" class="loading-dev-text">Loading registered devices...</div>
+            <div *ngIf="!loadingMemberDevices && memberFingerprintDevices.length === 0" class="no-dev-text">
+              No fingerprint devices enrolled by this member.
+            </div>
+            <div *ngIf="!loadingMemberDevices && memberFingerprintDevices.length > 0" class="m-dev-list">
+              <div class="m-dev-row" *ngFor="let dev of memberFingerprintDevices">
+                <div class="dev-meta-info">
+                  <strong>📱 {{ dev.deviceName }}</strong>
+                  <span class="dev-date">Added: {{ dev.createdAt | date:'mediumDate' }}</span>
+                </div>
+                <button type="button" class="btn-revoke-dev" (click)="revokeDevice(dev.id, dev.deviceName)" title="Revoke Fingerprint Passkey">
+                  Revoke ✕
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
