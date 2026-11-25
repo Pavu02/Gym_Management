@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface WebAuthnDevice {
   id: number;
@@ -29,8 +30,8 @@ export interface PasskeyAssertionOptionsResponse {
   providedIn: 'root'
 })
 export class PasskeyService {
-  private memberApiUrl = 'http://localhost:8080/api/member/passkey';
-  private checkinApiUrl = 'http://localhost:8080/api/checkin/passkey';
+  private memberApiUrl = `${environment.apiUrl}/member/passkey`;
+  private checkinApiUrl = `${environment.apiUrl}/checkin/passkey`;
 
   constructor(private http: HttpClient) {}
 

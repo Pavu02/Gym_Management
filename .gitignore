@@ -1,10 +1,14 @@
-﻿# ===== Angular =====
-angularapp/node_modules/
-angularapp/dist/
-angularapp/.angular/
+# ===== Angular =====
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+**/.angular/
 
 # ===== Spring Boot / Java =====
-springapp/target/
+target/
+**/target/
 *.class
 *.log
 
@@ -13,8 +17,11 @@ springapp/target/
 *.iml
 .vscode/
 Thumbs.db
+.DS_Store
 
 # ===== Secrets (never push) =====
 application-local.properties
 application-secrets.properties
+**/application-secrets.properties
 google-credentials.json
+**/google-credentials.json

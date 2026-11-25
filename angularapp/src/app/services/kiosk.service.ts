@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CheckinResultDTO } from './fingerprint.service';
+import { environment } from '../../environments/environment';
 
 export interface KioskTokenResponseDTO {
   token: string;
@@ -25,7 +26,7 @@ export interface RecentCheckinDTO {
   providedIn: 'root'
 })
 export class KioskService {
-  private apiUrl = 'http://localhost:8080/api/kiosk';
+  private apiUrl = `${environment.apiUrl}/kiosk`;
 
   constructor(private http: HttpClient) {}
 

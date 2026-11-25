@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Trainer, TrainerRequest } from '../models/trainer.model';
 import { MemberResponse } from '../models/member.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TrainerService {
-  apiUrl = 'http://localhost:8080/api';
+  apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

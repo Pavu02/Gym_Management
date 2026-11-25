@@ -1,0 +1,6 @@
+target/
+.idea/
+*.iml
+.git/
+application-secrets.properties
+google-credentials.json

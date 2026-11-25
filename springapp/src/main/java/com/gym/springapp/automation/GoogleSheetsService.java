@@ -77,24 +77,83 @@ public class GoogleSheetsService {
         this.paymentRepo = paymentRepo;
     }
 
+    public boolean isConfigured() {
+        if (!automationProperties.isSheetsConfigured()) {
+            return false;
+        }
+        InputStream stream = getCredentialsStream();
+        if (stream == null) {
+            log.info("Google Sheets credentials file not found on filesystem or classpath. Automation marked as Not Configured.");
+            return false;
+        }
+        try {
+            stream.close();
+        } catch (Exception ignored) {}
+        return true;
+    }
+
+    private InputStream getCredentialsStream() {
+        // 1. Read credentials from file path in env GOOGLE_CREDENTIALS_PATH (e.g. /etc/secrets/google-credentials.json)
+        String envPath = System.getenv("GOOGLE_CREDENTIALS_PATH");
+        if (envPath != null && !envPath.trim().isEmpty()) {
+            File f = new File(envPath.trim());
+            if (f.exists() && f.isFile()) {
+                try {
+                    log.info("Loading Google credentials from GOOGLE_CREDENTIALS_PATH: {}", envPath);
+                    return new FileInputStream(f);
+                } catch (Exception e) {
+                    log.warn("Failed to read credentials from GOOGLE_CREDENTIALS_PATH {}: {}", envPath, e.getMessage());
+                }
+            }
+        }
+
+        // 2. Read credentials from configured property file path
+        String credsFile = automationProperties.getSheets().getCredentialsFile();
+        if (credsFile != null && !credsFile.trim().isEmpty()) {
+            File f = new File(credsFile.trim());
+            if (f.exists() && f.isFile()) {
+                try {
+                    log.info("Loading Google credentials from filesystem path: {}", credsFile);
+                    return new FileInputStream(f);
+                } catch (Exception e) {
+                    log.warn("Failed to read credentials from filesystem path {}: {}", credsFile, e.getMessage());
+                }
+            }
+            InputStream cpStream = getClass().getClassLoader().getResourceAsStream(credsFile.trim());
+            if (cpStream != null) {
+                log.info("Loading Google credentials from classpath: {}", credsFile);
+                return cpStream;
+            }
+        }
+
+        // 3. Fallback to classpath google-credentials.json
+        InputStream defaultCpStream = getClass().getClassLoader().getResourceAsStream("google-credentials.json");
+        if (defaultCpStream != null) {
+            log.info("Loading Google credentials from default classpath: google-credentials.json");
+            return defaultCpStream;
+        }
+
+        // 4. Fallback to local root file google-credentials.json
+        File defaultFile = new File("google-credentials.json");
+        if (defaultFile.exists() && defaultFile.isFile()) {
+            try {
+                return new FileInputStream(defaultFile);
+            } catch (Exception e) {
+                log.warn("Failed to read local google-credentials.json: {}", e.getMessage());
+            }
+        }
+
+        return null;
+    }
+
     private synchronized Sheets getSheetsClient() throws Exception {
         if (sheetsClient != null) {
             return sheetsClient;
         }
 
-        String credsFile = automationProperties.getSheets().getCredentialsFile();
-        if (credsFile == null || credsFile.trim().isEmpty()) {
-            credsFile = "google-credentials.json";
-        }
-
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(credsFile);
+        InputStream stream = getCredentialsStream();
         if (stream == null) {
-            File f = new File(credsFile);
-            if (f.exists()) {
-                stream = new FileInputStream(f);
-            } else {
-                throw new IllegalStateException("Google credentials file not found on classpath or filesystem: " + credsFile);
-            }
+            throw new IllegalStateException("Google credentials file not found on filesystem or classpath. Google Sheets marked as Not configured.");
         }
 
         GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
@@ -113,9 +172,9 @@ public class GoogleSheetsService {
     @EventListener(ApplicationReadyEvent.class)
     @Async("automationExecutor")
     public void onStartup() {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Startup Setup",
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or credentials file not configured");
             return;
         }
 
@@ -131,9 +190,9 @@ public class GoogleSheetsService {
     }
 
     public synchronized void ensureTabsAndHeaders() {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Tab Verification",
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or credentials file not configured");
             return;
         }
 
@@ -395,9 +454,9 @@ public class GoogleSheetsService {
     }
 
     public synchronized void upsertMember(Long memberId) {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Member #" + memberId,
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or not configured");
             return;
         }
 
@@ -457,9 +516,9 @@ public class GoogleSheetsService {
     }
 
     public synchronized void appendPayment(Long paymentId) {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Payment #" + paymentId,
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or not configured");
             return;
         }
 
@@ -505,9 +564,9 @@ public class GoogleSheetsService {
     }
 
     public synchronized void appendDailyReport(Map<String, Object> stats) {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Daily Report",
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or not configured");
             return;
         }
 
@@ -569,9 +628,9 @@ public class GoogleSheetsService {
     }
 
     public synchronized void fullResync() {
-        if (!automationProperties.isSheetsConfigured()) {
+        if (!isConfigured()) {
             automationLogService.log(AutomationType.SHEET_SYNC, "Full Resync",
-                    AutomationStatus.SKIPPED, "Automation disabled or not configured");
+                    AutomationStatus.SKIPPED, "Google Sheets disabled or not configured");
             return;
         }
 

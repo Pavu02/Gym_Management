@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import * as faceapi from '@vladmandic/face-api';
 
 export interface FaceEnrollmentRequest {
@@ -31,7 +32,7 @@ export interface BiometricResponse {
   providedIn: 'root'
 })
 export class BiometricService {
-  private apiUrl = 'http://localhost:8080/api/member/biometrics';
+  private apiUrl = `${environment.apiUrl}/member/biometrics`;
   private modelsLoaded = false;
 
   constructor(private http: HttpClient) {}

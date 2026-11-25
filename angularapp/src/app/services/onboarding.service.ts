@@ -6,12 +6,13 @@ import { OnboardingSummary } from '../models/onboarding-summary.model';
 import { Plan } from '../models/plan.model';
 import { Trainer } from '../models/trainer.model';
 import { MemberResponse } from '../models/member.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OnboardingService {
-  private apiUrl = 'http://localhost:8080/api/onboarding';
+  private apiUrl = `${environment.apiUrl}/onboarding`;
 
   constructor(private http: HttpClient) {}
 

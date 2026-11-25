@@ -52,8 +52,8 @@ public class KioskController {
     @Value("${checkin.kiosk.token-seconds:60}")
     private int tokenSeconds;
 
-    @Value("${webauthn.origins:http://localhost:8081}")
-    private String originsProperty;
+    @Value("${app.frontend-url:${webauthn.origins:http://localhost:8081}}")
+    private String frontendUrl;
 
     public KioskController(
             KioskTokenRepo kioskTokenRepo,
@@ -77,8 +77,12 @@ public class KioskController {
     }
 
     private String getPrimaryFrontendOrigin() {
-        if (originsProperty != null && !originsProperty.trim().isEmpty()) {
-            return originsProperty.split(",")[0].trim();
+        if (frontendUrl != null && !frontendUrl.trim().isEmpty()) {
+            String first = frontendUrl.split(",")[0].trim();
+            if (first.endsWith("/")) {
+                first = first.substring(0, first.length() - 1);
+            }
+            return first;
         }
         return "http://localhost:8081";
     }
@@ -170,8 +174,7 @@ public class KioskController {
                     daysLeft,
                     fa.getMethod(),
                     timeStr,
-                    action
-            ));
+                    action));
         }
 
         // Sort descending by time
