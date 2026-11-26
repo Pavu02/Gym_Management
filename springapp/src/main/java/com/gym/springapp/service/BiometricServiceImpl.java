@@ -14,6 +14,7 @@ import com.gym.springapp.model.User;
 import com.gym.springapp.repository.FaceProfileRepo;
 import com.gym.springapp.repository.FingerprintProfileRepo;
 import com.gym.springapp.repository.MemberBiometricRepo;
+import com.gym.springapp.repository.MemberPasskeyRepo;
 import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.UserRepo;
 import com.gym.springapp.repository.WebAuthnCredentialRepo;
@@ -37,6 +38,7 @@ public class BiometricServiceImpl implements BiometricService {
     private final FaceProfileRepo faceProfileRepo;
     private final FingerprintProfileRepo fingerprintProfileRepo;
     private final WebAuthnCredentialRepo webAuthnCredentialRepo;
+    private final MemberPasskeyRepo memberPasskeyRepo;
     private final MemberRepo memberRepo;
     private final UserRepo userRepo;
     private final BiometricEncryptionService encryptionService;
@@ -47,6 +49,7 @@ public class BiometricServiceImpl implements BiometricService {
             FaceProfileRepo faceProfileRepo,
             FingerprintProfileRepo fingerprintProfileRepo,
             WebAuthnCredentialRepo webAuthnCredentialRepo,
+            MemberPasskeyRepo memberPasskeyRepo,
             MemberRepo memberRepo,
             UserRepo userRepo,
             BiometricEncryptionService encryptionService,
@@ -55,6 +58,7 @@ public class BiometricServiceImpl implements BiometricService {
         this.faceProfileRepo = faceProfileRepo;
         this.fingerprintProfileRepo = fingerprintProfileRepo;
         this.webAuthnCredentialRepo = webAuthnCredentialRepo;
+        this.memberPasskeyRepo = memberPasskeyRepo;
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.encryptionService = encryptionService;
@@ -175,6 +179,8 @@ public class BiometricServiceImpl implements BiometricService {
         }
 
         int passkeyCount = (int) webAuthnCredentialRepo.countByMemberId(member.getId());
+        List<com.gym.springapp.model.MemberPasskey> memberPasskeys = memberPasskeyRepo.findByMemberId(member.getId());
+        int totalPasskeyCount = passkeyCount + memberPasskeys.size();
 
         boolean faceEnrolled = bioOpt.isPresent() || faceOpt.isPresent();
         LocalDateTime faceEnrolledAt = null;
@@ -196,11 +202,13 @@ public class BiometricServiceImpl implements BiometricService {
             fpOpt = fingerprintProfileRepo.findByUserId(member.getId());
         }
 
-        boolean fingerprintEnrolled = fpOpt.isPresent() || passkeyCount > 0;
+        boolean fingerprintEnrolled = fpOpt.isPresent() || totalPasskeyCount > 0;
         LocalDateTime fingerprintEnrolledAt = null;
         if (fpOpt.isPresent()) {
             fingerprintEnrolledAt = fpOpt.get().getUpdatedAt() != null ? fpOpt.get().getUpdatedAt()
                     : fpOpt.get().getCreatedAt();
+        } else if (!memberPasskeys.isEmpty()) {
+            fingerprintEnrolledAt = memberPasskeys.get(0).getCreatedAt();
         }
 
         return new BiometricStatusResponseDTO(
@@ -208,7 +216,7 @@ public class BiometricServiceImpl implements BiometricService {
                 faceEnrolledAt,
                 consentGiven,
                 consentAt,
-                passkeyCount,
+                totalPasskeyCount,
                 fingerprintEnrolled,
                 fingerprintEnrolledAt);
     }
@@ -228,6 +236,9 @@ public class BiometricServiceImpl implements BiometricService {
 
         memberBiometricRepo.deleteByMemberId(member.getId());
         webAuthnCredentialRepo.deleteByMemberId(member.getId());
+
+        List<com.gym.springapp.model.MemberPasskey> memberPasskeys = memberPasskeyRepo.findByMemberId(member.getId());
+        memberPasskeyRepo.deleteAll(memberPasskeys);
 
         if (member.getUser() != null) {
             faceProfileRepo.deleteByUserId(member.getUser().getId());

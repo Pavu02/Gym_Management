@@ -1,0 +1,68 @@
+<div class="lc-wrap" [class.is-in-view]="inView">
+  <div class="lc-header" *ngIf="data && data.length > 0">
+    <div>
+      <div class="lc-metric-lbl">6-Month Total</div>
+      <div class="lc-total">
+        {{ formatINR(totalRevenue) }}
+        <span *ngIf="changePct !== null" class="lc-change" [class.up]="changePositive" [class.down]="!changePositive">
+          {{ changePositive ? '▲' : '▼' }} {{ changePct >= 0 ? '+' + changePct : changePct }}% vs prev mo
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!data || data.length === 0" class="lc-empty">No data yet</div>
+
+  <svg *ngIf="data && data.length > 0"
+       #svgEl [attr.viewBox]="'0 0 ' + W + ' ' + H"
+       class="lc-svg" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="lg-rev" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#FF5A00" stop-opacity="0.34"/>
+        <stop offset="100%" stop-color="#FF5A00" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lg-line" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="#FF8A1F"/>
+        <stop offset="100%" stop-color="#FF5A00"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Grid lines + baseline -->
+    <g *ngFor="let g of gridLines">
+      <line [attr.x1]="PAD_X" [attr.x2]="W - PAD_X" [attr.y1]="g.y" [attr.y2]="g.y"
+            stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+      <text [attr.x]="PAD_X - 6" [attr.y]="g.y + 3" text-anchor="end" class="lc-grid-lbl">{{ g.text }}</text>
+    </g>
+    <line [attr.x1]="PAD_X" [attr.x2]="W - PAD_X" [attr.y1]="H - PAD_BOTTOM" [attr.y2]="H - PAD_BOTTOM"
+          stroke="rgba(255,255,255,0.1)"/>
+
+    <!-- Area fill -->
+    <path [attr.d]="areaD" fill="url(#lg-rev)" class="area-path"/>
+
+    <!-- Smooth curve -->
+    <path [attr.d]="pathD" fill="none" stroke="url(#lg-line)" stroke-width="3"
+          stroke-linecap="round" class="line-path"
+          [attr.stroke-dasharray]="pathLen"
+          [style.--path-len]="pathLen"
+          [style.stroke-dashoffset]="inView ? null : pathLen"/>
+
+    <!-- Data dots + touch hit targets -->
+    <g *ngFor="let p of points; let i = index">
+      <circle [attr.cx]="p.x" [attr.cy]="p.y" r="5" fill="#FF5A00" stroke="#141414" stroke-width="2"
+              class="dot" [class.active]="activeIdx === i"
+              [style.animation-delay]="(350 + i * 110) + 'ms'"/>
+      <circle [attr.cx]="p.x" [attr.cy]="p.y" r="14" fill="transparent" class="dot-hit"
+              (mouseenter)="showTip(p, i)" (mouseleave)="hideTip()" (click)="toggleTip(p, i)"/>
+      <text [attr.x]="p.x" [attr.y]="H - 6" class="lc-label" text-anchor="middle">{{ p.label }}</text>
+    </g>
+
+    <!-- Tooltip -->
+    <g *ngIf="tooltip" class="tip-group">
+      <rect [attr.x]="tooltip.boxX" [attr.y]="tooltip.y - 28" width="100" height="24" rx="6"
+            fill="#1f1f1f" stroke="#FF5A00" stroke-width="1.2"/>
+      <text [attr.x]="tooltip.x" [attr.y]="tooltip.y - 12" text-anchor="middle" class="tip-text">
+        {{ tooltip.label }}: {{ tooltip.val }}
+      </text>
+    </g>
+  </svg>
+</div>

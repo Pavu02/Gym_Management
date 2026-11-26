@@ -1,108 +1,383 @@
-<div class="view-page-container">
-  <div class="view-header">
-    <div>
-      <h1>Gym <span>Payments</span></h1>
-      <p>Record and monitor membership fee transactions</p>
+<div class="payments-page">
+
+  <!-- ── Luxury Editorial Header ── -->
+  <header class="roster-header">
+    <div class="header-copy">
+      <div class="header-eyebrow">
+        <span>BEASTX FINANCIAL LEDGER &amp; REPORTS</span>
+        <span class="mail-pill">
+          <span class="pill-dot"></span> Member + Admin Email Notifications Active
+        </span>
+      </div>
+      <h1>GYM <span>PAYMENTS &amp; REPORTS</span></h1>
+      <p>Record membership fees, track live revenue trends, export CSV statements &amp; dispatch instant invoices</p>
     </div>
-  </div>
 
+    <div class="header-actions no-print">
+      <button type="button" class="btn-export" (click)="downloadCsvReport()" [disabled]="exporting || loading">
+        <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>{{ exporting ? 'Exporting...' : 'Export CSV Report' }}</span>
+      </button>
+
+      <button type="button" class="btn-print" (click)="printStatement()">
+        <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>Print Report</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Alerts -->
   <div class="alert alert-success" *ngIf="successMessage">
-    {{ successMessage }}
+    <span>✓ {{ successMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
-
   <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
+    <span>⚠ {{ errorMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
 
-  <!-- Form at the top -->
-  <div class="form-card-top">
-    <h2>Record New <span>Payment</span></h2>
-    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="payment-inline-form">
-      <div class="form-group">
-        <label for="memberId">Member</label>
-        <select id="memberId" formControlName="memberId" [class.is-invalid]="paymentForm.get('memberId')?.touched && paymentForm.get('memberId')?.invalid">
-          <option [ngValue]="null" disabled>Select Member</option>
-          <option *ngFor="let m of members" [value]="m.id">
-            {{ m.name }} ({{ m.email }})
-          </option>
-        </select>
+  <!-- ── 4-Card Financial KPI Strip ── -->
+  <section class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
       </div>
-
-      <div class="form-group">
-        <label for="amount">Amount (₹)</label>
-        <input
-          type="number"
-          id="amount"
-          formControlName="amount"
-          placeholder="e.g. 5000"
-          min="1"
-          [class.is-invalid]="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid"
-        />
+      <div>
+        <div class="kpi-label">Total Collected (Paid)</div>
+        <div class="kpi-val kpi-val-green">{{ formatINR(report?.totalCollected) }}</div>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label for="mode">Payment Mode</label>
-        <select id="mode" formControlName="mode">
-          <option value="UPI">UPI</option>
-          <option value="CASH">CASH</option>
-          <option value="CARD">CARD</option>
-        </select>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-amber">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
       </div>
-
-      <div class="form-group">
-        <label for="status">Payment Status</label>
-        <select id="status" formControlName="status">
-          <option value="PAID">PAID</option>
-          <option value="PENDING">PENDING</option>
-        </select>
+      <div>
+        <div class="kpi-label">Pending Collections ({{ report?.pendingCount || 0 }})</div>
+        <div class="kpi-val kpi-val-amber">{{ formatINR(report?.totalPending) }}</div>
       </div>
+    </div>
 
-      <div class="form-group btn-col">
-        <button type="submit" class="btn-record" [disabled]="submitting">
-          {{ submitting ? 'Saving...' : '+ Add Payment' }}
-        </button>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Collection Rate</div>
+        <div class="kpi-val">{{ report?.collectionRate || 0 }}<small>%</small></div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-violet">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <line x1="2" y1="10" x2="22" y2="10" />
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Avg Paid Invoice ({{ report?.paidCount || 0 }})</div>
+        <div class="kpi-val kpi-val-violet">{{ formatINR(report?.averageTicket) }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Interactive Revenue & Payment Mode Charts ── -->
+  <section class="charts-row">
+    <div class="chart-card chart-span-2">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">COLLECTION <span>TREND</span></h3>
+          <p class="chart-subtitle">Paid revenue trajectory across the last 6 months (filtered)</p>
+        </div>
+        <span class="chart-chip">6 Months</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="loading"></div>
+      <app-line-chart *ngIf="!loading" [data]="revenueTrend" [inView]="true"></app-line-chart>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">PAYMENT <span>MODES</span></h3>
+          <p class="chart-subtitle">UPI vs Card vs Cash share</p>
+        </div>
+        <span class="chart-chip">Breakdown</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="loading"></div>
+      <app-donut-chart *ngIf="!loading" [segments]="modeDonutSegs" title="INR" [inView]="true"></app-donut-chart>
+    </div>
+  </section>
+
+  <!-- ── Record New Payment Luxury Studio Card ── -->
+  <section class="record-studio no-print">
+    <div class="studio-head">
+      <div>
+        <h2>RECORD NEW <span>PAYMENT</span></h2>
+        <p>Recording a <strong>PAID</strong> transaction extends validity and automatically sends email confirmations to
+          both the <strong>Member</strong> and <strong>Admin</strong>.</p>
+      </div>
+      <span class="auto-mail-tag">✉ Auto Dual-Mail Enabled</span>
+    </div>
+
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="payment-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="memberId">Select Athlete / Member</label>
+          <select id="memberId" formControlName="memberId"
+            [class.is-invalid]="paymentForm.get('memberId')?.touched && paymentForm.get('memberId')?.invalid">
+            <option [ngValue]="null" disabled>-- Select Member --</option>
+            <option *ngFor="let m of members" [value]="m.id">
+              {{ m.name }} ({{ m.email }})
+            </option>
+          </select>
+          <div class="member-hint" *ngIf="selectedMemberInfo">
+            Plan: <strong>{{ selectedMemberInfo.planName || 'None' }}</strong> ·
+            Status: <span [class.hint-active]="selectedMemberInfo.status === 'ACTIVE'">{{ selectedMemberInfo.status
+              }}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount (₹)</label>
+          <input type="number" id="amount" formControlName="amount" placeholder="e.g. 2499" min="1"
+            [class.is-invalid]="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid" />
+          <div class="quick-amt-row">
+            <button type="button" class="qa-chip" *ngFor="let amt of quickAmounts" (click)="setQuickAmount(amt)">
+              ₹{{ amt }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <div class="seg-pills">
+            <button type="button" class="seg-btn" *ngFor="let md of ['UPI', 'CARD', 'CASH']"
+              [class.active]="paymentForm.get('mode')?.value === md" (click)="setFormMode(md)">
+              {{ md }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Status</label>
+          <div class="seg-pills">
+            <button type="button" class="seg-btn st-paid" [class.active]="paymentForm.get('status')?.value === 'PAID'"
+              (click)="setFormStatus('PAID')">
+              PAID
+            </button>
+            <button type="button" class="seg-btn st-pend"
+              [class.active]="paymentForm.get('status')?.value === 'PENDING'" (click)="setFormStatus('PENDING')">
+              PENDING
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group btn-col">
+          <button type="submit" class="btn-luxury-add full-w" [disabled]="submitting">
+            {{ submitting ? 'Recording...' : '+ Record Payment' }}
+          </button>
+        </div>
       </div>
     </form>
-  </div>
+  </section>
 
-  <!-- Table of all payments -->
-  <div class="table-card">
+  <!-- ── Financial Report Filter Dock ── -->
+  <section class="control-dock no-print">
+    <div class="dock-top">
+      <div class="search-box">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" class="search-ico">
+          <path fill-rule="evenodd"
+            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+            clip-rule="evenodd" />
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" (input)="applyLocalSearch()"
+          placeholder="Search by invoice #, member name, email, or plan..." class="search-input" />
+      </div>
+
+      <div class="date-range-group">
+        <div class="date-field">
+          <label>From</label>
+          <input type="date" [(ngModel)]="fromDate" (change)="onDateFilterChange()" class="date-input" />
+        </div>
+        <div class="date-field">
+          <label>To</label>
+          <input type="date" [(ngModel)]="toDate" (change)="onDateFilterChange()" class="date-input" />
+        </div>
+      </div>
+
+      <div class="view-toggle">
+        <button type="button" class="vt-btn" [class.active]="viewMode === 'table'"
+          (click)="viewMode = 'table'">Ledger</button>
+        <button type="button" class="vt-btn" [class.active]="viewMode === 'cards'"
+          (click)="viewMode = 'cards'">Cards</button>
+      </div>
+    </div>
+
+    <div class="dock-chips">
+      <div class="chip-group">
+        <span class="cg-lbl">Period:</span>
+        <button type="button" class="f-chip" [class.active]="activePreset === 'ALL'" (click)="applyPreset('ALL')">All
+          Time</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === 'TODAY'"
+          (click)="applyPreset('TODAY')">Today</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === 'MONTH'"
+          (click)="applyPreset('MONTH')">This Month</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === '30D'" (click)="applyPreset('30D')">30
+          Days</button>
+      </div>
+
+      <div class="chip-group">
+        <span class="cg-lbl">Mode:</span>
+        <button type="button" class="f-chip" *ngFor="let md of ['ALL', 'UPI', 'CARD', 'CASH']"
+          [class.active]="filterMode === md" (click)="setModeFilter(md)">
+          {{ md === 'ALL' ? 'All Modes' : md }}
+        </button>
+      </div>
+
+      <div class="chip-group">
+        <span class="cg-lbl">Status:</span>
+        <button type="button" class="f-chip" *ngFor="let st of ['ALL', 'PAID', 'PENDING']"
+          [class.active]="filterStatus === st" (click)="setStatusFilter(st)">
+          {{ st === 'ALL' ? 'All Status' : st }}
+        </button>
+      </div>
+
+      <button type="button" class="btn-reset" (click)="resetReportFilters()">Reset</button>
+    </div>
+  </section>
+
+  <!-- ── Transaction Ledger Table View ── -->
+  <section class="table-card" *ngIf="!loading && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Member Name</th>
+          <th>Invoice</th>
+          <th>Member</th>
+          <th>Plan</th>
           <th>Amount</th>
-          <th>Payment Date</th>
+          <th>Date</th>
           <th>Mode</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th class="no-print">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let payment of payments">
-          <td>{{ payment.id }}</td>
-          <td class="font-bold">{{ payment.member?.user?.name }}</td>
-          <td class="price-cell">₹{{ payment.amount | number:'1.2-2' }}</td>
-          <td>{{ payment.paymentDate | date:'mediumDate' }}</td>
-          <td><span class="badge-mode">{{ payment.mode }}</span></td>
+        <tr *ngFor="let tx of visibleTransactions">
+          <td><span class="invoice-tag">{{ tx.invoiceNo }}</span></td>
           <td>
-            <span
-              class="status-badge"
-              [class.status-paid]="payment.status === 'PAID'"
-              [class.status-pending]="payment.status === 'PENDING'"
-            >
-              {{ payment.status }}
+            <div class="tbl-identity">
+              <div class="tbl-avatar">{{ getInitials(tx.memberName) }}</div>
+              <div>
+                <div class="tbl-name">{{ tx.memberName }}</div>
+                <div class="tbl-sub">{{ tx.memberEmail }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="plan-chip">{{ tx.planName }}</span></td>
+          <td class="price-cell">{{ formatINR(tx.amount) }}</td>
+          <td class="tbl-date">{{ tx.paymentDate | date:'mediumDate' }}</td>
+          <td><span class="badge-mode">{{ tx.mode }}</span></td>
+          <td>
+            <span class="status-badge" [class.status-paid]="tx.status === 'PAID' || tx.status === 'SUCCESS'"
+              [class.status-pending]="tx.status === 'PENDING'">
+              {{ tx.status }}
             </span>
           </td>
-          <td class="actions-cell">
-            <button (click)="deletePayment(payment.id!)" class="btn-action btn-delete">Delete</button>
+          <td class="actions-cell no-print">
+            <button *ngIf="tx.status === 'PENDING'" type="button" (click)="markAsPaid(tx)"
+              [disabled]="updatingId === tx.id" class="act-btn act-paid"
+              title="Mark Paid &amp; Dispatch Confirmation Emails">
+              {{ updatingId === tx.id ? '...' : '✓ Mark Paid' }}
+            </button>
+            <button type="button" (click)="openReceipt(tx)" class="act-btn act-receipt">Receipt</button>
+            <button type="button" (click)="deletePayment(tx.id)" class="act-btn act-delete">Delete</button>
           </td>
         </tr>
-        <tr *ngIf="payments.length === 0 && !loading">
-          <td colspan="7" class="no-data">No payment records found.</td>
+        <tr *ngIf="visibleTransactions.length === 0">
+          <td colspan="8" class="no-data">No transactions match the current report filters.</td>
         </tr>
       </tbody>
     </table>
+  </section>
+
+  <!-- ── Transaction Cards View ── -->
+  <section class="tx-cards-grid" *ngIf="!loading && viewMode === 'cards'">
+    <article class="tx-card" *ngFor="let tx of visibleTransactions">
+      <div class="tx-top">
+        <span class="invoice-tag">{{ tx.invoiceNo }}</span>
+        <span class="status-badge" [class.status-paid]="tx.status === 'PAID' || tx.status === 'SUCCESS'"
+          [class.status-pending]="tx.status === 'PENDING'">
+          {{ tx.status }}
+        </span>
+      </div>
+      <div class="tbl-identity">
+        <div class="tbl-avatar">{{ getInitials(tx.memberName) }}</div>
+        <div>
+          <div class="tbl-name">{{ tx.memberName }}</div>
+          <div class="tbl-sub">{{ tx.memberEmail }}</div>
+        </div>
+      </div>
+      <div class="tx-amount-row">
+        <strong>{{ formatINR(tx.amount) }}</strong>
+        <span class="badge-mode">{{ tx.mode }}</span>
+      </div>
+      <div class="tx-meta">
+        <span>{{ tx.planName }}</span>
+        <span>{{ tx.paymentDate | date:'mediumDate' }}</span>
+      </div>
+      <div class="tx-actions">
+        <button *ngIf="tx.status === 'PENDING'" type="button" (click)="markAsPaid(tx)" class="act-btn act-paid">✓ Mark
+          Paid</button>
+        <button type="button" (click)="openReceipt(tx)" class="act-btn act-receipt">Receipt</button>
+        <button type="button" (click)="deletePayment(tx.id)" class="act-btn act-delete">Delete</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── Printable Luxury Receipt Modal ── -->
+  <div class="modal-overlay" *ngIf="receiptTx" (click)="closeReceipt()">
+    <div class="receipt-modal" (click)="$event.stopPropagation()">
+      <div class="rec-header">
+        <div>
+          <span class="rec-eyebrow">BEASTX OFFICIAL RECEIPT</span>
+          <h3>{{ receiptTx.invoiceNo }}</h3>
+        </div>
+        <button type="button" class="btn-close" (click)="closeReceipt()">×</button>
+      </div>
+      <div class="rec-body">
+        <div class="rec-row"><span>Member</span><strong>{{ receiptTx.memberName }}</strong></div>
+        <div class="rec-row"><span>Email</span><strong>{{ receiptTx.memberEmail || '—' }}</strong></div>
+        <div class="rec-row"><span>Plan</span><strong>{{ receiptTx.planName }}</strong></div>
+        <div class="rec-row"><span>Date</span><strong>{{ receiptTx.paymentDate | date:'fullDate' }}</strong></div>
+        <div class="rec-row"><span>Payment Mode</span><strong>{{ receiptTx.mode }}</strong></div>
+        <div class="rec-row"><span>Status</span><strong class="green">{{ receiptTx.status }}</strong></div>
+        <div class="rec-total">
+          <span>Total Amount</span>
+          <strong>{{ formatINR(receiptTx.amount) }}</strong>
+        </div>
+      </div>
+      <div class="rec-footer no-print">
+        <button type="button" class="btn-print" (click)="printStatement()">Print Receipt</button>
+        <button type="button" class="btn-luxury-add" (click)="closeReceipt()">Done</button>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MemberService } from '../../services/member.service';
 import { AttendanceService } from '../../services/attendance.service';
 import { FingerprintService, FingerprintDeviceDTO } from '../../services/fingerprint.service';
@@ -9,20 +11,36 @@ import { MemberResponse } from '../../models/member.model';
   templateUrl: './adminviewmembers.component.html',
   styleUrls: ['./adminviewmembers.component.css']
 })
-export class AdminviewmembersComponent implements OnInit {
+export class AdminviewmembersComponent implements OnInit, OnDestroy {
   members: MemberResponse[] = [];
   filteredMembers: MemberResponse[] = [];
-  searchTerm: string = '';
-  statusFilter: string = 'ALL';
-  loading: boolean = true;
-  errorMessage: string = '';
-  successMessage: string = '';
+
+  searchTerm = '';
+  statusFilter: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED' = 'ALL';
+  sortBy: 'name' | 'expiryAsc' | 'expiryDesc' | 'status' = 'name';
+  viewMode: 'cards' | 'table' = 'cards';
+
+  loading = true;
+  errorMessage = '';
+  successMessage = '';
+  copiedText = '';
+
   selectedMemberForModal: MemberResponse | null = null;
   selectedMemberForFaceEnroll: MemberResponse | null = null;
 
   // Member registered fingerprint devices
   memberFingerprintDevices: FingerprintDeviceDTO[] = [];
-  loadingMemberDevices: boolean = false;
+  loadingMemberDevices = false;
+
+  // Roster KPI counts
+  activeCount = 0;
+  pendingCount = 0;
+  expiredCount = 0;
+  expiringSoonCount = 0;
+  activeRatio = 0;
+
+  private destroy$ = new Subject<void>();
+  private copyTimer?: any;
 
   constructor(
     private memberService: MemberService,
@@ -34,48 +52,160 @@ export class AdminviewmembersComponent implements OnInit {
     this.loadMembers();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.copyTimer) clearTimeout(this.copyTimer);
+  }
+
   loadMembers(): void {
     this.loading = true;
-    this.memberService.getAllMembers().subscribe({
-      next: (data) => {
-        this.members = data;
-        this.applyFilter();
-        this.loading = false;
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to load members';
-        this.loading = false;
-      }
-    });
+    this.memberService.getAllMembers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.members = data || [];
+          this.computeMetrics();
+          this.applyFilter();
+          this.loading = false;
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Failed to load members';
+          this.loading = false;
+        }
+      });
+  }
+
+  private computeMetrics(): void {
+    const total = this.members.length;
+    this.activeCount = this.members.filter(m => (m.status || '').toUpperCase() === 'ACTIVE').length;
+    this.pendingCount = this.members.filter(m => (m.status || '').toUpperCase() === 'PENDING_PAYMENT').length;
+    this.expiredCount = this.members.filter(m => (m.status || '').toUpperCase() === 'EXPIRED').length;
+    this.expiringSoonCount = this.members.filter(m =>
+      (m.status || '').toUpperCase() === 'ACTIVE' &&
+      m.daysLeft !== null &&
+      m.daysLeft !== undefined &&
+      m.daysLeft <= 7
+    ).length;
+    this.activeRatio = total > 0 ? Math.round((this.activeCount / total) * 100) : 0;
   }
 
   applyFilter(): void {
-    this.filteredMembers = this.members.filter(m => {
+    const q = this.searchTerm.trim().toLowerCase();
+
+    let list = this.members.filter(m => {
+      const name = (m.name || '').toLowerCase();
+      const email = (m.email || '').toLowerCase();
+      const phone = (m.phone || '').toLowerCase();
+      const plan = (m.planName || '').toLowerCase();
+      const trainer = (m.trainerName || '').toLowerCase();
+      const goal = (m.fitnessGoal || '').toLowerCase();
+
       const matchSearch =
-        m.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        m.email.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (m.phone && m.phone.includes(this.searchTerm));
+        !q ||
+        name.includes(q) ||
+        email.includes(q) ||
+        phone.includes(q) ||
+        plan.includes(q) ||
+        trainer.includes(q) ||
+        goal.includes(q);
 
       const matchStatus =
-        this.statusFilter === 'ALL' || m.status.toUpperCase() === this.statusFilter.toUpperCase();
+        this.statusFilter === 'ALL' ||
+        (m.status || '').toUpperCase() === this.statusFilter.toUpperCase();
 
       return matchSearch && matchStatus;
     });
+
+    list = [...list].sort((a, b) => {
+      switch (this.sortBy) {
+        case 'expiryAsc':
+          return (a.daysLeft ?? 99999) - (b.daysLeft ?? 99999);
+        case 'expiryDesc':
+          return (b.daysLeft ?? -1) - (a.daysLeft ?? -1);
+        case 'status':
+          return (a.status || '').localeCompare(b.status || '');
+        case 'name':
+        default:
+          return (a.name || '').localeCompare(b.name || '');
+      }
+    });
+
+    this.filteredMembers = list;
+  }
+
+  selectStatus(status: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED'): void {
+    this.statusFilter = status;
+    this.applyFilter();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
+  resetAllFilters(): void {
+    this.searchTerm = '';
+    this.statusFilter = 'ALL';
+    this.sortBy = 'name';
+    this.applyFilter();
+  }
+
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode = mode;
+  }
+
+  getInitials(name?: string): string {
+    if (!name || !name.trim()) return 'BX';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  getStatusClass(status?: string): string {
+    const s = (status || '').toUpperCase();
+    if (s === 'ACTIVE') return 'st-active';
+    if (s === 'EXPIRED') return 'st-expired';
+    return 'st-pending';
+  }
+
+  getStatusLabel(status?: string): string {
+    const s = (status || '').toUpperCase();
+    if (s === 'PENDING_PAYMENT') return 'PENDING';
+    return s || 'PENDING';
+  }
+
+  copyContact(text?: string): void {
+    if (!text) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.copiedText = text;
+        if (this.copyTimer) clearTimeout(this.copyTimer);
+        this.copyTimer = setTimeout(() => (this.copiedText = ''), 1800);
+      }).catch(() => {});
+    }
+  }
+
+  dismissAlerts(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
   }
 
   openDetailsModal(member: MemberResponse): void {
     this.selectedMemberForModal = member;
     this.memberFingerprintDevices = [];
     this.loadingMemberDevices = true;
-    this.fingerprintService.getMemberDevices(member.id).subscribe({
-      next: (devices) => {
-        this.memberFingerprintDevices = devices || [];
-        this.loadingMemberDevices = false;
-      },
-      error: () => {
-        this.loadingMemberDevices = false;
-      }
-    });
+    this.fingerprintService.getMemberDevices(member.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (devices) => {
+          this.memberFingerprintDevices = devices || [];
+          this.loadingMemberDevices = false;
+        },
+        error: () => {
+          this.loadingMemberDevices = false;
+        }
+      });
   }
 
   closeDetailsModal(): void {
@@ -87,18 +217,21 @@ export class AdminviewmembersComponent implements OnInit {
     if (!confirm(`Are you sure you want to revoke "${deviceName}" for this member?`)) {
       return;
     }
-    this.fingerprintService.adminDeleteDevice(deviceId).subscribe({
-      next: () => {
-        this.memberFingerprintDevices = this.memberFingerprintDevices.filter(d => d.id !== deviceId);
-        this.successMessage = `Device "${deviceName}" revoked successfully.`;
-      },
-      error: (err: any) => {
-        this.errorMessage = err.error?.message || 'Failed to revoke device';
-      }
-    });
+    this.fingerprintService.adminDeleteDevice(deviceId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.memberFingerprintDevices = this.memberFingerprintDevices.filter(d => d.id !== deviceId);
+          this.successMessage = `Device "${deviceName}" revoked successfully.`;
+        },
+        error: (err: any) => {
+          this.errorMessage = err.error?.message || 'Failed to revoke device';
+        }
+      });
   }
 
   openFaceEnroll(member: MemberResponse): void {
+    this.selectedMemberForModal = null;
     this.selectedMemberForFaceEnroll = member;
   }
 
@@ -124,27 +257,31 @@ export class AdminviewmembersComponent implements OnInit {
   checkIn(member: MemberResponse): void {
     this.errorMessage = '';
     this.successMessage = '';
-    this.attendanceService.checkIn(member.id).subscribe({
-      next: () => {
-        this.successMessage = `Member ${member.name} checked in successfully!`;
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || `Failed to check in ${member.name}`;
-      }
-    });
+    this.attendanceService.checkIn(member.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.successMessage = `Member ${member.name} checked in successfully!`;
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || `Failed to check in ${member.name}`;
+        }
+      });
   }
 
   checkOut(member: MemberResponse): void {
     this.errorMessage = '';
     this.successMessage = '';
-    this.attendanceService.checkOut(member.id).subscribe({
-      next: () => {
-        this.successMessage = `Member ${member.name} checked out successfully!`;
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || `Failed to check out ${member.name}`;
-      }
-    });
+    this.attendanceService.checkOut(member.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.successMessage = `Member ${member.name} checked out successfully!`;
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || `Failed to check out ${member.name}`;
+        }
+      });
   }
 
   deleteMember(id: number, name: string): void {
@@ -155,14 +292,19 @@ export class AdminviewmembersComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.memberService.deleteMember(id).subscribe({
-      next: () => {
-        this.successMessage = `Member "${name}" deleted successfully!`;
-        this.loadMembers();
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to delete member';
-      }
-    });
+    this.memberService.deleteMember(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          if (this.selectedMemberForModal?.id === id) {
+            this.selectedMemberForModal = null;
+          }
+          this.successMessage = `Member "${name}" deleted successfully!`;
+          this.loadMembers();
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Failed to delete member';
+        }
+      });
   }
 }

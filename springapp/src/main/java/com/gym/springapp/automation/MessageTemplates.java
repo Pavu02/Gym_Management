@@ -126,4 +126,59 @@ public class MessageTemplates {
             </div>
             """.formatted(name, amount, safeMode, safeExpiry);
     }
+
+    // 5. ADMIN_PAYMENT_ALERT
+    public String adminPaymentAlertHtml(
+            String memberName,
+            String memberEmail,
+            String planName,
+            String invoiceNo,
+            String amount,
+            String mode,
+            String expiry) {
+        String safeName = (memberName != null && !memberName.isBlank()) ? memberName : "Member";
+        String safeEmail = (memberEmail != null && !memberEmail.isBlank()) ? memberEmail : "N/A";
+        String safePlan = (planName != null && !planName.isBlank()) ? planName : "Membership";
+        String safeInvoice = (invoiceNo != null && !invoiceNo.isBlank()) ? invoiceNo : "INV-NEW";
+        String safeMode = (mode != null && !mode.isBlank()) ? mode : "Online";
+        String safeExpiry = (expiry != null && !expiry.isBlank()) ? expiry : "N/A";
+
+        return """
+            <h2 style="color: #ff6b00; margin-top: 0;">💰 New Payment Received</h2>
+            <p style="font-size: 15px; color: #d0d0d0; line-height: 1.6;">
+                A membership payment has been verified and recorded in <strong>%s</strong>.
+            </p>
+            <div style="background-color: #222222; border-left: 4px solid #ff6b00; padding: 16px 20px; border-radius: 6px; margin: 22px 0;">
+                <table style="width: 100%%; border-collapse: collapse; color: #ffffff;">
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Invoice No:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 14px; font-weight: bold; color: #ffffff;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Member:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 14px; font-weight: bold;">%s (%s)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Plan:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 14px;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Amount Received:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 18px; font-weight: bold; color: #4caf50;">₹%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Payment Mode:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 14px;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; color: #aaaaaa; font-size: 13px;">Valid Till:</td>
+                        <td style="padding: 6px 0; text-align: right; font-size: 14px; color: #ff6b00; font-weight: bold;">%s</td>
+                    </tr>
+                </table>
+            </div>
+            <p style="font-size: 13px; color: #999999; margin: 0;">
+                Member confirmation email &amp; Google Sheets sync have been triggered automatically.
+            </p>
+            """.formatted(getBrand(), safeInvoice, safeName, safeEmail, safePlan, amount, safeMode, safeExpiry);
+    }
 }

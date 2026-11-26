@@ -14,4 +14,7 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
 
     @Query("SELECT COALESCE(SUM(p.amount),0) FROM Payment p WHERE p.status='PAID' AND MONTH(p.paymentDate)=:month AND YEAR(p.paymentDate)=:year")
     Double sumPaidByMonth(@Param("month") int month, @Param("year") int year);
+
+    @Query("SELECT COALESCE(SUM(p.amount),0) FROM Payment p WHERE UPPER(p.status) IN ('PAID','SUCCESS') AND MONTH(p.paymentDate)=:month AND YEAR(p.paymentDate)=:year")
+    Double sumPaidOrSuccessByMonth(@Param("month") int month, @Param("year") int year);
 }

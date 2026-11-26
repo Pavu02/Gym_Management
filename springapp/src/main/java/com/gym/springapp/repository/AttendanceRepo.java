@@ -2,6 +2,8 @@ package com.gym.springapp.repository;
 
 import com.gym.springapp.model.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -19,6 +21,15 @@ public interface AttendanceRepo extends JpaRepository<Attendance, Long> {
     List<Attendance> findByAttendanceDate(LocalDate attendanceDate);
 
     List<Attendance> findByAttendanceDateBetween(LocalDate start, LocalDate end);
+
+    @Query("SELECT a.attendanceDate, COUNT(a) FROM Attendance a WHERE a.member.deleted = false AND a.attendanceDate BETWEEN :start AND :end GROUP BY a.attendanceDate")
+    List<Object[]> countActiveByDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT a.method, COUNT(a) FROM Attendance a WHERE a.member.deleted = false AND a.attendanceDate BETWEEN :start AND :end GROUP BY a.method")
+    List<Object[]> countActiveByMethodBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT a FROM Attendance a WHERE a.member.deleted = false AND a.attendanceDate BETWEEN :start AND :end")
+    List<Attendance> findActiveByAttendanceDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     default Optional<Attendance> findByMemberIdAndDate(Long id, LocalDate date) {
         return findByMemberIdAndAttendanceDate(id, date);

@@ -48,6 +48,8 @@ public class FingerprintServiceImpl implements FingerprintService {
     private final AttendanceService attendanceService;
     private final AttendanceRepo attendanceRepo;
     private final FaceAttendanceRepo faceAttendanceRepo;
+    private final FingerprintProfileRepo fingerprintProfileRepo;
+    private final WebAuthnCredentialRepo webAuthnCredentialRepo;
 
     @Value("${checkin.fingerprint.simulator-enabled:false}")
     private boolean simulatorEnabled;
@@ -61,7 +63,9 @@ public class FingerprintServiceImpl implements FingerprintService {
             KioskTokenRepo kioskTokenRepo,
             AttendanceService attendanceService,
             AttendanceRepo attendanceRepo,
-            FaceAttendanceRepo faceAttendanceRepo) {
+            FaceAttendanceRepo faceAttendanceRepo,
+            FingerprintProfileRepo fingerprintProfileRepo,
+            WebAuthnCredentialRepo webAuthnCredentialRepo) {
         this.relyingParty = relyingParty;
         this.challengeStore = challengeStore;
         this.memberPasskeyRepo = memberPasskeyRepo;
@@ -71,6 +75,8 @@ public class FingerprintServiceImpl implements FingerprintService {
         this.attendanceService = attendanceService;
         this.attendanceRepo = attendanceRepo;
         this.faceAttendanceRepo = faceAttendanceRepo;
+        this.fingerprintProfileRepo = fingerprintProfileRepo;
+        this.webAuthnCredentialRepo = webAuthnCredentialRepo;
     }
 
     private Member getMemberByEmail(String email) {
@@ -168,6 +174,39 @@ public class FingerprintServiceImpl implements FingerprintService {
             passkey.setLastUsedAt(now);
 
             MemberPasskey saved = memberPasskeyRepo.save(passkey);
+
+            // Also keep FingerprintProfile and WebAuthnCredential synchronized
+            try {
+                Long userId = member.getUser() != null ? member.getUser().getId() : member.getId();
+                FingerprintProfile fpProfile = fingerprintProfileRepo.findByUserId(userId).orElseGet(() -> {
+                    FingerprintProfile fp = new FingerprintProfile();
+                    fp.setUserId(userId);
+                    fp.setRole("MEMBER");
+                    fp.setCreatedAt(now);
+                    return fp;
+                });
+                fpProfile.setFingerprintHash(credentialId);
+                fpProfile.setDeviceName(deviceName);
+                fpProfile.setQualityScore(99);
+                fpProfile.setUpdatedAt(now);
+                if (fpProfile.getMinutiaeData() == null) {
+                    fpProfile.setMinutiaeData("[]");
+                }
+                fingerprintProfileRepo.save(fpProfile);
+
+                if (webAuthnCredentialRepo.findByCredentialId(credentialId).isEmpty()) {
+                    WebAuthnCredential wac = new WebAuthnCredential();
+                    wac.setMember(member);
+                    wac.setCredentialId(credentialId);
+                    wac.setPublicKey(result.getPublicKeyCose().getBase64Url());
+                    wac.setSignCount(signCount);
+                    wac.setDeviceName(deviceName);
+                    wac.setCreatedAt(now);
+                    webAuthnCredentialRepo.save(wac);
+                }
+            } catch (Exception e) {
+                // Non-critical mirror write
+            }
 
             return new FingerprintDeviceDTO(
                     saved.getId(),
@@ -411,5 +450,37 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional
     public void cleanupExpiredKioskTokens() {
         kioskTokenRepo.deleteByExpiresAtBefore(LocalDateTime.now(KOLKATA_ZONE));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FingerprintStatusDTO getMyStatus(String authEmail) {
+        Member member = getMemberByEmail(authEmail);
+        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId());
+        Long userId = member.getUser() != null ? member.getUser().getId() : member.getId();
+        Optional<FingerprintProfile> fpOpt = fingerprintProfileRepo.findByUserId(userId);
+
+        boolean enrolled = !passkeys.isEmpty() || fpOpt.isPresent();
+        String deviceName = !passkeys.isEmpty() ? passkeys.get(0).getDeviceName()
+                : (fpOpt.map(FingerprintProfile::getDeviceName).orElse(null));
+        LocalDateTime enrolledAt = !passkeys.isEmpty() ? passkeys.get(0).getCreatedAt()
+                : (fpOpt.map(FingerprintProfile::getUpdatedAt).orElse(null));
+        String hash = !passkeys.isEmpty() ? passkeys.get(0).getCredentialId()
+                : (fpOpt.map(FingerprintProfile::getFingerprintHash).orElse(null));
+        Integer quality = fpOpt.map(FingerprintProfile::getQualityScore).orElse(enrolled ? 99 : 0);
+
+        return new FingerprintStatusDTO(enrolled, userId, hash, quality, deviceName, enrolledAt);
+    }
+
+    @Override
+    @Transactional
+    public void deleteFingerprint(Long userId, String authEmail) {
+        Member member = getMemberByEmail(authEmail);
+        Long targetUserId = member.getUser() != null ? member.getUser().getId() : member.getId();
+        fingerprintProfileRepo.deleteByUserId(targetUserId);
+        fingerprintProfileRepo.deleteByUserId(member.getId());
+
+        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId());
+        memberPasskeyRepo.deleteAll(passkeys);
     }
 }

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FingerprintService } from '../../services/fingerprint.service';
+import { isFingerprintSupported, prepareCreationOptions, publicKeyCredentialToJson } from '../../utils/webauthn.util';
 
 @Component({
   selector: 'app-fingerprintenroll',
@@ -17,116 +18,137 @@ export class FingerprintenrollComponent implements OnInit {
   // Scanner States: 'IDLE' | 'SCANNING' | 'SUCCESS' | 'ERROR'
   scanState: 'IDLE' | 'SCANNING' | 'SUCCESS' | 'ERROR' = 'IDLE';
   progress: number = 0;
-  statusText: string = 'Place and hold finger on the optical sensor';
+  statusText: string = 'Place and touch finger on sensor to register';
   qualityScore: number = 0;
   uniqueFingerprintHash: string = '';
   errorMessage: string = '';
   isSaving: boolean = false;
-
-  private scanInterval: any = null;
+  isSupported: boolean = true;
+  deviceName: string = 'My Phone';
 
   constructor(private fingerprintService: FingerprintService) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (!this.userName) {
       this.userName = 'Member';
     }
+    this.detectDeviceName();
+    try {
+      this.isSupported = await isFingerprintSupported();
+    } catch {
+      this.isSupported = true;
+    }
   }
 
-  startScanning(): void {
+  detectDeviceName(): void {
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent;
+      if (/iPhone/i.test(ua)) {
+        this.deviceName = 'iPhone (Touch ID / Face ID)';
+      } else if (/iPad/i.test(ua)) {
+        this.deviceName = 'iPad (Biometric Sensor)';
+      } else if (/Android/i.test(ua)) {
+        this.deviceName = 'Android Phone (Fingerprint Sensor)';
+      } else if (/Macintosh/i.test(ua)) {
+        this.deviceName = 'MacBook (Touch ID)';
+      } else if (/Windows/i.test(ua)) {
+        this.deviceName = 'Windows PC (Windows Hello)';
+      } else {
+        this.deviceName = 'My Phone (Fingerprint Sensor)';
+      }
+    }
+  }
+
+  async startScanning(): Promise<void> {
     if (this.scanState === 'SCANNING' || this.isSaving) return;
 
     this.scanState = 'SCANNING';
-    this.progress = 0;
+    this.progress = 20;
     this.errorMessage = '';
-    this.statusText = 'Contact detected. Initializing optical sensor...';
+    this.statusText = 'Contacting security module... Please touch your phone\'s fingerprint sensor when prompted.';
 
-    // Simulate multi-frequency biometric ridge acquisition
-    this.scanInterval = setInterval(() => {
-      this.progress += 5;
-
-      if (this.progress === 25) {
-        this.statusText = 'Acquiring dermal ridge patterns... (Pass 1/3)';
-      } else if (this.progress === 50) {
-        this.statusText = 'Mapping ridge bifurcations and delta points... (Pass 2/3)';
-      } else if (this.progress === 75) {
-        this.statusText = 'Synthesizing unique 512-bit biometric template... (Pass 3/3)';
-      } else if (this.progress >= 100) {
-        clearInterval(this.scanInterval);
-        this.progress = 100;
-        this.qualityScore = Math.floor(96 + Math.random() * 4); // 96% - 99%
-        this.completeEnrollment();
+    try {
+      // 1. Check WebAuthn platform authenticator support
+      if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+        throw new Error('Biometric WebAuthn is not supported on this browser. Please open this page on your smartphone browser (Chrome on Android or Safari on iPhone) with HTTPS.');
       }
-    }, 80);
+
+      // 2. Start registration with backend to get WebAuthn creation options
+      this.statusText = 'Contacting server for biometric challenge...';
+      const res = await this.fingerprintService.startRegistration().toPromise();
+      if (!res || !res.publicKeyCredentialCreationOptions) {
+        throw new Error('Could not obtain biometric registration challenge from server.');
+      }
+
+      this.progress = 50;
+      this.statusText = '👆 Touch your phone\'s fingerprint sensor now...';
+
+      // 3. Prepare creation options and invoke native biometric prompt on mobile/desktop
+      const creationOptions = prepareCreationOptions(res.publicKeyCredentialCreationOptions);
+      const credential = (await navigator.credentials.create(creationOptions)) as PublicKeyCredential;
+
+      if (!credential) {
+        throw new Error('Fingerprint registration was cancelled.');
+      }
+
+      this.progress = 85;
+      this.isSaving = true;
+      this.statusText = 'Fingerprint recognized! Finalizing cryptographic biometric enrollment...';
+
+      // 4. Serialize credential and finish registration
+      const credJson = publicKeyCredentialToJson(credential);
+      const targetDeviceName = (this.deviceName && this.deviceName.trim()) ? this.deviceName.trim() : 'My Phone';
+
+      const dev = await this.fingerprintService.finishRegistration(
+        res.requestId,
+        JSON.stringify(credJson),
+        targetDeviceName
+      ).toPromise();
+
+      // 5. Success state
+      this.isSaving = false;
+      this.progress = 100;
+      this.qualityScore = 99;
+      this.uniqueFingerprintHash = dev?.deviceName || targetDeviceName;
+      this.scanState = 'SUCCESS';
+      this.statusText = `✓ Biometric Verified! Fingerprint passkey active on "${this.uniqueFingerprintHash}".`;
+
+      // Emit enrolled event
+      setTimeout(() => {
+        this.enrolled.emit();
+      }, 1500);
+
+    } catch (err: any) {
+      this.isSaving = false;
+      this.scanState = 'ERROR';
+      const msg = err.error?.message || err.message || '';
+      if (err.name === 'NotAllowedError' || msg.includes('timed out or was not allowed') || msg.includes('privacy-considerations')) {
+        this.errorMessage = 'Fingerprint verification was cancelled or timed out. Please tap "Try Again" and touch the sensor when prompted by your phone.';
+      } else if (err.name === 'SecurityError' || msg.includes('relying party') || msg.includes('rpId')) {
+        this.errorMessage = 'Security origin mismatch. Ensure you are accessing via the official domain with HTTPS.';
+      } else {
+        this.errorMessage = msg || 'Biometric fingerprint capture failed.';
+      }
+      this.statusText = 'Fingerprint registration failed.';
+    }
   }
 
   cancelScanning(): void {
-    if (this.scanInterval) {
-      clearInterval(this.scanInterval);
-    }
     if (this.scanState === 'SCANNING') {
       this.scanState = 'IDLE';
       this.progress = 0;
-      this.statusText = 'Scan paused. Place finger to resume.';
+      this.statusText = 'Place and touch finger on sensor to register';
     }
-  }
-
-  private completeEnrollment(): void {
-    this.isSaving = true;
-    this.statusText = 'Registering unique biometric template...';
-
-    // Generate deterministic yet unique cryptographic biometric hash for this user
-    const timestamp = Date.now();
-    const entropy = Math.random().toString(36).substring(2, 10).toUpperCase();
-    this.uniqueFingerprintHash = `FP-BEASTX-${this.userId}-${entropy}-${timestamp.toString(36).toUpperCase()}`;
-
-    // Sample minutiae payload
-    const minutiaePoints = [];
-    for (let i = 0; i < 24; i++) {
-      minutiaePoints.push({
-        x: Math.round(30 + Math.random() * 140),
-        y: Math.round(30 + Math.random() * 180),
-        type: i % 2 === 0 ? 'BIFURCATION' : 'RIDGE_ENDING',
-        angle: Math.round(Math.random() * 360)
-      });
-    }
-
-    const payload = {
-      fingerprintHash: this.uniqueFingerprintHash,
-      minutiaeData: JSON.stringify(minutiaePoints),
-      qualityScore: this.qualityScore,
-      deviceName: 'BeastX Optical Biometric Sensor V2'
-    };
-
-    this.fingerprintService.enrollFingerprint(this.userId, payload).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.scanState = 'SUCCESS';
-        this.statusText = 'Biometric template registered! Unique fingerprint active.';
-        setTimeout(() => {
-          this.enrolled.emit();
-        }, 1200);
-      },
-      error: (err: any) => {
-        this.isSaving = false;
-        this.scanState = 'ERROR';
-        this.errorMessage = err.error?.message || 'Failed to save biometric fingerprint template.';
-        this.statusText = 'Fingerprint registration failed.';
-      }
-    });
   }
 
   retry(): void {
     this.scanState = 'IDLE';
     this.progress = 0;
     this.errorMessage = '';
-    this.statusText = 'Place and hold finger on the optical sensor';
+    this.statusText = 'Place and touch finger on sensor to register';
   }
 
   closeModal(): void {
-    if (this.scanInterval) {
-      clearInterval(this.scanInterval);
-    }
     this.close.emit();
   }
 }

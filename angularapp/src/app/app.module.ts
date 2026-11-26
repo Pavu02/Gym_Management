@@ -37,6 +37,11 @@ import { FaceScannerComponent } from './components/facescanner/facescanner.compo
 import { FingerprintenrollComponent } from './components/fingerprintenroll/fingerprintenroll.component';
 import { MemberfingerprintComponent } from './components/memberfingerprint/memberfingerprint.component';
 import { FingerprintcheckinComponent } from './components/fingerprintcheckin/fingerprintcheckin.component';
+import { LinechartComponent } from './components/linechart/linechart.component';
+import { BarchartComponent } from './components/barchart/barchart.component';
+import { DonutchartComponent } from './components/donutchart/donutchart.component';
+import { ProgressbarsComponent } from './components/progressbars/progressbars.component';
+import { HeatmapstripComponent } from './components/heatmapstrip/heatmapstrip.component';
 
 @NgModule({
   declarations: [
@@ -71,7 +76,12 @@ import { FingerprintcheckinComponent } from './components/fingerprintcheckin/fin
     FaceScannerComponent,
     FingerprintenrollComponent,
     MemberfingerprintComponent,
-    FingerprintcheckinComponent
+    FingerprintcheckinComponent,
+    LinechartComponent,
+    BarchartComponent,
+    DonutchartComponent,
+    ProgressbarsComponent,
+    HeatmapstripComponent
   ],
   imports: [
     BrowserModule,

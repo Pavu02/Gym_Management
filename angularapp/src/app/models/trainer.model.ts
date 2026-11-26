@@ -8,6 +8,8 @@ export interface Trainer {
   bio?: string;
   rating?: number;
   monthlyFee?: number;
+  maxMembers?: number;
+  active?: boolean;
 }
 
 export interface TrainerRequest {

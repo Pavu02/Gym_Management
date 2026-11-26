@@ -1,96 +1,227 @@
-<div class="view-page-container">
-  <div class="view-header">
-    <div>
-      <h1>Attendance <span>Dashboard & Logs</span></h1>
-      <p>Real-time biometric and manual check-in tracking for all members and trainers</p>
-    </div>
-    <button class="btn-manual-checkin" (click)="openManualModal()">
-      + Manual Check-In
-    </button>
-  </div>
+<div class="attendance-page">
 
+  <!-- ── Luxury Editorial Header ── -->
+  <header class="roster-header">
+    <div class="header-copy">
+      <div class="header-eyebrow">
+        <span>BEASTX ACCESS &amp; CHECK-IN TELEMETRY</span>
+        <span class="live-pill">
+          <span class="pill-dot"></span> {{ records.length }} Filtered {{ records.length === 1 ? 'Log' : 'Logs' }}
+        </span>
+      </div>
+      <h1>ATTENDANCE <span>DASHBOARD &amp; LOGS</span></h1>
+      <p>Interactive biometric floor analytics, hourly heatmaps, role splits &amp; manual verification logs</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-export" (click)="exportCsv()" [disabled]="records.length === 0"
+              title="Download filtered attendance logs as CSV">
+        <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+        <span>Export CSV</span>
+      </button>
+
+      <button type="button" class="btn-luxury-add" (click)="openManualModal()">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+          <path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"/>
+        </svg>
+        <span>Manual Check-In</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Alerts -->
   <div class="alert alert-success" *ngIf="successMessage">
-    {{ successMessage }}
+    <span>✓ {{ successMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
-
   <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
+    <span>⚠ {{ errorMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards-grid">
-    <div class="summary-card">
-      <div class="card-icon">👥</div>
-      <div class="card-info">
-        <h3>Total Check-Ins Today</h3>
-        <p class="card-value">{{ totalToday }}</p>
+  <!-- ── 4-Card Luxury KPI Strip ── -->
+  <section class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Check-Ins Today</div>
+        <div class="kpi-val">{{ totalToday }}</div>
       </div>
     </div>
 
-    <div class="summary-card card-members">
-      <div class="card-icon">⚡</div>
-      <div class="card-info">
-        <h3>Members Present Today</h3>
-        <p class="card-value">{{ membersPresentToday }}</p>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Members Present Today</div>
+        <div class="kpi-val kpi-val-green">{{ membersPresentToday }}</div>
       </div>
     </div>
 
-    <div class="summary-card card-trainers">
-      <div class="card-icon">🥊</div>
-      <div class="card-info">
-        <h3>Trainers Present Today</h3>
-        <p class="card-value">{{ trainersPresentToday }}</p>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-blue">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Trainers Present Today</div>
+        <div class="kpi-val kpi-val-blue">{{ trainersPresentToday }}</div>
       </div>
     </div>
-  </div>
 
-  <!-- Filter Toolbar -->
-  <div class="toolbar-card">
-    <div class="filter-group">
-      <label>From Date:</label>
-      <input type="date" [(ngModel)]="fromDate" (change)="onFilterChange()" class="filter-input">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-violet">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 11a4 4 0 1 0-4-4"/>
+          <path d="M12 3a9 9 0 0 1 9 9c0 3-1 6-2 8"/>
+          <path d="M5 10a7 7 0 0 0 7 7"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Biometric Adoption</div>
+        <div class="kpi-val kpi-val-violet">{{ biometricRate }}<small>%</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Interactive Charts Row 1 (7-Day Volume | Verification Method Split | Role Split) ── -->
+  <section class="charts-row-3">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">7-DAY <span>VOLUME</span></h3>
+          <p class="chart-subtitle">Daily check-in bars from filtered logs</p>
+        </div>
+        <span class="chart-chip">Interactive</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="loading"></div>
+      <app-bar-chart *ngIf="!loading"
+                     [data]="chartDailyAttendance"
+                     [todayIndex]="chartDailyAttendance.length - 1"
+                     [inView]="true"></app-bar-chart>
     </div>
 
-    <div class="filter-group">
-      <label>To Date:</label>
-      <input type="date" [(ngModel)]="toDate" (change)="onFilterChange()" class="filter-input">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">METHOD <span>MIX</span></h3>
+          <p class="chart-subtitle">Face vs Fingerprint vs Manual</p>
+        </div>
+        <span class="chart-chip">{{ records.length }} logs</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="loading"></div>
+      <app-donut-chart *ngIf="!loading"
+                       [segments]="methodDonutSegs"
+                       title="Check-ins"
+                       [inView]="true"></app-donut-chart>
     </div>
 
-    <div class="filter-group">
-      <label>Role:</label>
-      <select [(ngModel)]="selectedRole" (change)="onFilterChange()" class="filter-select">
-        <option value="ALL">All Roles</option>
-        <option value="MEMBER">Members Only</option>
-        <option value="TRAINER">Trainers Only</option>
-      </select>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">ROLE <span>BREAKDOWN</span></h3>
+          <p class="chart-subtitle">Athlete vs Coach floor share</p>
+        </div>
+        <span class="chart-chip">Live</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="loading"></div>
+      <app-donut-chart *ngIf="!loading"
+                       [segments]="roleDonutSegs"
+                       title="Present"
+                       [inView]="true"></app-donut-chart>
+    </div>
+  </section>
+
+  <!-- ── Interactive Peak Check-In Heatmap (Full Width) ── -->
+  <section class="chart-card chart-full">
+    <div class="chart-head">
+      <div>
+        <h3 class="chart-title">HOURLY FLOOR <span>INTENSITY</span></h3>
+        <p class="chart-subtitle">Hover or tap any hour (5 AM – 11 PM) to inspect check-in concentration</p>
+      </div>
+      <span class="chart-chip">Peak Hours</span>
+    </div>
+    <div class="chart-skeleton heatmap-sk" *ngIf="loading"></div>
+    <app-heatmap-strip *ngIf="!loading"
+                       [hours]="peakHourStats"
+                       [inView]="true"></app-heatmap-strip>
+  </section>
+
+  <!-- ── Interactive Control Dock ── -->
+  <section class="control-dock">
+    <div class="dock-top">
+      <div class="search-box">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" class="search-ico">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchName" (input)="onDateOrSearchChange()"
+               placeholder="Search athlete or coach by name..." class="search-input" />
+      </div>
+
+      <div class="date-range-group">
+        <div class="date-field">
+          <label>From</label>
+          <input type="date" [(ngModel)]="fromDate" (change)="onDateOrSearchChange()" class="date-input" />
+        </div>
+        <div class="date-field">
+          <label>To</label>
+          <input type="date" [(ngModel)]="toDate" (change)="onDateOrSearchChange()" class="date-input" />
+        </div>
+      </div>
+
+      <div class="view-toggle">
+        <button type="button" class="vt-btn" [class.active]="viewMode === 'table'" (click)="setViewMode('table')">Table</button>
+        <button type="button" class="vt-btn" [class.active]="viewMode === 'cards'" (click)="setViewMode('cards')">Cards</button>
+      </div>
     </div>
 
-    <div class="filter-group">
-      <label>Method:</label>
-      <select [(ngModel)]="selectedMethod" (change)="onFilterChange()" class="filter-select">
-        <option value="ALL">All Methods</option>
-        <option value="FACE">Face (📷)</option>
-        <option value="FINGERPRINT">Fingerprint (👆)</option>
-        <option value="MANUAL">Manual (📝)</option>
-      </select>
+    <div class="dock-chips">
+      <div class="chip-group">
+        <span class="cg-lbl">Range:</span>
+        <button type="button" class="f-chip" [class.active]="activePreset === 'ALL'" (click)="applyPreset('ALL')">All Time</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === 'TODAY'" (click)="applyPreset('TODAY')">Today</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === '7D'" (click)="applyPreset('7D')">7 Days</button>
+        <button type="button" class="f-chip" [class.active]="activePreset === '30D'" (click)="applyPreset('30D')">30 Days</button>
+      </div>
+
+      <div class="chip-group">
+        <span class="cg-lbl">Role:</span>
+        <button type="button" class="f-chip" [class.active]="selectedRole === 'ALL'" (click)="selectRole('ALL')">All</button>
+        <button type="button" class="f-chip" [class.active]="selectedRole === 'MEMBER'" (click)="selectRole('MEMBER')">Members</button>
+        <button type="button" class="f-chip" [class.active]="selectedRole === 'TRAINER'" (click)="selectRole('TRAINER')">Trainers</button>
+      </div>
+
+      <div class="chip-group">
+        <span class="cg-lbl">Method:</span>
+        <button type="button" class="f-chip" [class.active]="selectedMethod === 'ALL'" (click)="selectMethod('ALL')">All</button>
+        <button type="button" class="f-chip" [class.active]="selectedMethod === 'FACE'" (click)="selectMethod('FACE')">Face</button>
+        <button type="button" class="f-chip" [class.active]="selectedMethod === 'FINGERPRINT'" (click)="selectMethod('FINGERPRINT')">Fingerprint</button>
+        <button type="button" class="f-chip" [class.active]="selectedMethod === 'MANUAL'" (click)="selectMethod('MANUAL')">Manual</button>
+      </div>
+
+      <button type="button" class="btn-reset" (click)="resetFilters()">Reset</button>
     </div>
+  </section>
 
-    <div class="filter-group search-group">
-      <label>Search Name:</label>
-      <input type="text" [(ngModel)]="searchName" (input)="onFilterChange()" placeholder="Search by name..." class="filter-input">
-    </div>
-
-    <button class="btn-clear" (click)="resetFilters()" title="Reset Filters">
-      Reset Filters
-    </button>
-  </div>
-
-  <!-- Attendance Table -->
-  <div class="table-card">
+  <!-- ── Table View ── -->
+  <section class="table-card" *ngIf="!loading && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Name</th>
+          <th>Person</th>
           <th>Role</th>
           <th>Date</th>
           <th>Check-In Time</th>
@@ -100,16 +231,23 @@
       </thead>
       <tbody>
         <tr *ngFor="let record of records">
-          <td class="font-bold">
-            <div>{{ record.name }}</div>
-            <div class="sub-text">{{ record.email || record.phone }}</div>
+          <td>
+            <div class="tbl-identity">
+              <div class="tbl-avatar" [class.av-trainer]="record.role === 'TRAINER'">
+                {{ getInitials(record.name) }}
+              </div>
+              <div>
+                <div class="tbl-name">{{ record.name }}</div>
+                <div class="tbl-sub">{{ record.email || record.phone || 'Verified profile' }}</div>
+              </div>
+            </div>
           </td>
           <td>
             <span class="role-badge" [class.badge-member]="record.role === 'MEMBER'" [class.badge-trainer]="record.role === 'TRAINER'">
               {{ record.role }}
             </span>
           </td>
-          <td>{{ record.checkInTime | date:'mediumDate' }}</td>
+          <td class="tbl-date">{{ record.checkInTime | date:'mediumDate' }}</td>
           <td class="time-in">{{ record.checkInTime | date:'shortTime' }}</td>
           <td>
             <span class="method-badge" [ngClass]="'method-' + (record.method || 'face').toLowerCase()">
@@ -117,47 +255,75 @@
             </span>
           </td>
           <td>
-            <span class="status-badge status-present">
-              ✓ Present
-            </span>
+            <span class="status-badge status-present">✓ Present</span>
           </td>
         </tr>
-        <tr *ngIf="records.length === 0 && !loading">
-          <td colspan="6" class="no-data">No attendance records found matching criteria.</td>
+        <tr *ngIf="records.length === 0">
+          <td colspan="6" class="no-data">No attendance records match the current filters.</td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </section>
 
-  <!-- Manual Check-In Modal -->
+  <!-- ── Cards View ── -->
+  <section class="logs-grid" *ngIf="!loading && viewMode === 'cards'">
+    <article class="log-card" *ngFor="let record of records">
+      <div class="log-top">
+        <div class="tbl-identity">
+          <div class="tbl-avatar" [class.av-trainer]="record.role === 'TRAINER'">
+            {{ getInitials(record.name) }}
+          </div>
+          <div>
+            <div class="tbl-name">{{ record.name }}</div>
+            <div class="tbl-sub">{{ record.email || record.phone }}</div>
+          </div>
+        </div>
+        <span class="role-badge" [class.badge-member]="record.role === 'MEMBER'" [class.badge-trainer]="record.role === 'TRAINER'">
+          {{ record.role }}
+        </span>
+      </div>
+      <div class="log-meta">
+        <span>📅 {{ record.checkInTime | date:'mediumDate' }}</span>
+        <span>⏱ {{ record.checkInTime | date:'shortTime' }}</span>
+      </div>
+      <div class="log-foot">
+        <span class="method-badge" [ngClass]="'method-' + (record.method || 'face').toLowerCase()">
+          {{ (record.method || 'FACE').toUpperCase() === 'FINGERPRINT' ? '👆 Fingerprint' : ((record.method || 'FACE').toUpperCase() === 'MANUAL' ? '📝 Manual' : '📷 Face') }}
+        </span>
+        <span class="status-badge status-present">✓ Present</span>
+      </div>
+    </article>
+
+    <div *ngIf="records.length === 0" class="no-data empty-card">
+      No attendance records match the current filters.
+    </div>
+  </section>
+
+  <!-- ── Luxury Manual Check-In Modal ── -->
   <div class="modal-overlay" *ngIf="showManualModal" (click)="closeManualModal()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Manual <span>Check-In</span></h3>
-        <button class="btn-close" (click)="closeManualModal()">&times;</button>
+        <h3>MANUAL <span>CHECK-IN</span></h3>
+        <button type="button" class="btn-close" (click)="closeManualModal()">&times;</button>
       </div>
 
       <div class="modal-body">
-        <p class="modal-desc">Manually record gym check-in for a member or trainer without camera scanning.</p>
-
+        <p class="modal-desc">Record gym entry manually for an athlete or trainer at the front desk.</p>
         <div class="form-group">
-          <label>Select User:</label>
-          <select [(ngModel)]="selectedManualUserId" class="form-select">
+          <label for="manualUserSelect">Select Athlete / Coach</label>
+          <select id="manualUserSelect" [(ngModel)]="selectedManualUserId" class="form-select">
             <option [ngValue]="null">-- Choose Member or Trainer --</option>
             <option *ngFor="let u of availableUsers" [ngValue]="u.id">
-              {{ u.name }} ({{ u.role }}) - {{ u.email }}
+              {{ u.name }} ({{ u.role }}) — {{ u.email }}
             </option>
           </select>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeManualModal()" [disabled]="manualLoading">Cancel</button>
-        <button 
-          class="btn-confirm" 
-          (click)="submitManualCheckin()" 
-          [disabled]="!selectedManualUserId || manualLoading"
-        >
+        <button type="button" class="btn-cancel" (click)="closeManualModal()" [disabled]="manualLoading">Cancel</button>
+        <button type="button" class="btn-confirm" (click)="submitManualCheckin()"
+                [disabled]="!selectedManualUserId || manualLoading">
           {{ manualLoading ? 'Recording...' : 'Mark Present' }}
         </button>
       </div>

@@ -1,98 +1,376 @@
-<div class="view-page-container">
-  <div class="view-header">
-    <div>
-      <h1>Gym <span>Members</span></h1>
-      <p>View and manage all registered gym members, profiles and onboarding status</p>
-    </div>
-    <a routerLink="/admin/members/add" class="btn-add">+ Add New Member</a>
-  </div>
+<div class="members-page">
 
+  <!-- ── Luxury Editorial Header ── -->
+  <header class="roster-header">
+    <div class="header-copy">
+      <div class="header-eyebrow">
+        <span>BEASTX ATHLETE DIRECTORY</span>
+        <span class="roster-pill" *ngIf="!loading">
+          <span class="pill-dot"></span> {{ members.length }} Registered {{ members.length === 1 ? 'Member' : 'Members' }}
+        </span>
+      </div>
+      <h1>GYM <span>MEMBERS</span></h1>
+      <p>Manage athlete memberships, biometrics, floor check-ins, trainer pairings &amp; onboarding status</p>
+    </div>
+
+    <a routerLink="/admin/members/add" class="btn-luxury-add">
+      <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+        <path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span>Add New Member</span>
+    </a>
+  </header>
+
+  <!-- ── Alerts / Copy Toast ── -->
   <div class="alert alert-success" *ngIf="successMessage">
-    {{ successMessage }}
+    <span>✓ {{ successMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
-
   <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
+    <span>⚠ {{ errorMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
+  </div>
+  <div class="copy-toast" *ngIf="copiedText">
+    Copied <strong>{{ copiedText }}</strong> to clipboard
   </div>
 
-  <div class="toolbar">
-    <input
-      type="text"
-      placeholder="Search by name, email, or phone..."
-      [(ngModel)]="searchTerm"
-      (input)="applyFilter()"
-      class="search-input"
-    />
-
-    <div class="filter-group">
-      <label>Status:</label>
-      <select [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
-        <option value="ALL">All Status</option>
-        <option value="ACTIVE">Active</option>
-        <option value="PENDING_PAYMENT">Pending Onboarding</option>
-        <option value="EXPIRED">Expired</option>
-      </select>
+  <!-- ── 4-Card Luxury KPI Strip ── -->
+  <section class="kpi-strip" *ngIf="!loading && members.length > 0">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Total Members</div>
+        <div class="kpi-val">{{ members.length }}</div>
+      </div>
     </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Active Athletes</div>
+        <div class="kpi-val kpi-val-green">{{ activeCount }} <small>({{ activeRatio }}%)</small></div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-gold">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Expiring (&le; 7d)</div>
+        <div class="kpi-val kpi-val-gold">{{ expiringSoonCount }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-red">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Pending / Expired</div>
+        <div class="kpi-val kpi-val-red">{{ pendingCount + expiredCount }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Luxury Control Dock (Search, Status Chips, Sort, View Toggle) ── -->
+  <section class="control-dock" *ngIf="!loading && members.length > 0">
+    <div class="dock-top">
+      <div class="search-box">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" class="search-ico">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+        <input type="text"
+               [(ngModel)]="searchTerm"
+               (input)="applyFilter()"
+               placeholder="Search by name, email, phone, plan, or coach..."
+               class="search-input" />
+        <button *ngIf="searchTerm" type="button" class="search-clear" (click)="clearSearch()" title="Clear search">×</button>
+      </div>
+
+      <div class="dock-right">
+        <div class="sort-wrap">
+          <label for="memberSort">Sort</label>
+          <select id="memberSort" [(ngModel)]="sortBy" (change)="applyFilter()" class="sort-select">
+            <option value="name">Name (A–Z)</option>
+            <option value="expiryAsc">Expiring Soonest</option>
+            <option value="expiryDesc">Longest Validity</option>
+            <option value="status">Membership Status</option>
+          </select>
+        </div>
+
+        <div class="view-toggle" role="group" aria-label="View layout">
+          <button type="button" class="vt-btn" [class.active]="viewMode === 'cards'"
+                  (click)="setViewMode('cards')" title="Luxury Cards View">
+            <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
+              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            <span>Cards</span>
+          </button>
+          <button type="button" class="vt-btn" [class.active]="viewMode === 'table'"
+                  (click)="setViewMode('table')" title="Compact Table View">
+            <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <span>Table</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Filter Pills -->
+    <div class="spec-chips-row">
+      <button type="button" class="spec-chip" [class.active]="statusFilter === 'ALL'"
+              (click)="selectStatus('ALL')">
+        All Members <span class="chip-cnt">{{ members.length }}</span>
+      </button>
+      <button type="button" class="spec-chip chip-green" [class.active]="statusFilter === 'ACTIVE'"
+              (click)="selectStatus('ACTIVE')">
+        Active <span class="chip-cnt">{{ activeCount }}</span>
+      </button>
+      <button type="button" class="spec-chip chip-amber" [class.active]="statusFilter === 'PENDING_PAYMENT'"
+              (click)="selectStatus('PENDING_PAYMENT')">
+        Pending Onboarding <span class="chip-cnt">{{ pendingCount }}</span>
+      </button>
+      <button type="button" class="spec-chip chip-red" [class.active]="statusFilter === 'EXPIRED'"
+              (click)="selectStatus('EXPIRED')">
+        Expired <span class="chip-cnt">{{ expiredCount }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Loading Skeleton Shimmer ── -->
+  <div class="cards-grid" *ngIf="loading">
+    <div class="member-skeleton" *ngFor="let sk of [1,2,3]"></div>
   </div>
 
-  <div class="table-card">
+  <!-- ── VIEW 1: Luxury Member Showcase Cards ── -->
+  <section class="cards-grid" *ngIf="!loading && viewMode === 'cards' && filteredMembers.length > 0">
+    <article class="member-card"
+             [ngClass]="getStatusClass(member.status)"
+             *ngFor="let member of filteredMembers; let i = index"
+             [style.animation-delay]="(i * 65) + 'ms'">
+
+      <div class="card-accent-bar" [ngClass]="getStatusClass(member.status)"></div>
+
+      <!-- Identity Row -->
+      <div class="member-top">
+        <div class="member-identity" (click)="openDetailsModal(member)" title="Inspect full athlete dossier">
+          <div class="avatar-medallion" [ngClass]="getStatusClass(member.status)">
+            <span>{{ getInitials(member.name) }}</span>
+          </div>
+          <div class="name-stack">
+            <span class="sub-eyebrow">{{ member.onboardingCompleted ? 'VERIFIED ATHLETE' : 'ONBOARDING PENDING' }}</span>
+            <h2 class="member-name">{{ member.name }}</h2>
+          </div>
+        </div>
+
+        <span class="status-pill" [ngClass]="getStatusClass(member.status)">
+          <span class="s-dot"></span>
+          {{ getStatusLabel(member.status) }}
+        </span>
+      </div>
+
+      <!-- Plan & Goal Tags -->
+      <div class="tags-bar">
+        <span class="plan-tag">{{ member.planName || 'No Plan Assigned' }}</span>
+        <span class="goal-chip" *ngIf="member.fitnessGoal">🎯 {{ member.fitnessGoal }}</span>
+      </div>
+
+      <!-- 3-Metric Recessed Tile Strip -->
+      <div class="metric-trio">
+        <div class="metric-tile">
+          <span class="m-lbl">Coach</span>
+          <span class="m-val m-val-sm">{{ member.trainerName || 'Self' }}</span>
+        </div>
+        <div class="metric-tile">
+          <span class="m-lbl">Validity</span>
+          <span class="m-val"
+                [class.days-warn]="member.daysLeft !== null && member.daysLeft !== undefined && member.daysLeft <= 7 && member.status === 'ACTIVE'"
+                [class.days-ok]="member.daysLeft !== null && member.daysLeft !== undefined && member.daysLeft > 7 && member.status === 'ACTIVE'">
+            {{ member.daysLeft !== null && member.daysLeft !== undefined ? (member.daysLeft + 'd Left') : 'Pending' }}
+          </span>
+        </div>
+        <div class="metric-tile">
+          <span class="m-lbl">Expires</span>
+          <span class="m-val m-val-sm">{{ member.expiryDate ? (member.expiryDate | date:'MMM d, y') : '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Contact Pills -->
+      <div class="contact-strip">
+        <button type="button" class="contact-pill" *ngIf="member.email"
+                (click)="copyContact(member.email)" title="Click to copy email">
+          <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+          </svg>
+          <span>{{ member.email }}</span>
+        </button>
+        <button type="button" class="contact-pill" *ngIf="member.phone"
+                (click)="copyContact(member.phone)" title="Click to copy phone">
+          <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+          </svg>
+          <span>{{ member.phone }}</span>
+        </button>
+      </div>
+
+      <!-- Two-Row Clean Action Dock -->
+      <div class="card-actions-wrap">
+        <div class="actions-row">
+          <button type="button" (click)="checkIn(member)" class="act-btn act-in" title="Manual Check In">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 11-2 0V4H5v12h10v-2a1 1 0 112 0v3a1 1 0 01-1 1H4a1 1 0 01-1-1V3z" clip-rule="evenodd"/>
+              <path fill-rule="evenodd" d="M10.293 6.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L11.586 11H2a1 1 0 110-2h9.586l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            <span>In</span>
+          </button>
+
+          <button type="button" (click)="checkOut(member)" class="act-btn act-out" title="Manual Check Out">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+            </svg>
+            <span>Out</span>
+          </button>
+
+          <button type="button" (click)="openFaceEnroll(member)" class="act-btn act-face" title="Enroll Face Biometric">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+            <span>Face ID</span>
+          </button>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" (click)="openDetailsModal(member)" class="act-btn act-view" title="Inspect Full Profile &amp; Passkeys">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+            </svg>
+            <span>Dossier</span>
+          </button>
+
+          <a [routerLink]="['/admin/members/edit', member.id]" class="act-btn act-edit" title="Edit Member">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+            </svg>
+            <span>Edit</span>
+          </a>
+
+          <button type="button" (click)="deleteMember(member.id, member.name)"
+                  class="act-btn act-delete" title="Delete Member">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── VIEW 2: Compact Luxury Table ── -->
+  <section class="table-card" *ngIf="!loading && viewMode === 'table' && filteredMembers.length > 0">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Email & Phone</th>
+          <th>Athlete</th>
           <th>Plan</th>
-          <th>Trainer</th>
-          <th>Expiry Date</th>
+          <th>Coach</th>
+          <th>Expiry</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let member of filteredMembers">
-          <td class="font-bold">{{ member.name }}</td>
           <td>
-            <div>{{ member.email }}</div>
-            <div class="text-sub">{{ member.phone || 'N/A' }}</div>
+            <div class="tbl-identity" (click)="openDetailsModal(member)">
+              <div class="tbl-avatar" [ngClass]="getStatusClass(member.status)">
+                {{ getInitials(member.name) }}
+              </div>
+              <div>
+                <div class="tbl-name">{{ member.name }}</div>
+                <div class="tbl-sub">{{ member.email }} · {{ member.phone || 'N/A' }}</div>
+              </div>
+            </div>
           </td>
-          <td>{{ member.planName || 'No Plan' }}</td>
-          <td>{{ member.trainerName || 'Self' }}</td>
-          <td>{{ member.expiryDate ? (member.expiryDate | date:'mediumDate') : 'Pending' }}</td>
+          <td><span class="plan-tag">{{ member.planName || 'No Plan' }}</span></td>
+          <td class="tbl-trainer">{{ member.trainerName || 'Self' }}</td>
           <td>
-            <span
-              class="status-badge"
-              [class.status-active]="member.status === 'ACTIVE'"
-              [class.status-pending]="member.status === 'PENDING_PAYMENT'"
-              [class.status-expired]="member.status === 'EXPIRED'"
-            >
-              {{ member.status === 'PENDING_PAYMENT' ? 'PENDING' : member.status }}
+            <div class="tbl-exp">{{ member.expiryDate ? (member.expiryDate | date:'mediumDate') : 'Pending' }}</div>
+            <div class="tbl-sub" *ngIf="member.daysLeft !== null && member.daysLeft !== undefined">
+              {{ member.daysLeft }} days left
+            </div>
+          </td>
+          <td>
+            <span class="status-pill" [ngClass]="getStatusClass(member.status)">
+              <span class="s-dot"></span>
+              {{ getStatusLabel(member.status) }}
             </span>
           </td>
-          <td class="actions-cell">
-            <button (click)="openDetailsModal(member)" class="btn-action btn-view" title="View Full Details">View</button>
-            <button (click)="openFaceEnroll(member)" class="btn-action btn-face" title="Enroll Face Template">👤 Face</button>
-            <button (click)="checkIn(member)" class="btn-action btn-checkin" title="Check In">In</button>
-            <button (click)="checkOut(member)" class="btn-action btn-checkout" title="Check Out">Out</button>
-            <a [routerLink]="['/admin/members/edit', member.id]" class="btn-action btn-edit">Edit</a>
-            <button (click)="deleteMember(member.id, member.name)" class="btn-action btn-delete">Delete</button>
+          <td>
+            <div class="tbl-actions">
+              <button type="button" (click)="openDetailsModal(member)" class="act-btn act-view">View</button>
+              <button type="button" (click)="openFaceEnroll(member)" class="act-btn act-face">Face ID</button>
+              <button type="button" (click)="checkIn(member)" class="act-btn act-in">In</button>
+              <button type="button" (click)="checkOut(member)" class="act-btn act-out">Out</button>
+              <a [routerLink]="['/admin/members/edit', member.id]" class="act-btn act-edit">Edit</a>
+              <button type="button" (click)="deleteMember(member.id, member.name)" class="act-btn act-delete">Delete</button>
+            </div>
           </td>
-        </tr>
-        <tr *ngIf="filteredMembers.length === 0 && !loading">
-          <td colspan="7" class="no-data">No members found matching the criteria.</td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </section>
 
-  <!-- Member Full Profile Details Modal -->
+  <!-- ── Empty State ── -->
+  <section class="empty-state" *ngIf="!loading && filteredMembers.length === 0">
+    <div class="empty-icon">🏋️</div>
+    <h3>{{ members.length === 0 ? 'NO MEMBERS REGISTERED YET' : 'NO MATCHING ATHLETES FOUND' }}</h3>
+    <p *ngIf="members.length === 0">Add your first gym member to assign plans, coaches, and biometrics.</p>
+    <p *ngIf="members.length > 0">Try clearing the search query or selecting another status chip.</p>
+    <button *ngIf="members.length > 0" type="button" class="btn-reset" (click)="resetAllFilters()">Reset Filters</button>
+    <a *ngIf="members.length === 0" routerLink="/admin/members/add" class="btn-luxury-add">+ Add First Member</a>
+  </section>
+
+  <!-- ── Luxury Athlete Dossier Modal (Preserves All Profile + Passkey Device Management) ── -->
   <div class="modal-overlay" *ngIf="selectedMemberForModal" (click)="closeDetailsModal()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <div>
-          <h3>{{ selectedMemberForModal.name }}</h3>
-          <span class="modal-sub">{{ selectedMemberForModal.email }} | {{ selectedMemberForModal.phone }}</span>
+        <div class="modal-id">
+          <div class="avatar-medallion lg" [ngClass]="getStatusClass(selectedMemberForModal.status)">
+            <span>{{ getInitials(selectedMemberForModal.name) }}</span>
+          </div>
+          <div>
+            <span class="status-pill" [ngClass]="getStatusClass(selectedMemberForModal.status)">
+              <span class="s-dot"></span>
+              {{ getStatusLabel(selectedMemberForModal.status) }}
+            </span>
+            <h3>{{ selectedMemberForModal.name }}</h3>
+            <span class="modal-sub">{{ selectedMemberForModal.email }} · {{ selectedMemberForModal.phone || 'N/A' }}</span>
+          </div>
         </div>
-        <button class="btn-close" (click)="closeDetailsModal()">✕</button>
+        <button type="button" class="btn-close" (click)="closeDetailsModal()">×</button>
       </div>
 
       <div class="modal-body">
@@ -106,7 +384,7 @@
             <span class="m-val">{{ selectedMemberForModal.onboardingCompleted ? 'Yes' : 'No (Pending)' }}</span>
           </div>
           <div class="m-item">
-            <span class="m-lbl">Plan & Duration</span>
+            <span class="m-lbl">Plan &amp; Tier</span>
             <span class="m-val">{{ selectedMemberForModal.planName || 'None' }}</span>
           </div>
           <div class="m-item">
@@ -135,7 +413,7 @@
           </div>
           <div class="m-item">
             <span class="m-lbl">Days Left</span>
-            <span class="m-val">{{ selectedMemberForModal.daysLeft !== null ? selectedMemberForModal.daysLeft + ' Days' : 'N/A' }}</span>
+            <span class="m-val">{{ selectedMemberForModal.daysLeft !== null && selectedMemberForModal.daysLeft !== undefined ? selectedMemberForModal.daysLeft + ' Days' : 'N/A' }}</span>
           </div>
           <div class="m-item m-full">
             <span class="m-lbl">Medical Conditions / Injuries</span>
@@ -173,12 +451,15 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-modal-close" (click)="closeDetailsModal()">Close</button>
+        <button type="button" class="act-btn act-in" (click)="checkIn(selectedMemberForModal)">Check In</button>
+        <button type="button" class="act-btn act-face" (click)="openFaceEnroll(selectedMemberForModal)">Enroll Face ID</button>
+        <a [routerLink]="['/admin/members/edit', selectedMemberForModal.id]" class="act-btn act-edit" (click)="closeDetailsModal()">Edit Member</a>
+        <button type="button" class="btn-modal-close" (click)="closeDetailsModal()">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- Face Enrollment Modal Component -->
+  <!-- ── Existing Face Enrollment Modal ── -->
   <app-face-enroll
     *ngIf="selectedMemberForFaceEnroll"
     [userId]="selectedMemberForFaceEnroll.id"

@@ -1,76 +1,131 @@
 <div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>Admin <span>Dashboard</span></h1>
-    <p>Overview of gym members, trainers, attendance, and revenue</p>
-  </div>
 
-  <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
+  <!-- ── ROW 1: Greeting Header ── -->
+  <header class="dash-header">
+    <div class="dash-greet">
+      <div class="greet-eyebrow">BEASTX COMMAND CENTER</div>
+      <h1>{{ greeting }}, <span>Admin</span> 👋</h1>
+      <p class="dash-date">{{ currentDate }}</p>
+    </div>
 
-  <div class="loading-spinner" *ngIf="loading">
-    Loading stats...
-  </div>
+    <div class="dash-meta">
+      <span class="live-pill">
+        <span class="live-dot"></span> System Live
+      </span>
+      <span class="last-upd">Last updated: {{ lastUpdatedLabel }}</span>
+      <button type="button" class="btn-refresh" (click)="refresh()"
+              [disabled]="loading || analyticsLoading" title="Refresh stats & analytics">
+        <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor"
+             [class.spinning]="loading || analyticsLoading">
+          <path d="M4 10a6 6 0 1 1 1.76 4.24l1.42-1.42A4 4 0 1 0 6 10H8l-3 3-3-3h2z"/>
+        </svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
 
-  <div class="stats-grid" *ngIf="!loading && stats">
-    <div class="stat-card">
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- ── ROW 2: Existing Stat Cards (Enhanced) ── -->
+  <section class="stats-grid" *ngIf="!loading && stats">
+    <!-- 1. Total Members (with sparkline + trend chip) -->
+    <div class="stat-card sc-delay-0">
       <div class="stat-icon">👥</div>
       <div class="stat-info">
         <h3>Total Members</h3>
-        <p class="stat-value">{{ stats.totalMembers }}</p>
+        <p class="stat-value">{{ animTotalMembers }}</p>
+        <div class="stat-trend-row" *ngIf="analytics">
+          <span class="trend-chip" [class.up]="membersTrendPositive" [class.down]="!membersTrendPositive">
+            {{ membersTrendPositive ? '▲' : '▼' }} {{ membersTrendText }}
+          </span>
+        </div>
       </div>
+      <svg *ngIf="membersSparkPath" viewBox="0 0 76 26" class="mini-spark" preserveAspectRatio="none">
+        <path [attr.d]="membersSparkPath" fill="none" stroke="#FF5A00" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
 
-    <div class="stat-card stat-active">
+    <!-- 2. Active Members -->
+    <div class="stat-card stat-active sc-delay-1">
       <div class="stat-icon">✅</div>
       <div class="stat-info">
         <h3>Active Members</h3>
-        <p class="stat-value">{{ stats.activeMembers }}</p>
+        <p class="stat-value">{{ animActiveMembers }}</p>
       </div>
     </div>
 
-    <div class="stat-card stat-pending">
+    <!-- 3. Pending Onboarding -->
+    <div class="stat-card stat-pending sc-delay-2">
       <div class="stat-icon">⏳</div>
       <div class="stat-info">
         <h3>Pending Onboarding</h3>
-        <p class="stat-value">{{ stats.pendingMembers || 0 }}</p>
+        <p class="stat-value">{{ animPendingMembers }}</p>
       </div>
     </div>
 
-    <div class="stat-card stat-expired">
+    <!-- 4. Expired Members -->
+    <div class="stat-card stat-expired sc-delay-3">
       <div class="stat-icon">⚠️</div>
       <div class="stat-info">
         <h3>Expired Members</h3>
-        <p class="stat-value">{{ stats.expiredMembers }}</p>
+        <p class="stat-value">{{ animExpiredMembers }}</p>
       </div>
     </div>
 
-    <div class="stat-card">
+    <!-- 5. Total Trainers -->
+    <div class="stat-card sc-delay-4">
       <div class="stat-icon">🥊</div>
       <div class="stat-info">
         <h3>Total Trainers</h3>
-        <p class="stat-value">{{ stats.totalTrainers }}</p>
+        <p class="stat-value">{{ animTotalTrainers }}</p>
       </div>
     </div>
 
-    <div class="stat-card">
+    <!-- 6. Total Plans -->
+    <div class="stat-card sc-delay-5">
       <div class="stat-icon">📋</div>
       <div class="stat-info">
         <h3>Total Plans</h3>
-        <p class="stat-value">{{ stats.totalPlans }}</p>
+        <p class="stat-value">{{ animTotalPlans }}</p>
       </div>
     </div>
 
-    <div class="stat-card">
+    <!-- 7. Today's Attendance (with sparkline + trend chip) -->
+    <div class="stat-card sc-delay-6">
       <div class="stat-icon">📅</div>
       <div class="stat-info">
         <h3>Today's Attendance</h3>
-        <p class="stat-value">{{ stats.todayAttendance }}</p>
+        <p class="stat-value">{{ animTodayAttendance }}</p>
+        <div class="stat-trend-row" *ngIf="analytics">
+          <span class="trend-chip" [class.up]="attendanceTrendPositive" [class.down]="!attendanceTrendPositive">
+            {{ attendanceTrendPositive ? '▲' : '▼' }} {{ attendanceTrendText }}
+          </span>
+        </div>
       </div>
+      <svg *ngIf="attendanceSparkPath" viewBox="0 0 76 26" class="mini-spark" preserveAspectRatio="none">
+        <path [attr.d]="attendanceSparkPath" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
 
-    <!-- Today's Check-ins by Method -->
-    <div class="stat-card stat-methods">
+    <!-- 8. Monthly Revenue (with sparkline + trend chip + Indian grouping) -->
+    <div class="stat-card stat-revenue sc-delay-7">
+      <div class="stat-icon">💰</div>
+      <div class="stat-info">
+        <h3>Monthly Revenue</h3>
+        <p class="stat-value stat-value-rev">{{ formatINR(animMonthlyRevenue) }}</p>
+        <div class="stat-trend-row" *ngIf="analytics">
+          <span class="trend-chip" [class.up]="revenueTrendPositive" [class.down]="!revenueTrendPositive">
+            {{ revenueTrendPositive ? '▲' : '▼' }} {{ revenueTrendText }}
+          </span>
+        </div>
+      </div>
+      <svg *ngIf="revenueSparkPath" viewBox="0 0 76 26" class="mini-spark" preserveAspectRatio="none">
+        <path [attr.d]="revenueSparkPath" fill="none" stroke="#FF8A1F" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- 9. Today's Check-ins by Method -->
+    <div class="stat-card stat-methods sc-delay-8">
       <div class="stat-icon">⚡</div>
       <div class="stat-info">
         <h3>Today's Check-ins by Method</h3>
@@ -81,22 +136,222 @@
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="stat-card stat-revenue">
-      <div class="stat-icon">💰</div>
-      <div class="stat-info">
-        <h3>Monthly Revenue</h3>
-        <p class="stat-value">₹{{ stats.monthlyRevenue | number:'1.2-2' }}</p>
-      </div>
-    </div>
+  <!-- Stat skeleton shimmer -->
+  <div class="stats-grid skeleton-grid" *ngIf="loading">
+    <div class="skeleton-card" *ngFor="let x of [1,2,3,4,5,6,7,8]"></div>
   </div>
 
-  <!-- Live Face Recognition Auto Check-In Scanner -->
+  <!-- ── ROW 3: Revenue Line Chart (span 2) | Check-ins Donut ── -->
+  <section class="charts-row-3 chart-section" #chartSection data-row="row3">
+    <div class="chart-card chart-span-2">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">REVENUE <span>TREND</span></h3>
+          <p class="chart-subtitle">Paid collections across active billing cycles</p>
+        </div>
+        <span class="chart-chip">Last 6 months</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <app-line-chart *ngIf="!analyticsLoading"
+                      [data]="analytics?.revenueByMonth || []"
+                      [inView]="inViewRows['row3']"></app-line-chart>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">CHECK-IN <span>METHODS</span></h3>
+          <p class="chart-subtitle">Face vs Fingerprint vs Manual verification</p>
+        </div>
+        <span class="chart-chip">Last 30 days</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <app-donut-chart *ngIf="!analyticsLoading"
+                       [segments]="checkInDonutSegs"
+                       title="Check-ins"
+                       [inView]="inViewRows['row3']"></app-donut-chart>
+    </div>
+  </section>
+
+  <!-- ── ROW 4: Attendance Bar | Member Status Donut | Members by Plan ── -->
+  <section class="charts-row-3 chart-section" #chartSection data-row="row4">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">DAILY <span>ATTENDANCE</span></h3>
+          <p class="chart-subtitle">Check-in volume vs 7-day rolling average</p>
+        </div>
+        <span class="chart-chip">Last 7 days</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <app-bar-chart *ngIf="!analyticsLoading"
+                     [data]="analytics?.attendanceLast7Days || []"
+                     [todayIndex]="todayIndex"
+                     [inView]="inViewRows['row4']"></app-bar-chart>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">MEMBER <span>STATUS</span></h3>
+          <p class="chart-subtitle">Active vs Expired vs Pending onboarding</p>
+        </div>
+        <span class="chart-chip">Snapshot</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <app-donut-chart *ngIf="!analyticsLoading"
+                       [segments]="memberStatusSegs"
+                       title="Members"
+                       [inView]="inViewRows['row4']"></app-donut-chart>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">MEMBERS BY <span>PLAN</span></h3>
+          <p class="chart-subtitle">Ranked subscription tier popularity</p>
+        </div>
+        <span class="chart-chip">Plans</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <div class="plan-bars" [class.is-in-view]="inViewRows['row4']" *ngIf="!analyticsLoading">
+        <div *ngIf="!analytics?.membersByPlan?.length" class="no-data">No data yet</div>
+        <div class="plan-row" *ngFor="let p of analytics?.membersByPlan; let i = index">
+          <div class="plan-rank">#{{ i + 1 }}</div>
+          <div class="plan-info">
+            <div class="plan-top">
+              <span class="plan-name">{{ p.plan }}</span>
+              <span class="plan-count">{{ p.count }}</span>
+            </div>
+            <svg viewBox="0 0 240 8" preserveAspectRatio="none" class="plan-svg">
+              <defs>
+                <linearGradient [id]="'plan-g-' + i" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#FF5A00"/>
+                  <stop offset="100%" stop-color="#FF8A1F"/>
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="240" height="8" rx="4" fill="#252525"/>
+              <rect x="0" y="0"
+                    [attr.width]="((p.count || 0) / maxPlanCount) * 240"
+                    height="8" rx="4"
+                    [attr.fill]="'url(#plan-g-' + i + ')'"
+                    class="plan-fill-rect"
+                    [style.animation-delay]="(i * 90) + 'ms'"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ROW 5: Peak Hours Heatmap (full width) ── -->
+  <section class="chart-card chart-full chart-section" #chartSection data-row="row5">
+    <div class="chart-head">
+      <div>
+        <h3 class="chart-title">PEAK <span>HOURS</span></h3>
+        <p class="chart-subtitle">Gym floor traffic from 5 AM to 11 PM</p>
+      </div>
+      <span class="chart-chip">Last 30 days</span>
+    </div>
+    <div class="chart-skeleton heatmap-sk" *ngIf="analyticsLoading"></div>
+    <app-heatmap-strip *ngIf="!analyticsLoading"
+                       [hours]="analytics?.peakHours || []"
+                       [inView]="inViewRows['row5']"></app-heatmap-strip>
+  </section>
+
+  <!-- ── ROW 6: Trainer Load | New Members Sparkline Card ── -->
+  <section class="charts-row-2 chart-section" #chartSection data-row="row6">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">TRAINER <span>LOAD</span></h3>
+          <p class="chart-subtitle">Assigned members against coaching capacity</p>
+        </div>
+        <span class="chart-chip">Active coaches</span>
+      </div>
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+      <app-progress-bars *ngIf="!analyticsLoading"
+                         [items]="analytics?.trainerLoad || []"
+                         [inView]="inViewRows['row6']"></app-progress-bars>
+    </div>
+
+    <div class="chart-card new-members-card" [class.is-in-view]="inViewRows['row6']">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">NEW <span>MEMBERS</span></h3>
+          <p class="chart-subtitle">Monthly sign-up velocity by join date</p>
+        </div>
+        <span class="chart-chip">Last 6 months</span>
+      </div>
+
+      <div class="chart-skeleton" *ngIf="analyticsLoading"></div>
+
+      <ng-container *ngIf="!analyticsLoading">
+        <div *ngIf="!newMembersSpark.points.length" class="no-data">No data yet</div>
+
+        <div class="nm-spark-body" *ngIf="newMembersSpark.points.length">
+          <div class="nm-kpi-row">
+            <span class="nm-kpi-val">{{ newMembersTotal }} <small>sign-ups</small></span>
+            <span class="trend-chip" [class.up]="newMembersTrendPositive" [class.down]="!newMembersTrendPositive">
+              {{ newMembersTrendPositive ? '▲' : '▼' }} {{ newMembersTrendText }}
+            </span>
+          </div>
+
+          <svg viewBox="0 0 360 118" class="nm-svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="nm-area-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.38"/>
+                <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="nm-line-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#8B5CF6"/>
+                <stop offset="100%" stop-color="#FF5A00"/>
+              </linearGradient>
+            </defs>
+
+            <line x1="20" x2="340" y1="94" y2="94" stroke="rgba(255,255,255,0.08)"/>
+
+            <path [attr.d]="newMembersSpark.areaD" fill="url(#nm-area-grad)" class="nm-area"/>
+            <path [attr.d]="newMembersSpark.pathD" fill="none" stroke="url(#nm-line-grad)"
+                  stroke-width="2.5" stroke-linecap="round"
+                  class="nm-line"
+                  [attr.stroke-dasharray]="newMembersSpark.pathLen"
+                  [style.--nm-len]="newMembersSpark.pathLen"/>
+
+            <g *ngFor="let p of newMembersSpark.points; let i = index">
+              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4.5" fill="#8B5CF6"
+                      stroke="#141414" stroke-width="2"
+                      class="nm-dot" [class.active]="activeNewMemberIdx === i"
+                      [style.animation-delay]="(300 + i * 95) + 'ms'"/>
+              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="14" fill="transparent" class="nm-hit"
+                      (mouseenter)="showNewMemberTip(p, i)"
+                      (mouseleave)="hideNewMemberTip()"
+                      (click)="toggleNewMemberTip(p, i)"/>
+              <text [attr.x]="p.x" y="112" text-anchor="middle" class="nm-lbl">{{ p.label }}</text>
+            </g>
+
+            <g *ngIf="newMemberTip">
+              <rect [attr.x]="newMemberTip.boxX" [attr.y]="newMemberTip.y - 24"
+                    width="96" height="20" rx="5" fill="#1f1f1f" stroke="#8B5CF6" stroke-width="1"/>
+              <text [attr.x]="newMemberTip.x" [attr.y]="newMemberTip.y - 10.5"
+                    text-anchor="middle" class="nm-tip-txt">
+                {{ newMemberTip.label }}: {{ newMemberTip.value }} new
+              </text>
+            </g>
+          </svg>
+        </div>
+      </ng-container>
+    </div>
+  </section>
+
+  <!-- ── Existing Kiosk / Live Face Recognition Scanner (unchanged) ── -->
   <div class="scanner-section" *ngIf="!loading">
     <app-facescanner></app-facescanner>
   </div>
 
-  <!-- Quick Actions Section -->
+  <!-- ── Existing Quick Actions (unchanged) ── -->
   <div class="quick-actions" *ngIf="!loading">
     <h2>Quick <span>Management</span></h2>
     <div class="actions-grid">

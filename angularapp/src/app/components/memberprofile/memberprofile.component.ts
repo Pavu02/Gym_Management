@@ -114,11 +114,38 @@ export class MemberprofileComponent implements OnInit {
     if (this.webAuthnSupported) {
       this.passkeyService.getDevices().subscribe({
         next: (devices) => {
-          this.passkeyDevices = devices;
+          this.passkeyDevices = devices || [];
+          this.loadFingerprintDevices();
         },
-        error: () => { }
+        error: () => {
+          this.loadFingerprintDevices();
+        }
       });
+    } else {
+      this.loadFingerprintDevices();
     }
+  }
+
+  private loadFingerprintDevices(): void {
+    this.fingerprintService.getMyDevices().subscribe({
+      next: (fpDevices) => {
+        if (fpDevices && fpDevices.length > 0) {
+          const existingNames = new Set(this.passkeyDevices.map(d => d.deviceName));
+          for (const d of fpDevices) {
+            if (!existingNames.has(d.deviceName)) {
+              this.passkeyDevices.push({
+                id: d.id,
+                credentialId: String(d.id),
+                deviceName: d.deviceName,
+                signCount: 0,
+                createdAt: d.createdAt
+              });
+            }
+          }
+        }
+      },
+      error: () => { }
+    });
   }
 
   async addPasskey(): Promise<void> {
@@ -190,6 +217,20 @@ export class MemberprofileComponent implements OnInit {
 
   deletePasskey(credentialId: string): void {
     if (!confirm('Are you sure you want to remove this passkey device?')) {
+      return;
+    }
+
+    const numericId = Number(credentialId);
+    if (!isNaN(numericId) && numericId > 0) {
+      this.fingerprintService.deleteMyDevice(numericId).subscribe({
+        next: () => {
+          this.passkeyMessage = 'Device removed successfully.';
+          this.loadBiometricsAndPasskeys();
+        },
+        error: (err: any) => {
+          this.passkeyError = err.error?.message || 'Failed to remove device.';
+        }
+      });
       return;
     }
 

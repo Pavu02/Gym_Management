@@ -13,4 +13,5 @@ public interface MissedVisitNotificationRepo extends JpaRepository<MissedVisitNo
     Optional<MissedVisitNotification> findByMemberIdAndDate(Long memberId, LocalDate date);
     boolean existsByMemberIdAndDate(Long memberId, LocalDate date);
     List<MissedVisitNotification> findByDate(LocalDate date);
+    void deleteByMemberId(Long memberId);
 }

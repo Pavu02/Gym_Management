@@ -1,0 +1,31 @@
+:host { display: block; }
+.hm-wrap { width: 100%; }
+.hm-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.hm-busiest { font-size: 0.85rem; color: #aaa; }
+.hm-busiest strong { color: #FF5A00; font-weight: 800; }
+.hm-scale { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #666; }
+.hm-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid rgba(255,255,255,0.08); }
+.hm-swatch.s0 { background: #1F1F1F; }
+.hm-swatch.s1 { background: rgba(255, 90, 0, 0.35); }
+.hm-swatch.s2 { background: rgba(255, 90, 0, 0.65); }
+.hm-swatch.s3 { background: #FF5A00; }
+
+.hm-empty { color: #666; font-size: 0.85rem; text-align: center; padding: 36px 0; }
+.hm-svg { width: 100%; display: block; overflow: visible; }
+.hm-cell-grp { cursor: pointer; }
+.hm-cell { transform-box: fill-box; transform-origin: center bottom; }
+.hm-cell.active { transform: scaleY(1.1); }
+.hm-tick { font-size: 11px; fill: #777; font-weight: 600; }
+.hm-tip-txt { font-size: 11px; fill: #fff; font-weight: 700; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hm-wrap:not(.is-in-view) .hm-cell { opacity: 0; transform: scaleY(0.4); }
+  .hm-wrap.is-in-view .hm-cell {
+    transition: transform 0.16s ease;
+    animation: hmReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes hmReveal {
+    from { opacity: 0; transform: scaleY(0.4); }
+    to   { opacity: 1; transform: scaleY(1); }
+  }
+}

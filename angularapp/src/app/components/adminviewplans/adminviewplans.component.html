@@ -1,26 +1,203 @@
-<div class="view-page-container">
-  <div class="view-header">
-    <div>
-      <h1>Membership <span>Plans</span></h1>
-      <p>Manage all available gym membership tiers, features, and pricing</p>
+<div class="plans-page">
+
+  <!-- ── Luxury Editorial Header ── -->
+  <header class="roster-header">
+    <div class="header-copy">
+      <div class="header-eyebrow">
+        <span>BEASTX SUBSCRIPTION ARCHITECTURE</span>
+        <span class="live-pill" *ngIf="!loading">
+          <span class="pill-dot"></span> {{ plans.length }} Active {{ plans.length === 1 ? 'Tier' : 'Tiers' }}
+        </span>
+      </div>
+      <h1>MEMBERSHIP <span>PLANS</span></h1>
+      <p>Configure luxury membership tiers, validity cycles, included athlete perks &amp; pricing</p>
     </div>
-    <a routerLink="/admin/plans/add" class="btn-add">+ Add New Plan</a>
-  </div>
 
+    <a routerLink="/admin/plans/add" class="btn-luxury-add">
+      <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+        <path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span>Add New Plan</span>
+    </a>
+  </header>
+
+  <!-- Alerts -->
   <div class="alert alert-success" *ngIf="successMessage">
-    {{ successMessage }}
+    <span>✓ {{ successMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
-
   <div class="alert alert-error" *ngIf="errorMessage">
-    {{ errorMessage }}
+    <span>⚠ {{ errorMessage }}</span>
+    <button type="button" class="alert-close" (click)="dismissAlerts()">×</button>
   </div>
 
-  <div class="toolbar">
-    <input type="text" placeholder="Search plans by name or features..." [(ngModel)]="searchTerm"
-      (input)="filterPlans()" class="search-input" />
+  <!-- ── 4-Card Plans KPI Strip ── -->
+  <section class="kpi-strip" *ngIf="!loading && plans.length > 0">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <line x1="7" y1="9" x2="17" y2="9"/>
+          <line x1="7" y1="13" x2="13" y2="13"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Total Plans</div>
+        <div class="kpi-val">{{ plans.length }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-gold">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Flagship Popular</div>
+        <div class="kpi-val kpi-val-gold">{{ popularPlanName }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Starting From</div>
+        <div class="kpi-val kpi-val-green">{{ formatPriceWhole(startingPrice) }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-violet">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-label">Max Validity</div>
+        <div class="kpi-val">{{ maxDuration }} <small>Months</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Luxury Control Dock ── -->
+  <section class="control-dock" *ngIf="!loading && plans.length > 0">
+    <div class="dock-top">
+      <div class="search-box">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" class="search-ico">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchTerm" (input)="filterPlans()"
+               placeholder="Search plans by name, description, or included perks..." class="search-input" />
+      </div>
+
+      <div class="dock-right">
+        <div class="sort-wrap">
+          <label for="planSort">Sort</label>
+          <select id="planSort" [(ngModel)]="sortBy" (change)="filterPlans()" class="sort-select">
+            <option value="priceAsc">Price: Low to High</option>
+            <option value="priceDesc">Price: High to Low</option>
+            <option value="duration">Longest Duration</option>
+            <option value="name">Name (A–Z)</option>
+          </select>
+        </div>
+
+        <div class="view-toggle">
+          <button type="button" class="vt-btn" [class.active]="viewMode === 'cards'" (click)="viewMode = 'cards'">Cards</button>
+          <button type="button" class="vt-btn" [class.active]="viewMode === 'table'" (click)="viewMode = 'table'">Table</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-chips-row">
+      <button type="button" class="spec-chip" [class.active]="durationFilter === 'ALL'" (click)="selectFilter('ALL')">
+        All Plans <span class="chip-cnt">{{ plans.length }}</span>
+      </button>
+      <button type="button" class="spec-chip" [class.active]="durationFilter === 'POPULAR'" (click)="selectFilter('POPULAR')">
+        Most Popular <span class="chip-cnt">{{ popularCount }}</span>
+      </button>
+      <button type="button" class="spec-chip" [class.active]="durationFilter === 'SHORT'" (click)="selectFilter('SHORT')">
+        1 Month
+      </button>
+      <button type="button" class="spec-chip" [class.active]="durationFilter === 'MEDIUM'" (click)="selectFilter('MEDIUM')">
+        2–6 Months
+      </button>
+      <button type="button" class="spec-chip" [class.active]="durationFilter === 'LONG'" (click)="selectFilter('LONG')">
+        Annual (7m+)
+      </button>
+    </div>
+  </section>
+
+  <!-- Loading Skeleton -->
+  <div class="plans-grid" *ngIf="loading">
+    <div class="plan-skeleton" *ngFor="let sk of [1,2,3]"></div>
   </div>
 
-  <div class="table-card">
+  <!-- ── VIEW 1: Luxury Tier Showcase Cards ── -->
+  <section class="plans-grid" *ngIf="!loading && viewMode === 'cards' && filteredPlans.length > 0">
+    <article class="plan-card"
+             [class.popular-card]="plan.popular"
+             *ngFor="let plan of filteredPlans; let i = index"
+             [style.animation-delay]="(i * 65) + 'ms'">
+
+      <div class="card-accent-bar" [class.popular-bar]="plan.popular"></div>
+
+      <div class="plan-top">
+        <span class="tier-id-tag">TIER #{{ plan.id }}</span>
+        <span class="popular-ribbon" *ngIf="plan.popular">★ MOST POPULAR</span>
+      </div>
+
+      <div class="plan-title-row">
+        <h2>{{ plan.name }}</h2>
+        <span class="duration-pill">{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</span>
+      </div>
+
+      <p class="plan-desc">
+        {{ plan.description || 'Complete BeastX facility access paired with digital check-in &amp; member analytics.' }}
+      </p>
+
+      <div class="price-box">
+        <div class="price-main">{{ formatPriceWhole(plan.price) }}</div>
+        <div class="price-eff">≈ {{ getMonthlyRate(plan) }} /mo effective</div>
+      </div>
+
+      <div class="perks-wrap">
+        <span class="perks-lbl">Included Benefits</span>
+        <div class="perks-list" *ngIf="getFeatures(plan.features).length > 0">
+          <span class="perk-chip" *ngFor="let feat of getFeatures(plan.features)">
+            <span class="chk">✓</span> {{ feat }}
+          </span>
+        </div>
+        <div class="no-perks" *ngIf="getFeatures(plan.features).length === 0">
+          Standard gym floor access &amp; locker amenities
+        </div>
+      </div>
+
+      <div class="plan-actions">
+        <a [routerLink]="['/admin/plans/edit', plan.id]" class="act-btn act-edit">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+          </svg>
+          <span>Edit Tier</span>
+        </a>
+        <button type="button" (click)="deletePlan(plan.id!, plan.name)" class="act-btn act-delete" title="Delete Plan">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── VIEW 2: Compact Luxury Table ── -->
+  <section class="table-card" *ngIf="!loading && viewMode === 'table' && filteredPlans.length > 0">
     <table class="data-table">
       <thead>
         <tr>
@@ -35,28 +212,37 @@
       </thead>
       <tbody>
         <tr *ngFor="let plan of filteredPlans">
-          <td>{{ plan.id }}</td>
+          <td><span class="tier-id-tag">#{{ plan.id }}</span></td>
           <td class="font-bold">{{ plan.name }}</td>
-          <td>{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</td>
-          <td class="price-cell">₹{{ plan.price | number:'1.2-2' }}</td>
-          <td class="features-cell">
-            <span class="chip-feature" *ngFor="let feat of getFeatures(plan.features)">
-              {{ feat }}
-            </span>
+          <td><span class="duration-pill">{{ plan.durationMonths }} Month{{ plan.durationMonths > 1 ? 's' : '' }}</span></td>
+          <td class="price-cell">{{ formatINR(plan.price) }}</td>
+          <td>
+            <div class="features-cell">
+              <span class="perk-chip" *ngFor="let feat of getFeatures(plan.features)">{{ feat }}</span>
+            </div>
           </td>
           <td>
-            <span class="badge-popular" *ngIf="plan.popular">MOST POPULAR</span>
-            <span class="text-muted" *ngIf="!plan.popular">-</span>
+            <span class="popular-ribbon sm" *ngIf="plan.popular">MOST POPULAR</span>
+            <span class="text-muted" *ngIf="!plan.popular">—</span>
           </td>
-          <td class="actions-cell">
-            <a [routerLink]="['/admin/plans/edit', plan.id]" class="btn-action btn-edit">Edit</a>
-            <button (click)="deletePlan(plan.id!, plan.name)" class="btn-action btn-delete">Delete</button>
+          <td>
+            <div class="tbl-actions">
+              <a [routerLink]="['/admin/plans/edit', plan.id]" class="act-btn act-edit">Edit</a>
+              <button type="button" (click)="deletePlan(plan.id!, plan.name)" class="act-btn act-delete">Delete</button>
+            </div>
           </td>
-        </tr>
-        <tr *ngIf="filteredPlans.length === 0 && !loading">
-          <td colspan="7" class="no-data">No plans found.</td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </section>
+
+  <!-- Empty State -->
+  <section class="empty-state" *ngIf="!loading && filteredPlans.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3>{{ plans.length === 0 ? 'NO MEMBERSHIP PLANS YET' : 'NO MATCHING PLANS FOUND' }}</h3>
+    <p *ngIf="plans.length === 0">Create your first tier to enable member onboarding and subscriptions.</p>
+    <p *ngIf="plans.length > 0">Try adjusting your search or duration filter chips.</p>
+    <button *ngIf="plans.length > 0" type="button" class="btn-reset" (click)="resetAllFilters()">Reset Filters</button>
+    <a *ngIf="plans.length === 0" routerLink="/admin/plans/add" class="btn-luxury-add">+ Create Plan</a>
+  </section>
 </div>

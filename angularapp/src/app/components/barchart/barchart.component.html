@@ -1,0 +1,49 @@
+<div class="bc-wrap" [class.is-in-view]="inView">
+  <div *ngIf="!bars.length" class="bc-empty">No data yet</div>
+
+  <svg *ngIf="bars.length" [attr.viewBox]="'0 0 ' + W + ' ' + H" class="bc-svg" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="bc-today" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FF8A1F" />
+        <stop offset="100%" stop-color="#FF5A00" />
+      </linearGradient>
+      <linearGradient id="bc-other" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4A2E1E" />
+        <stop offset="100%" stop-color="#271E19" />
+      </linearGradient>
+    </defs>
+
+    <!-- Baseline -->
+    <line [attr.x1]="PAD_X" [attr.x2]="W - PAD_X" [attr.y1]="H - PAD_BOTTOM" [attr.y2]="H - PAD_BOTTOM"
+      stroke="rgba(255,255,255,0.1)" />
+
+    <!-- Bars -->
+    <g *ngFor="let b of bars; let i = index" class="bc-col" (mouseenter)="showBar(i)" (mouseleave)="hideBar()"
+      (click)="toggleBar(i)">
+      <rect [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" rx="6" ry="6"
+        [attr.fill]="b.isToday ? 'url(#bc-today)' : 'url(#bc-other)'" [class.today]="b.isToday"
+        [class.hovered]="hoveredIdx === i" class="bc-bar" [style.animation-delay]="(i * 80) + 'ms'" />
+
+      <!-- Hover/tap value label -->
+      <g *ngIf="hoveredIdx === i">
+        <rect [attr.x]="b.x + b.w / 2 - 16" [attr.y]="b.y - 24" width="32" height="18" rx="4" fill="#1f1f1f"
+          stroke="#FF5A00" stroke-width="1" />
+        <text [attr.x]="b.x + b.w / 2" [attr.y]="b.y - 11" text-anchor="middle" class="bc-tip-txt">
+          {{ b.count }}
+        </text>
+      </g>
+
+      <text [attr.x]="b.x + b.w / 2" [attr.y]="H - 7" text-anchor="middle" class="bc-lbl"
+        [class.today-lbl]="b.isToday">{{ b.label }}</text>
+    </g>
+
+    <!-- Dashed average line -->
+    <line [attr.x1]="PAD_X" [attr.x2]="W - PAD_X" [attr.y1]="avgY" [attr.y2]="avgY" stroke="#FF8A1F"
+      stroke-opacity="0.7" stroke-width="1.2" stroke-dasharray="5 4" class="bc-avg-line" />
+    <rect [attr.x]="W - PAD_X - 52" [attr.y]="avgY - 15" width="52" height="14" rx="4"
+      fill="rgba(255, 138, 31, 0.16)" />
+    <text [attr.x]="W - PAD_X - 26" [attr.y]="avgY - 5" text-anchor="middle" class="bc-avg-txt">
+      Avg {{ avg | number:'1.0-1' }}
+    </text>
+  </svg>
+</div>

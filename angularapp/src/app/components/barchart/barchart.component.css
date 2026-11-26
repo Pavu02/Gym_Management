@@ -1,0 +1,28 @@
+:host { display: block; }
+.bc-wrap { width: 100%; }
+.bc-empty { color: #666; font-size: 0.85rem; text-align: center; padding: 48px 0; }
+.bc-svg { width: 100%; display: block; overflow: visible; }
+.bc-col { cursor: pointer; }
+.bc-bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+.bc-bar.hovered { opacity: 0.9; }
+.bc-lbl { font-size: 10px; fill: #666; font-weight: 600; }
+.bc-lbl.today-lbl { fill: #FF5A00; font-weight: 800; }
+.bc-avg-line { pointer-events: none; }
+.bc-avg-txt { font-size: 9px; fill: #FF8A1F; font-weight: 700; pointer-events: none; }
+.bc-tip-txt { font-size: 10px; fill: #fff; font-weight: 700; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bc-wrap:not(.is-in-view) .bc-bar { opacity: 0; transform: scaleY(0); }
+  .bc-wrap.is-in-view .bc-bar {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    animation: growBar 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .bc-bar.hovered { transform: scaleY(1.04); }
+  @keyframes growBar {
+    from { transform: scaleY(0); opacity: 0; }
+    to   { transform: scaleY(1); opacity: 1; }
+  }
+}

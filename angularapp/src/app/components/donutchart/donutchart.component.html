@@ -1,0 +1,53 @@
+<div class="dc-wrap" [class.is-in-view]="inView">
+  <div *ngIf="!arcs.length" class="dc-empty">No data yet</div>
+
+  <div class="dc-inner" *ngIf="arcs.length">
+    <svg viewBox="0 0 156 156" class="dc-svg" preserveAspectRatio="xMidYMid meet">
+      <!-- Track circle -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="R"
+              fill="none" stroke="#252525" stroke-width="14"/>
+
+      <!-- Hover halo rings (opacity + transform only) -->
+      <circle *ngFor="let arc of arcs; let i = index"
+              [attr.cx]="CX" [attr.cy]="CY" [attr.r]="R"
+              fill="none" [attr.stroke]="arc.color" stroke-width="22"
+              stroke-linecap="butt"
+              [attr.stroke-dasharray]="circumference + ' ' + circumference"
+              [attr.stroke-dashoffset]="arc.targetOffset"
+              [attr.transform]="'rotate(' + arc.startDeg + ' ' + CX + ' ' + CY + ')'"
+              class="dc-halo"
+              [class.hovered]="hovered === i"/>
+
+      <!-- Main segments -->
+      <circle *ngFor="let arc of arcs; let i = index"
+              [attr.cx]="CX" [attr.cy]="CY" [attr.r]="R"
+              fill="none" [attr.stroke]="arc.color" stroke-width="14"
+              stroke-linecap="butt"
+              [attr.stroke-dasharray]="circumference + ' ' + circumference"
+              [attr.stroke-dashoffset]="arc.targetOffset"
+              [style.--donut-c]="circumference"
+              [style.--donut-offset]="arc.targetOffset"
+              [style.animation-delay]="(i * 120) + 'ms'"
+              [attr.transform]="'rotate(' + arc.startDeg + ' ' + CX + ' ' + CY + ')'"
+              [class.hovered]="hovered === i"
+              class="dc-seg"
+              (mouseenter)="hover(i)" (mouseleave)="hover(null)" (click)="toggleHover(i)"/>
+
+      <!-- Center count-up -->
+      <text [attr.x]="CX" [attr.y]="CY - 2" text-anchor="middle" class="dc-total">{{ displayTotal }}</text>
+      <text [attr.x]="CX" [attr.y]="CY + 14" text-anchor="middle" class="dc-sub">{{ title }}</text>
+    </svg>
+
+    <!-- Legend -->
+    <div class="dc-legend">
+      <div class="dc-leg-item" *ngFor="let arc of arcs; let i = index"
+           [class.hovered]="hovered === i"
+           (mouseenter)="hover(i)" (mouseleave)="hover(null)" (click)="toggleHover(i)">
+        <span class="dc-dot" [style.background]="arc.color"></span>
+        <span class="dc-leg-label">{{ arc.label }}</span>
+        <span class="dc-leg-val">{{ arc.value }}</span>
+        <span class="dc-leg-pct">{{ arc.pct }}</span>
+      </div>
+    </div>
+  </div>
+</div>

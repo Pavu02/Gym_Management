@@ -1,0 +1,62 @@
+:host { display: block; }
+.dc-wrap { width: 100%; }
+.dc-empty { color: #666; font-size: 0.85rem; text-align: center; padding: 48px 0; }
+.dc-inner { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.dc-svg { width: 156px; height: 156px; flex-shrink: 0; overflow: visible; }
+
+.dc-halo {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 78px 78px;
+  pointer-events: none;
+}
+.dc-halo.hovered {
+  opacity: 0.28;
+  transform: scale(1.06);
+}
+
+.dc-seg {
+  cursor: pointer;
+  transform-box: view-box;
+  transform-origin: 78px 78px;
+}
+.dc-seg.hovered {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dc-halo { transition: opacity 0.22s ease, transform 0.22s ease; }
+  .dc-seg  { transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  .dc-wrap:not(.is-in-view) .dc-seg {
+    stroke-dashoffset: var(--donut-c, 339.29);
+    opacity: 0;
+  }
+
+  .dc-wrap.is-in-view .dc-seg {
+    animation: drawDonut 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes drawDonut {
+    from { stroke-dashoffset: var(--donut-c, 339.29); opacity: 0; }
+    6%   { opacity: 1; }
+    to   { stroke-dashoffset: var(--donut-offset, 0); opacity: 1; }
+  }
+}
+
+.dc-total { font-size: 24px; font-weight: 800; fill: #fff; }
+.dc-sub   { font-size: 10px; fill: #888; text-transform: uppercase; letter-spacing: 0.6px; }
+
+.dc-legend { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.dc-leg-item {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.dc-leg-item.hovered {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px rgba(255, 90, 0, 0.25);
+}
+.dc-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dc-leg-label { flex: 1; font-size: 0.8rem; color: #ccc; }
+.dc-leg-val   { font-size: 0.78rem; color: #888; font-weight: 600; }
+.dc-leg-pct   { font-size: 0.8rem; font-weight: 700; color: #fff; min-width: 44px; text-align: right; }

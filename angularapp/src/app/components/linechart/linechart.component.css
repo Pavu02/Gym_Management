@@ -1,0 +1,50 @@
+:host { display: block; }
+.lc-wrap { width: 100%; }
+.lc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.lc-metric-lbl { font-size: 0.72rem; color: #777; text-transform: uppercase; letter-spacing: 0.6px; }
+.lc-total { font-size: 1.55rem; font-weight: 800; color: #fff; margin-top: 2px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.lc-change { font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.lc-change.up   { color: #22C55E; background: rgba(34, 197, 94, 0.12); }
+.lc-change.down { color: #EF4444; background: rgba(239, 68, 68, 0.12); }
+.lc-empty { color: #666; font-size: 0.85rem; text-align: center; padding: 48px 0; }
+.lc-svg { width: 100%; display: block; overflow: visible; }
+.area-path { opacity: 0.7; }
+.lc-grid-lbl { font-size: 9px; fill: #555; }
+.lc-label { font-size: 11px; fill: #777; font-weight: 600; }
+.tip-text  { font-size: 11px; fill: #fff; font-weight: 700; }
+.dot { transform-box: fill-box; transform-origin: center; }
+.dot.active { transform: scale(1.4); }
+.dot-hit { cursor: pointer; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lc-wrap:not(.is-in-view) .line-path,
+  .lc-wrap:not(.is-in-view) .area-path,
+  .lc-wrap:not(.is-in-view) .dot {
+    opacity: 0;
+  }
+
+  .lc-wrap.is-in-view .line-path {
+    animation: drawLine 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .lc-wrap.is-in-view .area-path {
+    animation: fadeArea 1.1s 0.3s ease both;
+  }
+  .lc-wrap.is-in-view .dot {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    animation: popDot 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes drawLine {
+    from { stroke-dashoffset: var(--path-len, 600); opacity: 0; }
+    5%   { opacity: 1; }
+    to   { stroke-dashoffset: 0; opacity: 1; }
+  }
+  @keyframes fadeArea {
+    from { opacity: 0; }
+    to   { opacity: 0.7; }
+  }
+  @keyframes popDot {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+}

@@ -1,105 +1,177 @@
 <div class="home-page">
 
   <!-- =========================================================================
-       1. HERO SECTION (Screenshot 1: media_1795197812011_23ff88e7.jpg)
+       1. CINEMATIC OBSIDIAN LUXURY HERO
        ========================================================================= -->
   <section class="hero-section">
-    <div class="hero-grid-canvas">
-      <!-- Left Hero Typography (3-line massive Bebas heading) -->
-      <div class="hero-text-wrap">
+    <div class="hero-aura" aria-hidden="true"></div>
+    <div class="hero-watermark" aria-hidden="true">BEASTX</div>
+
+    <div class="section-inner hero-grid">
+      <!-- Left Editorial Pitch -->
+      <div class="hero-copy">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>FLAGSHIP ATHLETIC CLUB · EST. 2015</span>
+        </div>
+
         <h1 class="hero-heading">
-          <span class="line-1">FORGE</span>
-          <span class="line-2">YOUR <span class="text-outline">BODY</span></span>
-          <span class="line-3"><span class="text-orange">BEAST</span>MODE</span>
+          <span class="h-line d-1">FORGE</span>
+          <span class="h-line d-2">YOUR <span class="text-outline-white">BODY</span></span>
+          <span class="h-line d-3"><span class="text-orange">BEAST</span>MODE</span>
         </h1>
+
+        <p class="hero-lead">
+          Engineered for serious athletes. Experience competition-grade iron, bespoke 1-on-1 coaching,
+          and sub-second biometric Face &amp; Touch ID floor access under one obsidian roof.
+        </p>
+
+        <div class="hero-actions">
+          <a *ngIf="!authService.isLoggedIn()" routerLink="/signup" class="btn-bracket">
+            Start Membership
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+          <a *ngIf="authService.isLoggedIn()" [routerLink]="getPortalRoute()" class="btn-bracket">
+            Open Dashboard
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+          <a href="#pricing" class="btn-glass">Explore Plans</a>
+        </div>
+
+        <div class="hero-trust-strip">
+          <div class="trust-item">
+            <strong>4.9 ★</strong>
+            <span>Coach Rating</span>
+          </div>
+          <span class="trust-sep"></span>
+          <div class="trust-item">
+            <strong>0.4s</strong>
+            <span>Biometric Entry</span>
+          </div>
+          <span class="trust-sep"></span>
+          <div class="trust-item">
+            <strong>5 AM – 11 PM</strong>
+            <span>Open Daily</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Right Hero Athlete Image -->
-      <div class="hero-athlete-wrap">
-        <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop"
-          alt="Athlete Barbell Deadlift" class="hero-athlete-img" loading="eager" />
-      </div>
+      <!-- Right Framed Editorial Showcase -->
+      <div class="hero-visual">
+        <div class="hero-photo-frame">
+          <div class="frame-corner tl"></div>
+          <div class="frame-corner tr"></div>
+          <div class="frame-corner bl"></div>
+          <div class="frame-corner br"></div>
 
-      <!-- Vertical Faded Watermark on Far Right Edge -->
-      <div class="hero-watermark" aria-hidden="true">
-        BEASTX
+          <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop"
+               alt="Athlete gripping calibrated Olympic barbell" class="hero-img" loading="eager" />
+          <div class="hero-img-vignette"></div>
+
+          <!-- Floating HUD Badges -->
+          <div class="hud-card hud-top">
+            <span class="hud-pulse"></span>
+            <div>
+              <div class="hud-title">BIOMETRIC KIOSK</div>
+              <div class="hud-sub">Face ID &amp; Phone Passkey Ready</div>
+            </div>
+          </div>
+
+          <div class="hud-card hud-bottom">
+            <div class="hud-stat-num">5,000+</div>
+            <div class="hud-sub">Active Athletes Trained Citywide</div>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <div class="scroll-cue">
+      <span>SCROLL TO EXPLORE</span>
+      <div class="scroll-line"></div>
     </div>
   </section>
 
+  <!-- Kinetic Brand Ticker -->
+  <div class="kinetic-ribbon">
+    <div class="ribbon-track">
+      <span>CALIBRATED IRON • BIOMETRIC ACCESS • ELITE COACHES • CONDITIONING LAB • RECOVERY LOUNGE • NUTRITION STRATEGY •</span>
+      <span>CALIBRATED IRON • BIOMETRIC ACCESS • ELITE COACHES • CONDITIONING LAB • RECOVERY LOUNGE • NUTRITION STRATEGY •</span>
+    </div>
+  </div>
+
 
   <!-- =========================================================================
-       2. ABOUT SECTION - 2-COLUMN BENTO (Screenshot 2: media_1795197816687_8c9b0467.jpg)
+       2. ABOUT & ARCHITECTURAL BENTO SHOWCASE
        ========================================================================= -->
-  <section id="about" class="about-section">
+  <section id="about" class="about-section reveal-block" #revealEl>
     <div class="section-inner">
       <div class="about-bento-grid">
 
-        <!-- LEFT COLUMN -->
-        <div class="about-col-left">
-          <!-- Card 1: Equipment Image Card -->
-          <div class="equipment-card">
+        <!-- Left Bento Stack -->
+        <div class="bento-col">
+          <div class="bento-media-card tall">
             <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop"
-              alt="Premium Equipment" class="card-img" />
-            <span class="pill-tag pill-tag-left">Premium Equipment</span>
+                 alt="BeastX Olympic iron equipment floor" class="bento-img" loading="lazy" />
+            <div class="bento-vignette"></div>
+            <span class="luxury-pill pill-top-left">Olympic Calibrated Iron</span>
+            <div class="bento-caption">
+              <h3>ENGINEERED FLOOR</h3>
+              <p>Competition racks, specialty bars &amp; turf sprint lanes built for zero compromise.</p>
+            </div>
           </div>
 
-          <!-- Card 2: - ABOUT Description -->
-          <div class="about-copy-box">
-            <div class="label-dash"><span class="dash-mark">—</span> ABOUT</div>
-            <p class="about-paragraph">
-              At BeastX, we combine expert coaching, advanced equipment, and personalized fitness programs
-              to help you achieve peak performance. Whether your goal is strength, endurance, or transformation,
-              our training environment is designed to keep you motivated every step of the way.
+          <div class="bento-glass-card about-manifesto">
+            <div class="label-eyebrow"><span>—</span> THE BEASTX STANDARD</div>
+            <p>
+              At BeastX, we merge championship coaching, calibrated equipment, and frictionless smart-gym automation.
+              From biometric check-ins to custom progressive programming, every detail is engineered to keep you locked in.
             </p>
-          </div>
-
-          <!-- Card 3: Orange Clipboard & Dumbbell Icon Card -->
-          <div class="about-icon-card clipboard-card">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#FF5A00" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="4" width="14" height="17" rx="2"></rect>
-              <path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z"></path>
-              <line x1="8" y1="9" x2="10" y2="9"></line>
-              <line x1="12" y1="9" x2="16" y2="9"></line>
-              <line x1="8" y1="13" x2="10" y2="13"></line>
-              <line x1="12" y1="13" x2="16" y2="13"></line>
-              <circle cx="10" cy="17" r="1.5"></circle>
-              <line x1="11.5" y1="17" x2="14.5" y2="17"></line>
-              <circle cx="16" cy="17" r="1.5"></circle>
-            </svg>
+            <div class="manifesto-tags">
+              <span>✓ Face &amp; Fingerprint Gate</span>
+              <span>✓ Real-Time Analytics</span>
+            </div>
           </div>
         </div>
 
-        <!-- RIGHT COLUMN -->
-        <div class="about-col-right">
-          <!-- Card 1: Modern Training Heading -->
-          <div class="about-heading-box">
-            <h2 class="section-title">
+        <!-- Right Bento Stack -->
+        <div class="bento-col">
+          <div class="bento-heading-card">
+            <div class="label-eyebrow"><span>—</span> BUILT DIFFERENT</div>
+            <h2 class="section-title white">
               MODERN <span class="text-orange">TRAINING</span><br />
               BUILT FOR REAL RESULTS
             </h2>
           </div>
 
-          <!-- Card 2: Flexible Memberships Feature Box -->
-          <div class="feature-box">
-            <div class="feature-icon-badge">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF5A00" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
+          <div class="bento-feature-card">
+            <div class="feature-ico-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF5A00" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="3" width="20" height="14" rx="2"></rect>
                 <circle cx="8" cy="10" r="2.5"></circle>
                 <path d="M13 8h5M13 12h5M5 15c0-1.5 1.5-2.5 3-2.5s3 1 3 2.5"></path>
                 <path d="M18 19l2 2 3-3"></path>
               </svg>
             </div>
-            <h3 class="feature-title">FLEXIBLE MEMBERSHIPS</h3>
+            <div>
+              <h3>FLEXIBLE MEMBERSHIPS &amp; SMART PASSKEYS</h3>
+              <p>Seamless monthly, quarterly, or annual access paired with instant mobile passkey entry and automated progress reminders.</p>
+            </div>
           </div>
 
-          <!-- Card 3: Professional Trainers Image Card -->
-          <div class="trainer-preview-card">
-            <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"
-              alt="Professional Trainer" class="card-img" />
-            <span class="pill-tag pill-tag-right">Professional Trainers</span>
+          <div class="bento-media-card">
+            <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=900&auto=format&fit=crop"
+                 alt="BeastX professional coaching specialist" class="bento-img" loading="lazy" />
+            <div class="bento-vignette"></div>
+            <span class="luxury-pill gold pill-top-right">Certified Coaches</span>
+            <div class="bento-caption">
+              <h3>1-ON-1 PERFORMANCE</h3>
+              <p>Dedicated specialists guiding form, load progression, and injury resilience.</p>
+            </div>
           </div>
         </div>
 
@@ -109,103 +181,51 @@
 
 
   <!-- =========================================================================
-       3. MORE THAN A GYM & STATS (Screenshot 10: media_1795198253222_f52caa49.jpg)
+       3. TRANSFORMATION ARENA BANNER & ANIMATED METRICS STRIP
        ========================================================================= -->
-  <section class="transformation-section">
-    <!-- Curved Elliptical Dome Banner -->
-    <div class="curved-banner-wrap">
-      <div class="curved-banner-canvas">
-        <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1400&auto=format&fit=crop"
-          alt="Gym Dumbbell Training" class="curved-banner-img" />
-        <div class="curved-banner-overlay">
-          <h2 class="curved-overlay-title">MORE THAN A GYM</h2>
-        </div>
-      </div>
-    </div>
-
-    <!-- Center Callout -->
-    <div class="section-inner text-center transform-copy-wrap">
-      <h2 class="outline-transformation-title">BUILT FOR TRANSFORMATION</h2>
-      <p class="transform-description">
-        At BeastX, we believe fitness is more than lifting weights. It's about building discipline, confidence,
-        and a stronger version of yourself every single day. Our mission is to help people unlock their full
-        potential through expert coaching, proven training methods, and a community that never settles for average.
-      </p>
-    </div>
-
-    <!-- Solid Orange Full-Width Divider -->
-    <div class="orange-full-divider"></div>
-
-    <!-- Stats Bar (Black background with 4 columns) -->
-    <div class="stats-strip">
-      <div class="section-inner stats-strip-inner">
-        <div class="stat-col">
-          <div class="stat-number">12+</div>
-          <div class="stat-label">YEARS FORGING ATHLETES</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-col">
-          <div class="stat-number">5K+</div>
-          <div class="stat-label">ACTIVE MEMBERS</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-col">
-          <div class="stat-number">44</div>
-          <div class="stat-label">ELITE TRAINERS</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-col">
-          <div class="stat-number">3</div>
-          <div class="stat-label">LOCATIONS CITYWIDE</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- =========================================================================
-       4. FITNESS PROGRAMS DESIGNED AROUND YOUR GOALS (Screenshot 3: media_1795197823206_3f90f0b4.jpg)
-       ========================================================================= -->
-  <section id="programs" class="programs-section">
+  <section class="transformation-section reveal-block" #revealEl>
     <div class="section-inner">
-      <div class="programs-header-row">
-        <h2 class="section-title">
-          FITNESS <span class="text-orange">PROGRAMS</span> DESIGNED AROUND YOUR GOALS
-        </h2>
-        <a routerLink="/signup" class="btn-bracket">View more</a>
+      <div class="arena-dome">
+        <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1400&auto=format&fit=crop"
+             alt="BeastX dumbbell strength training" class="arena-img" loading="lazy" />
+        <div class="arena-overlay">
+          <span class="arena-tag">NO EXCUSES · PURE DISCIPLINE</span>
+          <h2 class="arena-title">MORE THAN A GYM</h2>
+        </div>
       </div>
 
-      <div class="programs-2x2-grid">
-        <!-- Top Left: Strength Training Text Card -->
-        <div class="program-text-card">
-          <h3 class="program-card-title">STRENGTH TRAINING</h3>
-          <p class="program-card-desc">
-            Build muscle, improve power, and increase endurance with expert-led strength programs tailored to your
-            athletic baseline.
-          </p>
-        </div>
+      <div class="transform-copy">
+        <h2 class="outline-display">BUILT FOR TRANSFORMATION</h2>
+        <p>
+          Fitness isn't a weekend mood—it's a daily architecture of discipline, resilience, and measurable output.
+          Our mission is unlocking your peak self through precision coaching, relentless standards, and an uncompromising brotherhood.
+        </p>
+      </div>
+    </div>
 
-        <!-- Top Right: Athletes Crunches Photo Card -->
-        <div class="program-image-card">
-          <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop"
-            alt="Athletes Conditioning Crunches" class="program-img" />
-        </div>
+    <div class="molten-divider"></div>
 
-        <!-- Bottom Left: Orange Stretching Person Icon Card -->
-        <div class="program-stretching-card">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF5A00" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="4" r="2"></circle>
-            <path d="M15 8l-3 4-3-4"></path>
-            <path d="M12 12v5l3 4M12 17l-3 4"></path>
-            <path d="M7 10l-3 2M17 10l3-2"></path>
-          </svg>
+    <!-- Animated Count-Up Metrics Bar -->
+    <div class="stats-band" #statsBlock>
+      <div class="section-inner stats-grid">
+        <div class="stat-item">
+          <div class="stat-val">{{ statYears }}<span>+</span></div>
+          <div class="stat-lbl">YEARS FORGING ATHLETES</div>
         </div>
-
-        <!-- Bottom Right: TRX Suspension Training Photo Card -->
-        <div class="program-image-card">
-          <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800&auto=format&fit=crop"
-            alt="TRX Suspension Training" class="program-img" />
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <div class="stat-val">{{ statMembers | number:'1.0-0' }}<span>+</span></div>
+          <div class="stat-lbl">ATHLETES TRAINED</div>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <div class="stat-val">{{ statTrainers }}<span>+</span></div>
+          <div class="stat-lbl">ELITE COACHES</div>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <div class="stat-val">{{ statStudios }}</div>
+          <div class="stat-lbl">CITYWIDE FLAGSHIPS</div>
         </div>
       </div>
     </div>
@@ -213,52 +233,54 @@
 
 
   <!-- =========================================================================
-       5. PROGRAMS BUILT FOR EVERY GOAL (Screenshot 8: media_1795198253231_9ace8506.jpg)
+       4. INTERACTIVE PROGRAMS SHOWCASE
        ========================================================================= -->
-  <section class="programs-feature-section">
-    <div class="section-inner text-center">
-      <h2 class="section-title">
-        <span class="text-orange">PROGRAMS</span> BUILT FOR EVERY GOAL
-      </h2>
-      <p class="programs-feature-subtitle">
-        Every program at BeastX is engineered by competitive athletes – built to transform beginners into beasts
-        and push elite athletes further than they thought possible.
-      </p>
-    </div>
+  <section id="programs" class="programs-section reveal-block" #revealEl>
+    <div class="section-inner">
+      <div class="section-header-row">
+        <div>
+          <div class="label-eyebrow"><span>—</span> TRAINING SYSTEMS</div>
+          <h2 class="section-title white">
+            PROGRAMS ENGINEERED FOR <span class="text-orange">EVERY GOAL</span>
+          </h2>
+        </div>
+        <a routerLink="/signup" class="btn-bracket">Start Training</a>
+      </div>
 
-    <div class="section-inner" style="margin-top: 54px;">
-      <div class="program-split-box">
-        <!-- Left Image of Athlete Squatting with Barbell in Rack -->
-        <div class="program-split-left">
-          <img src="https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=1000&auto=format&fit=crop"
-            alt="Strength Training Barbell Squat" class="split-img" />
+      <!-- Interactive Discipline Selector Tabs -->
+      <div class="program-tabs">
+        <button type="button"
+                *ngFor="let p of programs; let i = index"
+                class="prog-tab"
+                [class.active]="selectedProgramIndex === i"
+                (click)="selectProgram(i)">
+          <span class="prog-num">0{{ i + 1 }}</span>
+          <span>{{ p.title }}</span>
+        </button>
+      </div>
+
+      <!-- Active Program Luxury Split Showcase -->
+      <div class="program-showcase-card">
+        <div class="prog-media">
+          <img [src]="activeProgram.img" [alt]="activeProgram.alt" class="prog-img" />
+          <div class="prog-media-overlay"></div>
+          <span class="luxury-pill pill-top-left">{{ activeProgram.tag }}</span>
         </div>
 
-        <!-- Right Content & 2x2 Numbered Feature Grid -->
-        <div class="program-split-right">
-          <h2 class="split-title">STRENGTH<br />TRAINING</h2>
-          <p class="split-desc">
-            Build muscle, increase power, and develop total-body strength with progressive training systems
-            designed for lasting results.
-          </p>
+        <div class="prog-details">
+          <div class="prog-subtitle">{{ activeProgram.subtitle }}</div>
+          <h3 class="prog-title">{{ activeProgram.title }}</h3>
+          <p class="prog-desc">{{ activeProgram.desc }}</p>
 
-          <div class="numbered-feature-grid">
-            <div class="num-feature-item">
-              <span class="num-idx">1.</span>
-              <span class="num-text">Personalized workout plans</span>
+          <div class="pillars-grid">
+            <div class="pillar-item" *ngFor="let pt of activeProgram.points; let j = index">
+              <span class="pillar-idx">0{{ j + 1 }}</span>
+              <span class="pillar-txt">{{ pt }}</span>
             </div>
-            <div class="num-feature-item">
-              <span class="num-idx">3.</span>
-              <span class="num-text">Progressive overload tracking</span>
-            </div>
-            <div class="num-feature-item">
-              <span class="num-idx">2.</span>
-              <span class="num-text">Strength assessments</span>
-            </div>
-            <div class="num-feature-item">
-              <span class="num-idx">4.</span>
-              <span class="num-text">Expert trainer support</span>
-            </div>
+          </div>
+
+          <div class="prog-cta-row">
+            <a routerLink="/signup" class="btn-bracket">Claim Program Pass →</a>
           </div>
         </div>
       </div>
@@ -267,137 +289,49 @@
 
 
   <!-- =========================================================================
-       6. MEET OUR PROFESSIONAL TRAINERS (Screenshot 4: media_1795197843744_0fe7976e.jpg)
+       5. MEET OUR ELITE COACHES
        ========================================================================= -->
-  <section id="trainers" class="trainers-section">
+  <section id="trainers" class="trainers-section reveal-block" #revealEl>
     <div class="section-inner">
       <div class="trainers-grid">
-        <!-- Left Column: Title & Specialties with Orange Left Bar -->
-        <div class="trainers-left-col">
-          <h2 class="section-title">
+        <div class="trainers-left">
+          <div class="label-eyebrow"><span>—</span> COACHING EXCELLENCE</div>
+          <h2 class="section-title white">
             MEET OUR<br />
-            PROFESSIONAL <span class="text-orange">TRAINERS</span>
+            ELITE <span class="text-orange">COACHES</span>
           </h2>
 
-          <div class="trainer-spec-list">
-            <div class="spec-item" *ngFor="let spec of trainerSpecialties; let i = index"
-              [class.active]="selectedTrainerIndex === i" (click)="selectTrainer(i)">
-              <h4 class="spec-title">{{ spec.title }}</h4>
+          <div class="spec-accordion">
+            <div class="spec-row" *ngFor="let spec of trainerSpecialties; let i = index"
+                 [class.active]="selectedTrainerIndex === i"
+                 (click)="selectTrainer(i)">
+              <div class="spec-row-top">
+                <h4>{{ spec.title }}</h4>
+                <span class="spec-meta">{{ spec.tier }}</span>
+              </div>
+              <p class="spec-desc" *ngIf="selectedTrainerIndex === i">{{ spec.desc }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Grayscale Trainer Portraits -->
-        <div class="trainers-right-col">
-          <div class="trainer-portrait-card">
+        <div class="trainers-portraits">
+          <div class="portrait-card">
             <img src="https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=800&auto=format&fit=crop"
-              alt="Male Fitness Trainer" class="trainer-portrait-img" />
+                 alt="Coach Rahul Sharma - Strength & Muscle Gain" class="portrait-img" loading="lazy" />
+            <div class="portrait-glass">
+              <div class="p-badge">★ 4.8 · STRENGTH &amp; HYPERTROPHY</div>
+              <h3>RAHUL SHARMA</h3>
+              <p>5 Years Exp · Heavy Lifting &amp; Periodization</p>
+            </div>
           </div>
-          <div class="trainer-portrait-card">
+
+          <div class="portrait-card">
             <img src="https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=800&auto=format&fit=crop"
-              alt="Female Strength Trainer" class="trainer-portrait-img" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- =========================================================================
-       7. CHOOSE THE PERFECT MEMBERSHIP PLAN (Screenshot 5: media_1795197848752_e36f5e37.jpg)
-       ========================================================================= -->
-  <section id="pricing" class="pricing-section">
-    <!-- Right Background Athlete Graphic -->
-    <div class="pricing-bg-layer">
-      <div class="pricing-backdrop-img"></div>
-      <div class="pricing-gradient-fade"></div>
-    </div>
-
-    <div class="section-inner pricing-content-wrap">
-      <h2 class="section-title">
-        CHOOSE THE PERFECT <span class="text-orange">MEMBERSHIP</span> PLAN
-      </h2>
-      <p class="pricing-subtitle">
-        Real transformations, real experiences, and real results from members who train with BeastX every day.
-      </p>
-
-      <!-- Monthly / Yearly Toggle Buttons -->
-      <div class="billing-toggle-wrap">
-        <button class="toggle-btn" [class.active]="billingCycle === 'monthly'" (click)="setBillingCycle('monthly')">
-          Monthly
-        </button>
-        <button class="toggle-btn" [class.active]="billingCycle === 'yearly'" (click)="setBillingCycle('yearly')">
-          Yearly
-        </button>
-      </div>
-
-      <!-- 3 Pricing Cards Grid -->
-      <div class="pricing-cards-grid">
-        <!-- Starter Plan -->
-        <div class="pricing-card">
-          <div class="card-top-block">
-            <h3 class="plan-name">Starter</h3>
-            <p class="plan-tagline">Perfect for beginners starting their fitness journey.</p>
-            <div class="plan-price">
-              <span class="price-val">{{ billingCycle === 'monthly' ? '$29' : '$290' }}</span>
-              <span class="price-period">{{ billingCycle === 'monthly' ? '/month' : '/year' }}</span>
-            </div>
-          </div>
-          <div class="card-features-block">
-            <ul class="feature-check-list">
-              <li><span class="check-icon">✓</span> Gym Access</li>
-              <li><span class="check-icon">✓</span> Basic Workout Programs</li>
-              <li><span class="check-icon">✓</span> Locker Facility</li>
-            </ul>
-            <div class="plan-cta-wrap">
-              <a routerLink="/signup" class="btn-bracket" style="width: 100%;">Get Started</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pro Plan (Most Popular / Raised) -->
-        <div class="pricing-card card-pro-raised">
-          <div class="card-top-block">
-            <div class="popular-badge">Most Popular</div>
-            <h3 class="plan-name">Pro</h3>
-            <p class="plan-tagline">Advanced fitness experience with premium features.</p>
-            <div class="plan-price">
-              <span class="price-val">{{ billingCycle === 'monthly' ? '$59' : '$590' }}</span>
-              <span class="price-period">{{ billingCycle === 'monthly' ? '/month' : '/year' }}</span>
-            </div>
-          </div>
-          <div class="card-features-block">
-            <ul class="feature-check-list">
-              <li><span class="check-icon">✓</span> Unlimited Gym Access</li>
-              <li><span class="check-icon">✓</span> Personal Coaching</li>
-              <li><span class="check-icon">✓</span> Locker Facility</li>
-              <li><span class="check-icon">✓</span> Nutrition Guidance</li>
-            </ul>
-            <div class="plan-cta-wrap">
-              <a routerLink="/signup" class="btn-bracket" style="width: 100%;">Join Pro</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Elite Plan -->
-        <div class="pricing-card">
-          <div class="card-top-block">
-            <h3 class="plan-name">Elite</h3>
-            <p class="plan-tagline">Complete transformation package for maximum performance.</p>
-            <div class="plan-price">
-              <span class="price-val">{{ billingCycle === 'monthly' ? '$99' : '$990' }}</span>
-              <span class="price-period">{{ billingCycle === 'monthly' ? '/month' : '/year' }}</span>
-            </div>
-          </div>
-          <div class="card-features-block">
-            <ul class="feature-check-list">
-              <li><span class="check-icon">✓</span> All Premium Features</li>
-              <li><span class="check-icon">✓</span> VIP Training Sessions</li>
-              <li><span class="check-icon">✓</span> Custom Workout Plans</li>
-              <li><span class="check-icon">✓</span> Dedicated Physiotherapist</li>
-            </ul>
-            <div class="plan-cta-wrap">
-              <a routerLink="/signup" class="btn-bracket" style="width: 100%;">Go Elite</a>
+                 alt="Coach Priya Patil - Weight Loss & Yoga Flow" class="portrait-img" loading="lazy" />
+            <div class="portrait-glass">
+              <div class="p-badge gold">★ 4.9 · YOGA &amp; CONDITIONING</div>
+              <h3>PRIYA PATIL</h3>
+              <p>4 Years Exp · Mobility, Core &amp; Fat Loss</p>
             </div>
           </div>
         </div>
@@ -407,55 +341,94 @@
 
 
   <!-- =========================================================================
-       8. A DECADE OF MILESTONES (Screenshot 6: media_1795198253099_74fda8a1.png)
+       6. LUXURY MEMBERSHIP PRICING
        ========================================================================= -->
-  <section class="milestones-section">
-    <div class="section-inner text-center">
-      <h2 class="section-title">
-        A DECADE OF <span class="text-orange">MILESTONES</span>.
-      </h2>
-    </div>
+  <section id="pricing" class="pricing-section reveal-block" #revealEl>
+    <div class="pricing-ambient" aria-hidden="true"></div>
 
-    <!-- Central Vertical Timeline -->
-    <div class="timeline-container">
-      <div class="timeline-line"></div>
+    <div class="section-inner pricing-inner">
+      <div class="pricing-head">
+        <div class="label-eyebrow center"><span>—</span> MEMBERSHIP TIERS</div>
+        <h2 class="section-title white">
+          CHOOSE YOUR <span class="text-orange">PERFORMANCE</span> TIER
+        </h2>
+        <p class="pricing-sub">
+          Transparent pricing with instant onboarding, biometric entry, and flexible coaching upgrades.
+        </p>
 
-      <!-- Item 1: 2015 -->
-      <div class="timeline-row">
-        <div class="timeline-left">
-          <h3 class="milestone-title">THE FOUNDING</h3>
-        </div>
-        <div class="timeline-center">
-          <div class="timeline-marker"></div>
-        </div>
-        <div class="timeline-right">
-          <div class="milestone-year">2015</div>
+        <!-- Monthly / Yearly Switch -->
+        <div class="billing-switch">
+          <button type="button" class="sw-btn" [class.active]="billingCycle === 'monthly'"
+                  (click)="setBillingCycle('monthly')">
+            Monthly
+          </button>
+          <button type="button" class="sw-btn" [class.active]="billingCycle === 'yearly'"
+                  (click)="setBillingCycle('yearly')">
+            Annual <span class="save-badge">Save 20%</span>
+          </button>
         </div>
       </div>
 
-      <!-- Item 2: 2018 -->
-      <div class="timeline-row">
-        <div class="timeline-left">
-          <div class="milestone-year text-right">2018</div>
+      <div class="pricing-grid">
+        <!-- Basic Tier -->
+        <div class="tier-card">
+          <div class="tier-top">
+            <span class="tier-label">ESSENTIAL ACCESS</span>
+            <h3>BASIC</h3>
+            <p>Full calibrated iron floor access and locker amenities.</p>
+            <div class="tier-price">
+              <span class="p-val">{{ billingCycle === 'monthly' ? '₹999' : '₹9,590' }}</span>
+              <span class="p-unit">{{ billingCycle === 'monthly' ? '/month' : '/year' }}</span>
+            </div>
+          </div>
+          <ul class="tier-features">
+            <li><span class="chk">✓</span> Unlimited Gym Floor Access</li>
+            <li><span class="chk">✓</span> Face &amp; Touch ID Check-In</li>
+            <li><span class="chk">✓</span> Luxury Locker &amp; Shower Suite</li>
+            <li><span class="chk">✓</span> High-Speed Studio WiFi</li>
+          </ul>
+          <a routerLink="/signup" class="btn-glass full-w">Choose Basic</a>
         </div>
-        <div class="timeline-center">
-          <div class="timeline-marker"></div>
-        </div>
-        <div class="timeline-right">
-          <h3 class="milestone-title">FIRST 500 MEMBERS</h3>
-        </div>
-      </div>
 
-      <!-- Item 3: 2022 -->
-      <div class="timeline-row">
-        <div class="timeline-left">
-          <h3 class="milestone-title">LOCATION #2 OPENS</h3>
+        <!-- Pro Tier (Featured) -->
+        <div class="tier-card tier-featured">
+          <div class="popular-ribbon">MOST POPULAR</div>
+          <div class="tier-top">
+            <span class="tier-label orange">COMPLETE PERFORMANCE</span>
+            <h3>PREMIUM</h3>
+            <p>Classes, nutrition strategy &amp; coaching priority access.</p>
+            <div class="tier-price">
+              <span class="p-val">{{ billingCycle === 'monthly' ? '₹2,499' : '₹23,990' }}</span>
+              <span class="p-unit">{{ billingCycle === 'monthly' ? '/month' : '/year' }}</span>
+            </div>
+          </div>
+          <ul class="tier-features">
+            <li><span class="chk">✓</span> Everything in Basic</li>
+            <li><span class="chk">✓</span> Unlimited Group HIIT &amp; Yoga</li>
+            <li><span class="chk">✓</span> Diet &amp; Macro Consultation</li>
+            <li><span class="chk">✓</span> Trainer Matching &amp; Progress Logs</li>
+          </ul>
+          <a routerLink="/signup" class="btn-bracket full-w">Join Premium</a>
         </div>
-        <div class="timeline-center">
-          <div class="timeline-marker"></div>
-        </div>
-        <div class="timeline-right">
-          <div class="milestone-year">2022</div>
+
+        <!-- Elite Tier -->
+        <div class="tier-card tier-elite">
+          <div class="tier-top">
+            <span class="tier-label gold">ALL-INCLUSIVE VIP</span>
+            <h3>ELITE</h3>
+            <p>VIP recovery lounge, steam, sauna &amp; custom blueprint.</p>
+            <div class="tier-price">
+              <span class="p-val">{{ billingCycle === 'monthly' ? '₹8,999' : '₹86,390' }}</span>
+              <span class="p-unit">{{ billingCycle === 'monthly' ? '/year pass' : '/vip annual' }}</span>
+            </div>
+          </div>
+          <ul class="tier-features">
+            <li><span class="chk gold">✓</span> 12-Month All-Club VIP Access</li>
+            <li><span class="chk gold">✓</span> Personalized Nutrition Blueprint</li>
+            <li><span class="chk gold">✓</span> Steam, Sauna &amp; Recovery Suite</li>
+            <li><span class="chk gold">✓</span> Exclusive BeastX Athlete Kit</li>
+          </ul>
+          <a routerLink="/signup" class="btn-gold full-w">Go Elite VIP</a>
         </div>
       </div>
     </div>
@@ -463,39 +436,84 @@
 
 
   <!-- =========================================================================
-       9. GOT QUESTIONS? WE'VE GOT ANSWERS (Screenshot 7: media_1795198253216_44838b23.jpg)
+       7. ATHLETE TESTIMONIALS + MILESTONES TIMELINE
        ========================================================================= -->
-  <section id="faqs" class="faq-section">
+  <section id="testimonials" class="testimonials-section reveal-block" #revealEl>
+    <div class="section-inner">
+      <div class="center-head">
+        <div class="label-eyebrow center"><span>—</span> MEMBER VOICES</div>
+        <h2 class="section-title white">BUILT WITH <span class="text-orange">ATHLETES</span> LIKE YOU</h2>
+      </div>
+
+      <div class="reviews-grid">
+        <article class="review-card" *ngFor="let t of testimonials">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-quote">“{{ t.quote }}”</p>
+          <div class="review-author">
+            <div class="rev-avatar">{{ t.initials }}</div>
+            <div>
+              <strong>{{ t.name }}</strong>
+              <span>{{ t.tag }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="milestones-section reveal-block" #revealEl>
+    <div class="section-inner">
+      <div class="center-head">
+        <div class="label-eyebrow center"><span>—</span> OUR HERITAGE</div>
+        <h2 class="section-title white">A DECADE OF <span class="text-orange">MILESTONES</span></h2>
+      </div>
+
+      <div class="timeline-grid">
+        <div class="milestone-card" *ngFor="let m of milestones; let i = index">
+          <div class="ms-year">{{ m.year }}</div>
+          <div class="ms-dot"></div>
+          <h4>{{ m.title }}</h4>
+          <p>{{ m.desc }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =========================================================================
+       8. INTERACTIVE FAQ & CONCIERGE INQUIRY
+       ========================================================================= -->
+  <section id="faqs" class="faq-section reveal-block" #revealEl>
     <div class="section-inner">
       <div class="faq-grid">
-        <!-- Left: Accordion Boxes with Contour Background for Open Item -->
-        <div class="faq-left-col">
-          <div class="faq-box" *ngFor="let item of faqs; let i = index" [class.open]="openFaqIndex === i"
-            (click)="toggleFaq(i)">
-            <div class="faq-question-row">
-              <h4 class="faq-question" [class.text-orange]="openFaqIndex === i">
-                {{ item.q }}
-              </h4>
-              <span class="faq-icon" [class.text-orange]="openFaqIndex === i">{{ openFaqIndex === i ? '−' : '+'
-                }}</span>
+        <div class="faq-list">
+          <div class="faq-item" *ngFor="let item of faqs; let i = index"
+               [class.open]="openFaqIndex === i" (click)="toggleFaq(i)">
+            <div class="faq-q-row">
+              <h4>{{ item.q }}</h4>
+              <span class="faq-toggle">{{ openFaqIndex === i ? '−' : '+' }}</span>
             </div>
-            <div class="faq-answer-wrap" *ngIf="openFaqIndex === i">
-              <p class="faq-answer">{{ item.a }}</p>
+            <div class="faq-a-wrap" *ngIf="openFaqIndex === i">
+              <p>{{ item.a }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Right: Heading & Any Inquiry CTA Button -->
-        <div class="faq-right-col">
-          <h2 class="section-title">
-            GOT <span class="text-orange">QUESTIONS</span>?<br />
-            WE'VE GOT<br />
-            ANSWERS.
+        <div class="faq-concierge">
+          <div class="label-eyebrow"><span>—</span> CONCIERGE SUPPORT</div>
+          <h2 class="section-title white">
+            GOT <span class="text-orange">QUESTIONS?</span><br />
+            WE'VE GOT ANSWERS.
           </h2>
-
-          <div class="faq-inquiry-box">
-            <span class="inquiry-label">Still have questions?</span>
-            <a routerLink="/signup" class="btn-bracket">Any Inquiry ↗</a>
+          <p class="concierge-copy">
+            Ready to tour the floor, pair with a specialist trainer, or try a complimentary 1-day athlete pass?
+          </p>
+          <div class="concierge-card">
+            <div>
+              <span class="c-lbl">Studio Concierge</span>
+              <strong>Mon – Sun · Walk-In Tours Welcome</strong>
+            </div>
+            <a routerLink="/signup" class="btn-bracket">Book Trial ↗</a>
           </div>
         </div>
       </div>
@@ -504,141 +522,69 @@
 
 
   <!-- =========================================================================
-       10. FOOTER & CTA (Screenshot 9: media_1795198253229_2e4f502e.jpg)
+       9. EXECUTIVE DARK FOOTER
        ========================================================================= -->
-  <footer class="site-footer">
-    <!-- Top CTA Strip with Diagonal Accent Slash -->
-    <div class="footer-cta-strip">
-      <div class="cta-pill-badge">PREMIUM FITNESS EXPERIENCE</div>
-      <div class="cta-diagonal-accent"></div>
-    </div>
-
-    <!-- Huge Faint Background Watermark Text -->
+  <footer id="contact" class="site-footer">
     <div class="footer-marquee-wrap">
       <div class="footer-marquee-track">
-        <span>Ready to Transform Your Body? Ready to Transform Your Body?</span>
-        <span>Ready to Transform Your Body? Ready to Transform Your Body?</span>
+        <span>UNLOCK YOUR PEAK PERFORMANCE • FORGE YOUR BODY AT BEASTX • </span>
+        <span>UNLOCK YOUR PEAK PERFORMANCE • FORGE YOUR BODY AT BEASTX • </span>
       </div>
     </div>
 
-    <div class="section-inner footer-content-grid">
-      <!-- Left Column: Logo & Socials -->
-      <div class="footer-left-col">
-        <div class="brand-logo footer-logo">
-          BEAST<span class="logo-x">X</span>
-        </div>
-        <p class="footer-description">
-          BeastX is a premium fitness experience focused on strength, performance, and transformation.
-          Train smarter, push harder, and unlock your full potential.
+    <div class="section-inner footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">BEAST<span class="logo-x">X</span></div>
+        <p>
+          BeastX is an obsidian-grade athletic sanctuary uniting calibrated iron, smart biometric automation,
+          and championship personal coaching.
         </p>
-        <div class="footer-socials">
-          <a href="#" class="social-link" aria-label="Instagram">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-            </svg>
-          </a>
-          <a href="#" class="social-link" aria-label="Facebook">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-            </svg>
-          </a>
-          <a href="#" class="social-link" aria-label="LinkedIn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-              <rect x="2" y="9" width="4" height="12"></rect>
-              <circle cx="4" cy="4" r="2"></circle>
-            </svg>
-          </a>
-        </div>
-        <div class="footer-copyright">
-          © 2026 All rights reserved.
+        <div class="studio-hours">
+          <span><strong>Mon – Fri:</strong> 5:00 AM – 11:00 PM</span>
+          <span><strong>Sat – Sun:</strong> 6:00 AM – 9:00 PM</span>
         </div>
       </div>
 
-      <!-- Right Column: Menu Navigation Links (2 Columns under 'M E N U') -->
-      <div class="footer-right-col">
-        <div class="menu-label-spaced">M E N U</div>
-        <div class="footer-nav-2col">
-          <div class="nav-col">
-            <a routerLink="/home">Home</a>
-            <a href="#about">About</a>
-            <a href="#programs">Programs</a>
-            <a href="#trainers">Trainers</a>
-          </div>
-          <div class="nav-col">
-            <a href="#testimonials">Testimonials</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#contact">Contact</a>
-            <a href="#faqs">FAQs</a>
-          </div>
+      <div class="footer-links-wrap">
+        <div class="f-col">
+          <span class="f-head">NAVIGATION</span>
+          <a routerLink="/home">Home</a>
+          <a href="#about">About BeastX</a>
+          <a href="#programs">Training Labs</a>
+          <a href="#trainers">Elite Coaches</a>
+        </div>
+        <div class="f-col">
+          <span class="f-head">MEMBERSHIP</span>
+          <a href="#pricing">Plans &amp; Pricing</a>
+          <a href="#testimonials">Member Stories</a>
+          <a href="#faqs">FAQs</a>
+          <a routerLink="/login">Member Login</a>
         </div>
       </div>
     </div>
 
-    <!-- Bottom Flat Vector Gym Equipment Illustrations Row (6 icons) -->
-    <div class="footer-gym-illustrations">
-      <div class="section-inner illustration-row">
-        <!-- 1. Gym Bag -->
-        <div class="icon-ill" title="Gym Bag">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <rect x="8" y="22" width="48" height="30" rx="8" fill="#FF5A00" stroke="#111111" stroke-width="3"></rect>
-            <path d="M20 22V13a9 9 0 0 1 18 0v9" stroke="#111111" stroke-width="4" stroke-linecap="round"></path>
-            <rect x="18" y="28" width="8" height="18" rx="2" fill="#111111"></rect>
-            <rect x="38" y="28" width="8" height="18" rx="2" fill="#111111"></rect>
-            <text x="21" y="42" font-family="'Bebas Neue', sans-serif" font-size="12" fill="#FFFFFF"
-              letter-spacing="1">GYM</text>
+    <div class="section-inner footer-bottom">
+      <span>© 2026 BeastX Athletic Club. All rights reserved.</span>
+      <div class="footer-socials">
+        <a href="#contact" class="soc-btn" aria-label="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
           </svg>
-        </div>
-
-        <!-- 2. Dumbbell -->
-        <div class="icon-ill" title="Dumbbell">
-          <svg width="60" height="60" viewBox="0 0 64 64" fill="none">
-            <rect x="10" y="28" width="44" height="8" rx="3" fill="#FF5A00"></rect>
-            <rect x="6" y="18" width="8" height="28" rx="3" fill="#64748B" stroke="#111111" stroke-width="2"></rect>
-            <rect x="50" y="18" width="8" height="28" rx="3" fill="#64748B" stroke="#111111" stroke-width="2"></rect>
+        </a>
+        <a href="#contact" class="soc-btn" aria-label="YouTube">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-        </div>
-
-        <!-- 3. Hand Grip Strengthener -->
-        <div class="icon-ill" title="Grip Strengthener">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="18" r="8" stroke="#64748B" stroke-width="4" fill="none"></circle>
-            <path d="M26 22l-10 26M38 22l10 26" stroke="#FF5A00" stroke-width="6" stroke-linecap="round"></path>
-            <rect x="14" y="34" width="6" height="14" rx="2" fill="#111111"></rect>
-            <rect x="44" y="34" width="6" height="14" rx="2" fill="#111111"></rect>
+        </a>
+        <a href="#contact" class="soc-btn" aria-label="LinkedIn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+            <rect x="2" y="9" width="4" height="12"></rect>
+            <circle cx="4" cy="4" r="2"></circle>
           </svg>
-        </div>
-
-        <!-- 4. Kettlebell -->
-        <div class="icon-ill" title="Kettlebell">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <path d="M22 22V14a10 10 0 0 1 20 0v8" stroke="#FF5A00" stroke-width="5" stroke-linecap="round"></path>
-            <circle cx="32" cy="40" r="18" fill="#475569" stroke="#111111" stroke-width="3"></circle>
-            <circle cx="32" cy="40" r="11" fill="#334155"></circle>
-            <text x="24" y="44" font-family="'Bebas Neue', sans-serif" font-size="13" fill="#E2E8F0"
-              letter-spacing="1">KG</text>
-          </svg>
-        </div>
-
-        <!-- 5. Studio Dumbbell -->
-        <div class="icon-ill" title="Studio Dumbbell">
-          <svg width="60" height="60" viewBox="0 0 64 64" fill="none">
-            <rect x="12" y="28" width="40" height="8" rx="2" fill="#FF5A00"></rect>
-            <circle cx="12" cy="32" r="12" fill="#64748B" stroke="#111111" stroke-width="2.5"></circle>
-            <circle cx="52" cy="32" r="12" fill="#64748B" stroke="#111111" stroke-width="2.5"></circle>
-          </svg>
-        </div>
-
-        <!-- 6. Barbell Collar Clamp -->
-        <div class="icon-ill" title="Barbell Clamp">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <circle cx="26" cy="36" r="14" stroke="#64748B" stroke-width="5" fill="none"></circle>
-            <path d="M34 26l18-12" stroke="#FF5A00" stroke-width="6" stroke-linecap="round"></path>
-            <circle cx="52" cy="14" r="3" fill="#111111"></circle>
-          </svg>
-        </div>
+        </a>
       </div>
     </div>
   </footer>

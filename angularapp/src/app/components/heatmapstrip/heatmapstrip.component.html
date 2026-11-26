@@ -1,0 +1,45 @@
+<div class="hm-wrap" [class.is-in-view]="inView">
+  <div class="hm-top" *ngIf="cells.length">
+    <div class="hm-busiest">
+      Busiest: <strong>{{ busiestLabel }}</strong>
+    </div>
+    <div class="hm-scale">
+      <span>Less</span>
+      <span class="hm-swatch s0"></span>
+      <span class="hm-swatch s1"></span>
+      <span class="hm-swatch s2"></span>
+      <span class="hm-swatch s3"></span>
+      <span>More</span>
+    </div>
+  </div>
+
+  <div *ngIf="!cells.length" class="hm-empty">No data yet</div>
+
+  <svg *ngIf="cells.length"
+       [attr.viewBox]="'0 0 ' + W + ' ' + H"
+       class="hm-svg" preserveAspectRatio="xMidYMid meet">
+    <!-- Hour cells -->
+    <g *ngFor="let c of cells; let i = index" class="hm-cell-grp"
+       (mouseenter)="showTip(c, i)" (mouseleave)="hideTip()" (click)="toggleTip(c, i)">
+      <rect [attr.x]="c.x" y="24" [attr.width]="c.w" height="36" rx="5"
+            [attr.fill]="c.fill"
+            [attr.stroke]="activeIdx === i ? '#FF8A1F' : 'rgba(255,255,255,0.06)'"
+            stroke-width="1.2"
+            class="hm-cell"
+            [class.active]="activeIdx === i"
+            [style.animation-delay]="(i * 28) + 'ms'"/>
+      <text *ngIf="c.showTick" [attr.x]="c.x + c.w / 2" y="76" text-anchor="middle" class="hm-tick">
+        {{ c.shortLabel }}
+      </text>
+    </g>
+
+    <!-- Tooltip -->
+    <g *ngIf="tooltip">
+      <rect [attr.x]="tooltip.x - 68" y="0" width="136" height="20" rx="5"
+            fill="#1f1f1f" stroke="#FF5A00" stroke-width="1"/>
+      <text [attr.x]="tooltip.x" y="13.5" text-anchor="middle" class="hm-tip-txt">
+        {{ tooltip.label }}: {{ tooltip.count }} check-in{{ tooltip.count === 1 ? '' : 's' }}
+      </text>
+    </g>
+  </svg>
+</div>

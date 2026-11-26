@@ -15,4 +15,7 @@ public interface FingerprintService {
     CheckinStartResponseDTO startCheckin(String authEmail, CheckinStartRequestDTO request);
     CheckinResultDTO finishCheckin(String authEmail, CheckinFinishRequestDTO request);
     CheckinResultDTO simulateCheckin(Long memberId);
+
+    FingerprintStatusDTO getMyStatus(String authEmail);
+    void deleteFingerprint(Long userId, String authEmail);
 }

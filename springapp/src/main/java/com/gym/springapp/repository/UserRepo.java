@@ -5,6 +5,7 @@ import com.gym.springapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -16,4 +17,5 @@ public interface UserRepo extends JpaRepository<User, Long> {
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCaseAndDeletedFalse(String email);
     long countByRoleAndActiveTrueAndDeletedFalse(Role role);
+    List<User> findByRoleAndActiveTrueAndDeletedFalse(Role role);
 }

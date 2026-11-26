@@ -30,6 +30,24 @@ public class FingerprintController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/status")
+    @PreAuthorize("hasRole('MEMBER')")
+    public ResponseEntity<com.gym.springapp.dto.FingerprintStatusDTO> getMyStatus(Authentication authentication) {
+        String authEmail = authentication.getName();
+        com.gym.springapp.dto.FingerprintStatusDTO status = fingerprintService.getMyStatus(authEmail);
+        return ResponseEntity.ok(status);
+    }
+
+    @DeleteMapping("/enroll/{userId}")
+    @PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteFingerprint(
+            @PathVariable Long userId,
+            Authentication authentication) {
+        String authEmail = authentication.getName();
+        fingerprintService.deleteFingerprint(userId, authEmail);
+        return ResponseEntity.ok(Map.of("message", "Fingerprint biometric removed successfully"));
+    }
+
     @PostMapping("/register/finish")
     @PreAuthorize("hasRole('MEMBER')")
     public ResponseEntity<FingerprintDeviceDTO> finishRegistration(

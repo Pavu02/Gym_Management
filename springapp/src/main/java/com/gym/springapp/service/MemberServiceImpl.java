@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class MemberServiceImpl implements MemberService {
@@ -32,6 +33,14 @@ public class MemberServiceImpl implements MemberService {
     private final PaymentRepo paymentRepo;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final MemberBiometricRepo memberBiometricRepo;
+    private final MemberPasskeyRepo memberPasskeyRepo;
+    private final WebAuthnCredentialRepo webAuthnCredentialRepo;
+    private final FaceProfileRepo faceProfileRepo;
+    private final FingerprintProfileRepo fingerprintProfileRepo;
+    private final FaceAttendanceRepo faceAttendanceRepo;
+    private final WorkoutPlanRepo workoutPlanRepo;
+    private final MissedVisitNotificationRepo missedVisitNotificationRepo;
 
     public MemberServiceImpl(MemberRepo memberRepo,
             UserRepo userRepo,
@@ -40,7 +49,15 @@ public class MemberServiceImpl implements MemberService {
             AttendanceRepo attendanceRepo,
             PaymentRepo paymentRepo,
             PasswordEncoder passwordEncoder,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            MemberBiometricRepo memberBiometricRepo,
+            MemberPasskeyRepo memberPasskeyRepo,
+            WebAuthnCredentialRepo webAuthnCredentialRepo,
+            FaceProfileRepo faceProfileRepo,
+            FingerprintProfileRepo fingerprintProfileRepo,
+            FaceAttendanceRepo faceAttendanceRepo,
+            WorkoutPlanRepo workoutPlanRepo,
+            MissedVisitNotificationRepo missedVisitNotificationRepo) {
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.planRepo = planRepo;
@@ -49,6 +66,14 @@ public class MemberServiceImpl implements MemberService {
         this.paymentRepo = paymentRepo;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.memberBiometricRepo = memberBiometricRepo;
+        this.memberPasskeyRepo = memberPasskeyRepo;
+        this.webAuthnCredentialRepo = webAuthnCredentialRepo;
+        this.faceProfileRepo = faceProfileRepo;
+        this.fingerprintProfileRepo = fingerprintProfileRepo;
+        this.faceAttendanceRepo = faceAttendanceRepo;
+        this.workoutPlanRepo = workoutPlanRepo;
+        this.missedVisitNotificationRepo = missedVisitNotificationRepo;
     }
 
     @Override
@@ -208,12 +233,38 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
 
-        List<Attendance> attendances = attendanceRepo.findByMemberId(id);
-        attendanceRepo.deleteAll(attendances);
+        Long userId = member.getUser() != null ? member.getUser().getId() : null;
 
-        List<Payment> payments = paymentRepo.findByMemberId(id);
-        paymentRepo.deleteAll(payments);
+        // 1. Delete attendance records
+        attendanceRepo.deleteAll(attendanceRepo.findByMemberId(id));
 
+        // 2. Delete payment records
+        paymentRepo.deleteAll(paymentRepo.findByMemberId(id));
+
+        // 3. Delete face biometric record (member_biometrics table - FK to members)
+        memberBiometricRepo.findByMemberId(id).ifPresent(memberBiometricRepo::delete);
+
+        // 4. Delete WebAuthn passkeys (member_passkeys table - FK to members)
+        memberPasskeyRepo.deleteByMemberId(id);
+
+        // 5. Delete WebAuthn credentials mirror (webauthn_credentials table - FK to
+        // members)
+        webAuthnCredentialRepo.deleteByMemberId(id);
+
+        // 6. Delete missed visit notifications (FK to members)
+        missedVisitNotificationRepo.deleteByMemberId(id);
+
+        // 7. Delete workout plan (FK to members)
+        workoutPlanRepo.findByMemberId(id).ifPresent(workoutPlanRepo::delete);
+
+        // 8. Delete face profile by userId (no FK to members, but tidy up)
+        if (userId != null) {
+            faceProfileRepo.findByUserId(userId).ifPresent(faceProfileRepo::delete);
+            fingerprintProfileRepo.findByUserId(userId).ifPresent(fingerprintProfileRepo::delete);
+            faceAttendanceRepo.deleteAll(faceAttendanceRepo.findByUserId(userId));
+        }
+
+        // 9. Finally delete the member and user
         User user = member.getUser();
         memberRepo.delete(member);
         if (user != null) {

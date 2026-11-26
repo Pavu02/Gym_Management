@@ -1,5 +1,6 @@
 <div class="fp-overlay" (click)="closeModal()">
   <div class="fp-modal" (click)="$event.stopPropagation()">
+
     <!-- Header -->
     <div class="fp-header">
       <div class="header-titles">
@@ -11,68 +12,70 @@
 
     <!-- Body -->
     <div class="fp-body">
-      <!-- Sensor Viewport -->
-      <div class="sensor-container" [ngClass]="scanState.toLowerCase()">
-        <!-- Outer Glowing Ring -->
-        <div class="sensor-pad" (mousedown)="startScanning()" (mouseup)="cancelScanning()" (touchstart)="startScanning()" (touchend)="cancelScanning()">
-          
-          <!-- Detailed SVG Fingerprint Pattern -->
-          <svg class="fingerprint-svg" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M80 30 C50 30 35 50 35 85 C35 125 50 170 80 175 C110 170 125 125 125 85 C125 50 110 30 80 30 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 3"/>
-            <path d="M80 45 C60 45 48 60 48 90 C48 120 60 155 80 160 C100 155 112 120 112 90 C112 60 100 45 80 45 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M80 60 C68 60 60 72 60 95 C60 118 68 140 80 145 C92 140 100 118 100 95 C100 72 92 60 80 60 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 4"/>
-            <path d="M80 75 C74 75 70 82 70 100 C70 115 75 125 80 128 C85 125 90 115 90 100 C90 82 86 75 80 75 Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="80" cy="100" r="4" fill="currentColor"/>
-            
-            <!-- Minutiae feature points (animated) -->
-            <g class="minutiae-layer" *ngIf="scanState === 'SCANNING' || scanState === 'SUCCESS'">
-              <circle cx="50" cy="75" r="3.5" class="minutiae-dot" />
-              <circle cx="110" cy="80" r="3.5" class="minutiae-dot" />
-              <circle cx="65" cy="130" r="3.5" class="minutiae-dot" />
-              <circle cx="95" cy="135" r="3.5" class="minutiae-dot" />
-              <circle cx="80" cy="40" r="3.5" class="minutiae-dot" />
-            </g>
+
+      <!-- IDLE STATE: Big authenticate button -->
+      <div class="auth-cta-wrap" *ngIf="scanState === 'IDLE'">
+        <div class="auth-icon-ring">
+          <svg class="auth-icon-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="38" stroke="#FF5A00" stroke-width="2.5" stroke-dasharray="6 4"/>
+            <path d="M40 20 C28 20 20 28 20 40 C20 54 28 65 40 67 C52 65 60 54 60 40 C60 28 52 20 40 20 Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 2.5"/>
+            <path d="M40 27 C33 27 27 33 27 42 C27 52 33 60 40 62 C47 60 53 52 53 42 C53 33 47 27 40 27 Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M40 34 C36 34 33 38 33 44 C33 50 36 56 40 57 C44 56 47 50 47 44 C47 38 44 34 40 34 Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 2"/>
+            <circle cx="40" cy="44" r="3" fill="currentColor"/>
           </svg>
-
-          <!-- Laser Sweep Beam -->
-          <div class="laser-beam" *ngIf="scanState === 'SCANNING'"></div>
-
-          <!-- Pulsing Waves -->
-          <div class="sensor-ripple" *ngIf="scanState === 'SCANNING'"></div>
         </div>
+        <p class="auth-hint">Your phone's fingerprint sensor (Touch ID / Face ID) will appear after you tap the button below.</p>
 
-        <!-- Sensor Status HUD -->
-        <div class="sensor-hud">
-          <div class="hud-status" [ngClass]="scanState.toLowerCase()">
-            <span class="hud-dot"></span>
-            <span *ngIf="scanState === 'IDLE'">Sensor Ready (Hold to Scan)</span>
-            <span *ngIf="scanState === 'SCANNING'">Scanning Ridges... {{ progress }}%</span>
-            <span *ngIf="scanState === 'SUCCESS'">✓ Biometric Verified (Quality: {{ qualityScore }}%)</span>
-            <span *ngIf="scanState === 'ERROR'">Scan Error</span>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="progress-bar-wrap" *ngIf="scanState === 'SCANNING'">
-            <div class="progress-bar-fill" [style.width.%]="progress"></div>
-          </div>
+        <!-- Device Name Input -->
+        <div class="device-input-box">
+          <label class="device-label" for="fpDeviceName">Device Name / Label:</label>
+          <input id="fpDeviceName" type="text" [(ngModel)]="deviceName" class="device-input"
+            placeholder="e.g. iPhone 13, Galaxy S23, My Phone">
         </div>
       </div>
 
-      <!-- Live Instruction / Status Text -->
-      <div class="status-box" [ngClass]="scanState.toLowerCase()">
-        <p class="status-text">{{ statusText }}</p>
-        <p class="status-sub" *ngIf="scanState === 'IDLE'">
-          👆 Press and hold the sensor pad above or click the button below to capture your unique fingerprint.
-        </p>
-        <p class="status-sub" *ngIf="scanState === 'SUCCESS'">
-          Fingerprint Template: <code>{{ uniqueFingerprintHash }}</code>
-        </p>
+      <!-- SCANNING STATE: Waiting for native OS biometric prompt -->
+      <div class="scanning-state-wrap" *ngIf="scanState === 'SCANNING'">
+        <div class="pulse-ring">
+          <div class="pulse-inner">
+            <svg viewBox="0 0 60 60" fill="none" width="60" height="60">
+              <path d="M30 8 C18 8 10 16 10 28 C10 42 18 54 30 56 C42 54 50 42 50 28 C50 16 42 8 30 8 Z"
+                stroke="#FF5A00" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="30" cy="30" r="4" fill="#FF5A00"/>
+            </svg>
+          </div>
+        </div>
+        <p class="scanning-label">👆 Touch your fingerprint sensor now</p>
+        <p class="scanning-sub">Your phone or browser is showing the biometric permission dialog. Place your finger on the sensor.</p>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" [style.width.%]="progress"></div>
+        </div>
       </div>
 
-      <!-- Alerts -->
+      <!-- SUCCESS STATE -->
+      <div class="success-state-wrap" *ngIf="scanState === 'SUCCESS'">
+        <div class="success-icon">✓</div>
+        <p class="success-label">Fingerprint Registered!</p>
+        <p class="success-device">Device: <strong>{{ uniqueFingerprintHash }}</strong></p>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div class="error-state-wrap" *ngIf="scanState === 'ERROR'">
+        <div class="error-icon">✕</div>
+        <p class="error-label">Registration Failed</p>
+      </div>
+
+      <!-- Error Message -->
       <div class="alert alert-error" *ngIf="errorMessage">
         {{ errorMessage }}
       </div>
+
+      <!-- Status Text (for scanning + saving) -->
+      <p class="status-text" *ngIf="scanState === 'SCANNING' || isSaving">{{ statusText }}</p>
+
     </div>
 
     <!-- Actions Footer -->
@@ -82,11 +85,11 @@
       </button>
 
       <button *ngIf="scanState === 'IDLE'" type="button" class="btn-primary" (click)="startScanning()">
-        ⚡ Start Fingerprint Scan
+        🔐 Authenticate with Biometrics
       </button>
 
-      <button *ngIf="scanState === 'SCANNING'" type="button" class="btn-cancel" (click)="cancelScanning()">
-        Pause Scan
+      <button *ngIf="scanState === 'SCANNING'" type="button" class="btn-cancel" disabled>
+        ⏳ Waiting for Biometric Touch...
       </button>
 
       <button *ngIf="scanState === 'ERROR'" type="button" class="btn-primary" (click)="retry()">
