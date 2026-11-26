@@ -2,7 +2,10 @@ package com.gym.springapp.service;
 
 import com.gym.springapp.dto.*;
 import com.gym.springapp.exceptions.BadRequestException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
+import com.gym.springapp.exceptions.VerificationRuleException;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.User;
 import com.gym.springapp.model.WebAuthnCredential;
@@ -32,6 +35,7 @@ public class PasskeyServiceImpl implements PasskeyService {
     private final MemberRepo memberRepo;
     private final UserRepo userRepo;
     private final WebAuthnCredentialRepo webAuthnCredentialRepo;
+    private final AttendanceService attendanceService;
 
     @Value("${webauthn.rp.id:localhost}")
     private String rpId;
@@ -48,11 +52,13 @@ public class PasskeyServiceImpl implements PasskeyService {
             RelyingParty relyingParty,
             MemberRepo memberRepo,
             UserRepo userRepo,
-            WebAuthnCredentialRepo webAuthnCredentialRepo) {
+            WebAuthnCredentialRepo webAuthnCredentialRepo,
+            AttendanceService attendanceService) {
         this.relyingParty = relyingParty;
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.webAuthnCredentialRepo = webAuthnCredentialRepo;
+        this.attendanceService = attendanceService;
     }
 
     @Override
@@ -67,8 +73,11 @@ public class PasskeyServiceImpl implements PasskeyService {
             newMember.setStatus("PENDING_PAYMENT");
             return memberRepo.save(newMember);
         });
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
 
-        long deviceCount = webAuthnCredentialRepo.countByMemberId(member.getId());
+        long deviceCount = webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
+                .filter(WebAuthnCredential::isActive)
+                .count();
         if (deviceCount >= MAX_DEVICES_PER_MEMBER) {
             throw new BadRequestException("Device limit reached (maximum " + MAX_DEVICES_PER_MEMBER
                     + " devices). Please remove an existing device first.");
@@ -120,8 +129,11 @@ public class PasskeyServiceImpl implements PasskeyService {
 
         Member member = memberRepo.findByUserEmail(authEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
 
-        long deviceCount = webAuthnCredentialRepo.countByMemberId(member.getId());
+        long deviceCount = webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
+                .filter(WebAuthnCredential::isActive)
+                .count();
         if (deviceCount >= MAX_DEVICES_PER_MEMBER) {
             throw new BadRequestException("Device limit reached (maximum " + MAX_DEVICES_PER_MEMBER + " devices)");
         }
@@ -180,6 +192,8 @@ public class PasskeyServiceImpl implements PasskeyService {
                 .userVerification(UserVerificationRequirement.REQUIRED);
 
         if (authEmailOrNull != null && !authEmailOrNull.trim().isEmpty()) {
+            memberRepo.findByUserEmail(authEmailOrNull.trim())
+                    .ifPresent(m -> attendanceService.validateMemberCheckInEligibility(m, "BIOMETRIC"));
             builder.username(Optional.of(authEmailOrNull.trim()));
         }
 
@@ -238,6 +252,12 @@ public class PasskeyServiceImpl implements PasskeyService {
                     .orElseThrow(
                             () -> new ResourceNotFoundException("Registered credential not found in gym database"));
 
+            if (!cred.isActive()) {
+                throw new VerificationRuleException(
+                        "This biometric credential has been revoked. Register this device for biometric check-in.");
+            }
+            attendanceService.validateMemberCheckInEligibility(cred.getMember(), "BIOMETRIC");
+
             long newSignCount = result.getSignatureCount();
             if (newSignCount <= cred.getSignCount() && cred.getSignCount() > 0) {
                 throw new BadRequestException("Cloned passkey risk detected: signCount did not advance (stored: "
@@ -249,8 +269,9 @@ public class PasskeyServiceImpl implements PasskeyService {
 
             return cred.getMember();
 
-        } catch (BadRequestException bre) {
-            throw bre;
+        } catch (MemberDeactivatedException | ForbiddenOperationException | VerificationRuleException
+                | BadRequestException e) {
+            throw e;
         } catch (Exception e) {
             throw new BadRequestException("Fingerprint passkey verification error: " + e.getMessage());
         }
@@ -267,9 +288,11 @@ public class PasskeyServiceImpl implements PasskeyService {
             member = memberRepo.findByUserEmail(authEmail)
                     .orElseThrow(
                             () -> new ResourceNotFoundException("Member profile not found for email: " + authEmail));
+            attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         }
 
         return webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
+                .filter(WebAuthnCredential::isActive)
                 .map(c -> new WebAuthnDeviceDTO(
                         c.getId(),
                         null,

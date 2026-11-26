@@ -46,4 +46,18 @@ public class MemberPasskey {
 
     @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
+
+    @Column(name = "active")
+    private Boolean active = Boolean.TRUE;
+
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+
+    public boolean isActive() {
+        return !Boolean.FALSE.equals(active) && revokedAt == null;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gym.springapp.dto.FaceProfileDescriptorDTO;
 import com.gym.springapp.exceptions.BadRequestException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.FaceProfile;
 import com.gym.springapp.model.Member;
@@ -73,6 +74,18 @@ public class FaceServiceImpl implements FaceService {
             }
         }
 
+        var memberCheckOpt = memberRepo.findByUserId(userId);
+        if (memberCheckOpt.isPresent()) {
+            Member targetMember = memberCheckOpt.get();
+            if ("DEACTIVATED".equalsIgnoreCase(targetMember.getStatus()) || !targetMember.isActive() || !user.isActive()) {
+                throw new MemberDeactivatedException("MEMBER_DEACTIVATED", targetMember.getId(), user.getName(),
+                        "Cannot enroll Face ID for a deactivated member account. Reactivate the member first.");
+            }
+        } else if (!user.isActive() || user.isDeleted()) {
+            throw new MemberDeactivatedException("USER_DEACTIVATED", user.getId(), user.getName(),
+                    "Cannot enroll Face ID for an inactive user account.");
+        }
+
         String descriptorJson;
         try {
             descriptorJson = objectMapper.writeValueAsString(descriptor);
@@ -87,6 +100,9 @@ public class FaceServiceImpl implements FaceService {
         profile.setUserId(userId);
         profile.setRole(user.getRole() != null ? user.getRole().name() : "MEMBER");
         profile.setDescriptor(descriptorJson);
+        profile.setEnabled(true);
+        profile.setStatus("ACTIVE");
+        profile.setDisabledAt(null);
         profile.setUpdatedAt(now);
         if (profile.getId() == null) {
             profile.setCreatedAt(now);
@@ -98,12 +114,18 @@ public class FaceServiceImpl implements FaceService {
         var memberOpt = memberRepo.findByUserId(userId);
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
+            member.setFaceEnabled(true);
+            memberRepo.save(member);
+
             MemberBiometric mb = memberBiometricRepo.findByMemberId(member.getId())
                     .orElse(new MemberBiometric());
             mb.setMember(member);
             mb.setFaceDescriptorEncrypted(encryptionService.encryptDescriptor(descriptor));
             mb.setFaceEnrolledAt(now);
             mb.setConsentAt(now);
+            mb.setEnabled(true);
+            mb.setStatus("ACTIVE");
+            mb.setDisabledAt(null);
             memberBiometricRepo.save(mb);
         }
 
@@ -117,9 +139,20 @@ public class FaceServiceImpl implements FaceService {
         List<FaceProfileDescriptorDTO> result = new ArrayList<>();
 
         for (FaceProfile fp : all) {
+            if (!fp.isEnabled()) {
+                continue;
+            }
             User user = userRepo.findById(fp.getUserId()).orElse(null);
             if (user == null || user.isDeleted() || !user.isActive()) {
                 continue;
+            }
+            if ("MEMBER".equalsIgnoreCase(fp.getRole())) {
+                Member member = memberRepo.findByUserId(user.getId()).orElse(null);
+                if (member != null && (member.isDeleted() || !member.isActive()
+                        || "DEACTIVATED".equalsIgnoreCase(member.getStatus())
+                        || !member.isFaceEnabled())) {
+                    continue;
+                }
             }
 
             try {

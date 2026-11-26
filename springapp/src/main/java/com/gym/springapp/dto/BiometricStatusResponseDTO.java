@@ -9,5 +9,8 @@ public record BiometricStatusResponseDTO(
     LocalDateTime consentAt,
     int passkeyCount,
     boolean fingerprintEnrolled,
-    LocalDateTime fingerprintEnrolledAt
+    LocalDateTime fingerprintEnrolledAt,
+    boolean faceEnabled,
+    boolean faceReenrollmentRequired,
+    boolean biometricReenrollmentRequired
 ) {}

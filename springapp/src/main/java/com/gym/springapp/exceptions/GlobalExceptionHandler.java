@@ -1,7 +1,9 @@
 package com.gym.springapp.exceptions;
 
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -9,10 +11,34 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MemberDeactivatedException.class)
+    public ResponseEntity<Map<String, Object>> handleMemberDeactivated(MemberDeactivatedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", ex.getErrorCode());
+        body.put("error", ex.getErrorCode());
+        body.put("status", ex.getErrorCode());
+        body.put("message", ex.getMessage());
+        if (ex.getMemberId() != null) {
+            body.put("memberId", ex.getMemberId());
+        }
+        if (ex.getMemberName() != null) {
+            body.put("name", ex.getMemberName());
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler({ ObjectOptimisticLockingFailureException.class, OptimisticLockException.class })
+    public ResponseEntity<Map<String, String>> handleOptimisticLock(Exception ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code", "CONCURRENCY_CONFLICT",
+                "message", "Member record was updated concurrently by another administrator. Please refresh and try again."));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {

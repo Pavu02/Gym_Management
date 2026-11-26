@@ -1,6 +1,8 @@
 package com.gym.springapp.config;
 
+import com.gym.springapp.model.Member;
 import com.gym.springapp.model.User;
+import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.UserRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,10 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserRepo userRepo;
+    private final MemberRepo memberRepo;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils, UserRepo userRepo) {
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, UserRepo userRepo, MemberRepo memberRepo) {
         this.jwtUtils = jwtUtils;
         this.userRepo = userRepo;
+        this.memberRepo = memberRepo;
     }
 
     @Override
@@ -49,18 +53,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Optional<User> userOpt = userRepo.findByEmailIgnoreCase(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                if (!user.isActive() || user.isDeleted()) {
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    String body = String.format(
-                            "{\"timestamp\":\"%s\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Account is deactivated or deleted\",\"path\":\"%s\"}",
-                            LocalDateTime.now(),
-                            request.getRequestURI());
-                    response.getWriter().write(body);
-                    return;
-                }
-
                 if (jwtUtils.validateToken(token, user.getEmail())) {
+                    Optional<Member> memberOpt = memberRepo.findByUserId(user.getId());
+                    boolean memberDeleted = memberOpt.map(Member::isDeleted).orElse(false);
+                    if (user.isDeleted() || memberDeleted) {
+                        writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized",
+                                "Account is deleted", request.getRequestURI(), null);
+                        return;
+                    }
+
+                    boolean memberDeactivated = memberOpt
+                            .map(m -> "DEACTIVATED".equalsIgnoreCase(m.getStatus()) || !m.isActive())
+                            .orElse(false);
+
+                    if (!user.isActive() || memberDeactivated) {
+                        writeError(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden",
+                                "Your account has been deactivated. Please contact the gym administrator.",
+                                request.getRequestURI(), "MEMBER_DEACTIVATED");
+                        return;
+                    }
+
+                    if (memberOpt.map(m -> "SUSPENDED".equalsIgnoreCase(m.getStatus())).orElse(false)) {
+                        writeError(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden",
+                                "Your account has been suspended. Please contact the gym administrator.",
+                                request.getRequestURI(), "MEMBER_SUSPENDED");
+                        return;
+                    }
+
+                    Long tokenVersion = jwtUtils.extractTokenVersion(token);
+                    long currentVersion = user.getEffectiveTokenVersion();
+                    if ((tokenVersion == null && currentVersion > 0)
+                            || (tokenVersion != null && tokenVersion.longValue() != currentVersion)) {
+                        writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized",
+                                "Session invalidated. Please log in again.", request.getRequestURI(), null);
+                        return;
+                    }
+
                     UserDetails userDetails = new UserPrinciple(user);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
                             null, userDetails.getAuthorities());
@@ -71,5 +99,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeError(HttpServletResponse response, int status, String error, String message,
+                            String path, String code) throws IOException {
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(status);
+        String codePart = code != null
+                ? String.format("\"code\":\"%s\",\"error\":\"%s\",", code, code)
+                : String.format("\"error\":\"%s\",", error);
+        String body = String.format(
+                "{\"timestamp\":\"%s\",\"status\":%d,%s\"message\":\"%s\",\"path\":\"%s\"}",
+                LocalDateTime.now(),
+                status,
+                codePart,
+                message.replace("\"", "\\\""),
+                path);
+        response.getWriter().write(body);
     }
 }

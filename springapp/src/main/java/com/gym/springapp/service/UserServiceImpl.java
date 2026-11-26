@@ -6,6 +6,8 @@ import com.gym.springapp.dto.AuthResponse;
 import com.gym.springapp.dto.LoginRequestDTO;
 import com.gym.springapp.dto.RegisterRequestDTO;
 import com.gym.springapp.exceptions.DuplicateResourceException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.Role;
@@ -27,19 +29,22 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final ApplicationEventPublisher eventPublisher;
+    private final MemberAuditService memberAuditService;
 
     public UserServiceImpl(UserRepo userRepo,
             MemberRepo memberRepo,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             JwtUtils jwtUtils,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            MemberAuditService memberAuditService) {
         this.userRepo = userRepo;
         this.memberRepo = memberRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.eventPublisher = eventPublisher;
+        this.memberAuditService = memberAuditService;
     }
 
     @Override
@@ -75,8 +80,29 @@ public class UserServiceImpl implements UserService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
-        User user = userRepo.findByEmail(request.email())
+        User user = userRepo.findByEmailIgnoreCaseAndDeletedFalse(request.email().trim().toLowerCase())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.email()));
+
+        Member member = memberRepo.findByUserId(user.getId()).orElse(null);
+        boolean isMemberDeactivated = member != null
+                && ("DEACTIVATED".equalsIgnoreCase(member.getStatus()) || !member.isActive());
+
+        if (!user.isActive() || isMemberDeactivated) {
+            if (member != null) {
+                memberAuditService.logDeniedEntry(member.getId(), "LOGIN", "MEMBER_DEACTIVATED");
+            }
+            throw new MemberDeactivatedException(
+                    "MEMBER_DEACTIVATED",
+                    member != null ? member.getId() : null,
+                    user.getName(),
+                    "Your account has been deactivated. Please contact the gym administrator.");
+        }
+
+        if (member != null && "SUSPENDED".equalsIgnoreCase(member.getStatus())) {
+            memberAuditService.logDeniedEntry(member.getId(), "LOGIN", "MEMBER_SUSPENDED");
+            throw new ForbiddenOperationException(
+                    "Your account has been suspended. Please contact the gym administrator.");
+        }
 
         String token = jwtUtils.generateToken(user);
         return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole().name());

@@ -18,6 +18,12 @@ public interface AttendanceService {
 
     void validateMemberEligibility(Member member);
 
+    void validateMemberCheckInEligibility(Member member);
+
+    void validateMemberCheckInEligibility(Member member, String entryMethod);
+
+    void validateAccountNotDeactivated(Member member, String entryMethod);
+
     Attendance recordVerifiedCheckIn(
             Member member,
             String gymId,

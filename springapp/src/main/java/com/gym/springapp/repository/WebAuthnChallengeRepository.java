@@ -38,6 +38,10 @@ public interface WebAuthnChallengeRepository extends JpaRepository<WebAuthnChall
     int deleteStaleChallenges(@Param("cutoff") Instant cutoff);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE WebAuthnChallenge c SET c.consumed = true, c.consumedAt = :now WHERE c.memberId = :memberId AND c.consumed = false")
+    int invalidatePendingForMember(@Param("memberId") Long memberId, @Param("now") Instant now);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM WebAuthnChallenge c WHERE c.memberId = :memberId")
     void deleteDirectByMemberId(@Param("memberId") Long memberId);
 }

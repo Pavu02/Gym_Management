@@ -53,4 +53,24 @@ export interface MemberResponse {
   emergencyContactPhone?: string;
   onboardingCompleted?: boolean;
   daysLeft?: number;
+  active?: boolean;
+  faceEnabled?: boolean;
+  faceEnrolled?: boolean;
+  faceReenrollmentRequired?: boolean;
+  activeBiometricDevices?: number;
+  hasOpenAttendance?: boolean;
+  deactivatedAt?: string;
+  deactivationReason?: string;
+  role?: string;
+  version?: number;
+}
+
+export interface MemberStatusActionResponse {
+  success: boolean;
+  memberId: number;
+  status: string;
+  message: string;
+  version?: number;
+  closedOpenAttendance?: boolean;
+  biometricReenrollmentRequired?: boolean;
 }

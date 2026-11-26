@@ -45,6 +45,7 @@ public class PasskeyCredentialRepository implements CredentialRepository {
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
         return memberRepo.findByUserEmail(username)
                 .map(member -> memberPasskeyRepo.findByMemberId(member.getId()).stream()
+                        .filter(MemberPasskey::isActive)
                         .map(cred -> PublicKeyCredentialDescriptor.builder()
                                 .id(safeFromBase64Url(cred.getCredentialId()))
                                 .type(PublicKeyCredentialType.PUBLIC_KEY)
@@ -74,6 +75,9 @@ public class PasskeyCredentialRepository implements CredentialRepository {
         }
 
         MemberPasskey passkey = credOpt.get();
+        if (!passkey.isActive()) {
+            return Optional.empty();
+        }
         ByteArray storedUserHandle = new ByteArray(passkey.getMember().getUser().getEmail().getBytes(StandardCharsets.UTF_8));
 
         RegisteredCredential rc = RegisteredCredential.builder()
@@ -90,6 +94,7 @@ public class PasskeyCredentialRepository implements CredentialRepository {
     public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
         String credIdBase64 = credentialId.getBase64Url();
         return memberPasskeyRepo.findByCredentialId(credIdBase64)
+                .filter(MemberPasskey::isActive)
                 .map(passkey -> {
                     ByteArray userHandle = new ByteArray(passkey.getMember().getUser().getEmail().getBytes(StandardCharsets.UTF_8));
                     RegisteredCredential rc = RegisteredCredential.builder()

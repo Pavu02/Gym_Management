@@ -6,6 +6,9 @@
       Enroll your phone once using its built-in Fingerprint, Face ID, Touch ID, or device screen lock.
       Your actual fingerprint image never leaves your phone.
     </p>
+    <p class="enroll-sub" *ngIf="activeDeviceCount === 0" style="color: #fbbf24; font-weight: 700; margin-top: 6px;">
+      Register this device for biometric check-in
+    </p>
   </div>
 
   <!-- Capability Telemetry -->

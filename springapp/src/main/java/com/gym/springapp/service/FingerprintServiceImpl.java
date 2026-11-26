@@ -2,7 +2,10 @@ package com.gym.springapp.service;
 
 import com.gym.springapp.dto.*;
 import com.gym.springapp.exceptions.BadRequestException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
+import com.gym.springapp.exceptions.VerificationRuleException;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
 import com.yubico.webauthn.AssertionRequest;
@@ -94,6 +97,7 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional
     public RegisterStartResponseDTO startRegistration(String authEmail) {
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         User user = member.getUser();
 
         String requestId = UUID.randomUUID().toString();
@@ -133,6 +137,7 @@ public class FingerprintServiceImpl implements FingerprintService {
         }
 
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
 
         PublicKeyCredentialCreationOptions options = challengeStore.removeRegistration(request.requestId());
         if (options == null) {
@@ -172,6 +177,8 @@ public class FingerprintServiceImpl implements FingerprintService {
             passkey.setSignCount(signCount);
             passkey.setDeviceName(deviceName);
             passkey.setLastUsedAt(now);
+            passkey.setActive(true);
+            passkey.setRevokedAt(null);
 
             MemberPasskey saved = memberPasskeyRepo.save(passkey);
 
@@ -188,6 +195,9 @@ public class FingerprintServiceImpl implements FingerprintService {
                 fpProfile.setFingerprintHash(credentialId);
                 fpProfile.setDeviceName(deviceName);
                 fpProfile.setQualityScore(99);
+                fpProfile.setEnabled(true);
+                fpProfile.setStatus("ACTIVE");
+                fpProfile.setDisabledAt(null);
                 fpProfile.setUpdatedAt(now);
                 if (fpProfile.getMinutiaeData() == null) {
                     fpProfile.setMinutiaeData("[]");
@@ -202,6 +212,7 @@ public class FingerprintServiceImpl implements FingerprintService {
                     wac.setSignCount(signCount);
                     wac.setDeviceName(deviceName);
                     wac.setCreatedAt(now);
+                    wac.setActive(true);
                     webAuthnCredentialRepo.save(wac);
                 }
             } catch (Exception e) {
@@ -222,7 +233,9 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional(readOnly = true)
     public List<FingerprintDeviceDTO> getMemberDevices(String authEmail) {
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         return memberPasskeyRepo.findByMemberId(member.getId()).stream()
+                .filter(MemberPasskey::isActive)
                 .map(p -> new FingerprintDeviceDTO(p.getId(), p.getDeviceName(), p.getCreatedAt(), p.getLastUsedAt()))
                 .collect(Collectors.toList());
     }
@@ -231,6 +244,7 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional
     public void deleteMyDevice(String authEmail, Long deviceId) {
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         MemberPasskey passkey = memberPasskeyRepo.findById(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
 
@@ -245,6 +259,7 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional(readOnly = true)
     public List<FingerprintDeviceDTO> getDevicesByMemberId(Long memberId) {
         return memberPasskeyRepo.findByMemberId(memberId).stream()
+                .filter(MemberPasskey::isActive)
                 .map(p -> new FingerprintDeviceDTO(p.getId(), p.getDeviceName(), p.getCreatedAt(), p.getLastUsedAt()))
                 .collect(Collectors.toList());
     }
@@ -277,10 +292,13 @@ public class FingerprintServiceImpl implements FingerprintService {
         }
 
         Member member = getMemberByEmail(authEmail);
-        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId());
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
+        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId()).stream()
+                .filter(MemberPasskey::isActive)
+                .toList();
         if (passkeys.isEmpty()) {
             throw new BadRequestException(
-                    "No fingerprint device registered. Please enable fingerprint check-in first.");
+                    "No active fingerprint device registered. Please register this device for biometric check-in.");
         }
 
         StartAssertionOptions.StartAssertionOptionsBuilder builder = StartAssertionOptions.builder()
@@ -308,6 +326,7 @@ public class FingerprintServiceImpl implements FingerprintService {
         }
 
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
 
         AssertionRequest assertionRequest = challengeStore.removeAssertion(request.requestId());
         if (assertionRequest == null) {
@@ -328,15 +347,23 @@ public class FingerprintServiceImpl implements FingerprintService {
                 throw new BadRequestException("Fingerprint verification failed.");
             }
 
-            // Step 2: Check credential belongs to the logged-in member
+            // Step 2: Check credential belongs to the logged-in member and is active
             String credentialId = result.getCredential().getCredentialId().getBase64Url();
             MemberPasskey passkey = memberPasskeyRepo.findByCredentialId(credentialId)
                     .orElseThrow(
                             () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Unrecognized device credential"));
 
+            if (!passkey.isActive()) {
+                throw new VerificationRuleException("This biometric credential has been revoked. Register this device for biometric check-in.");
+            }
+
             if (!passkey.getMember().getId().equals(member.getId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This fingerprint belongs to another member");
             }
+
+            // Fresh account eligibility check immediately before creating attendance
+            Member freshMember = getMemberByEmail(authEmail);
+            attendanceService.validateAccountNotDeactivated(freshMember, "FINGERPRINT");
 
             // Step 3: Check signCount did not go backwards
             long newSignCount = result.getSignatureCount();
@@ -362,13 +389,14 @@ public class FingerprintServiceImpl implements FingerprintService {
             }
 
             kt.setUsed(true);
-            kt.setUsedByMember(member);
+            kt.setUsedByMember(freshMember);
             kioskTokenRepo.save(kt);
 
             // Step 5: Perform check-in or check-out
-            return processCheckinOrCheckout(member);
+            return processCheckinOrCheckout(freshMember);
 
-        } catch (BadRequestException | ResponseStatusException e) {
+        } catch (MemberDeactivatedException | ForbiddenOperationException | VerificationRuleException
+                | BadRequestException | ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             throw new BadRequestException("Fingerprint verification error: " + e.getMessage());
@@ -376,6 +404,7 @@ public class FingerprintServiceImpl implements FingerprintService {
     }
 
     private CheckinResultDTO processCheckinOrCheckout(Member member) {
+        attendanceService.validateAccountNotDeactivated(member, "FINGERPRINT");
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
         Optional<Attendance> todayAttOpt = attendanceRepo.findFirstByMemberIdAndAttendanceDateOrderByIdDesc(member.getId(), today);
 
@@ -456,9 +485,13 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional(readOnly = true)
     public FingerprintStatusDTO getMyStatus(String authEmail) {
         Member member = getMemberByEmail(authEmail);
-        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId());
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
+        List<MemberPasskey> passkeys = memberPasskeyRepo.findByMemberId(member.getId()).stream()
+                .filter(MemberPasskey::isActive)
+                .toList();
         Long userId = member.getUser() != null ? member.getUser().getId() : member.getId();
-        Optional<FingerprintProfile> fpOpt = fingerprintProfileRepo.findByUserId(userId);
+        Optional<FingerprintProfile> fpOpt = fingerprintProfileRepo.findByUserId(userId)
+                .filter(FingerprintProfile::isEnabled);
 
         boolean enrolled = !passkeys.isEmpty() || fpOpt.isPresent();
         String deviceName = !passkeys.isEmpty() ? passkeys.get(0).getDeviceName()
@@ -473,6 +506,7 @@ public class FingerprintServiceImpl implements FingerprintService {
     @Transactional
     public void deleteFingerprint(Long userId, String authEmail) {
         Member member = getMemberByEmail(authEmail);
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         Long targetUserId = member.getUser() != null ? member.getUser().getId() : member.getId();
         fingerprintProfileRepo.deleteByUserId(targetUserId);
         fingerprintProfileRepo.deleteByUserId(member.getId());

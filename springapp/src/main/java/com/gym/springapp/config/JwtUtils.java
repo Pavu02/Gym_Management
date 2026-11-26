@@ -31,6 +31,7 @@ public class JwtUtils {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("role", user.getRole().name());
+        claims.put("tokenVersion", user.getEffectiveTokenVersion());
         return createToken(claims, user.getEmail());
     }
 
@@ -72,6 +73,14 @@ public class JwtUtils {
     public String extractRole(String token) {
         Object val = extractAllClaims(token).get("role");
         return val != null ? val.toString() : null;
+    }
+
+    public Long extractTokenVersion(String token) {
+        Object val = extractAllClaims(token).get("tokenVersion");
+        if (val instanceof Number num) {
+            return num.longValue();
+        }
+        return null;
     }
 
     public boolean validateToken(String token, String email) {

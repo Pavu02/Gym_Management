@@ -259,9 +259,14 @@ export class MobileCheckinVerificationComponent implements OnInit, OnDestroy {
   private handleBackendError(err: any): void {
     this.stage = 'ERROR';
     const msg = err?.error?.message || err?.message || 'Verification failed.';
+    const code = (err?.error?.code || err?.error?.error || '').toString().toUpperCase();
     const lower = msg.toLowerCase();
 
-    if (err.status === 410 || lower.includes('expired')) {
+    if (code === 'MEMBER_DEACTIVATED' || lower.includes('deactivated')) {
+      this.canRetryVerification = false;
+      this.isQrExpiredOrUsed = true;
+      this.errorMessage = 'Your gym membership account is deactivated. Please contact the gym administrator.';
+    } else if (err.status === 410 || lower.includes('expired')) {
       if (lower.includes('membership')) {
         this.isExpiredPlan = true;
         this.errorMessage = 'Your membership has expired. Please contact the gym administrator.';

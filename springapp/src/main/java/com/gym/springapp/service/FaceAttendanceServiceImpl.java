@@ -1,13 +1,17 @@
 package com.gym.springapp.service;
 
 import com.gym.springapp.dto.FaceCheckinResponseDTO;
-import com.gym.springapp.exceptions.BadRequestException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
+import com.gym.springapp.exceptions.QrSessionConflictException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
+import com.gym.springapp.exceptions.VerificationRuleException;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,18 +31,30 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
     private final UserRepo userRepo;
     private final MemberRepo memberRepo;
     private final TrainerRepo trainerRepo;
+    private final FaceProfileRepo faceProfileRepo;
+    private final MemberBiometricRepo memberBiometricRepo;
+    private final AttendanceService attendanceService;
+    private final MemberAuditService memberAuditService;
 
     public FaceAttendanceServiceImpl(
             FaceAttendanceRepo faceAttendanceRepo,
             AttendanceRepo attendanceRepo,
             UserRepo userRepo,
             MemberRepo memberRepo,
-            TrainerRepo trainerRepo) {
+            TrainerRepo trainerRepo,
+            FaceProfileRepo faceProfileRepo,
+            MemberBiometricRepo memberBiometricRepo,
+            AttendanceService attendanceService,
+            MemberAuditService memberAuditService) {
         this.faceAttendanceRepo = faceAttendanceRepo;
         this.attendanceRepo = attendanceRepo;
         this.userRepo = userRepo;
         this.memberRepo = memberRepo;
         this.trainerRepo = trainerRepo;
+        this.faceProfileRepo = faceProfileRepo;
+        this.memberBiometricRepo = memberBiometricRepo;
+        this.attendanceService = attendanceService;
+        this.memberAuditService = memberAuditService;
     }
 
     @Override
@@ -76,74 +92,107 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
         LocalDateTime now = LocalDateTime.now(KOLKATA_ZONE);
         String roleStr = user.getRole() != null ? user.getRole().name() : "MEMBER";
 
-        // Check if user already checked in today
-        Optional<FaceAttendance> existingToday = faceAttendanceRepo.findByUserIdAndDate(userId, today);
-        if (existingToday.isPresent()) {
-            FaceAttendance existing = existingToday.get();
-            return buildResponse(user, existing.getCheckInTime(), "ALREADY_CHECKED_IN", true, false);
-        }
-
         if ("MEMBER".equalsIgnoreCase(roleStr)) {
             Member member = memberRepo.findByUserId(userId)
                     .orElse(memberRepo.findByUserEmail(user.getEmail()).orElse(null));
 
-            if (member == null || member.getPlan() == null || "PENDING_PAYMENT".equalsIgnoreCase(member.getStatus())) {
+            if (member == null) {
                 return buildResponse(user, null, "NO_PLAN", false, false);
             }
 
-            LocalDate expiryDate = member.getExpiryDate();
-            long remainingDays = expiryDate != null ? ChronoUnit.DAYS.between(today, expiryDate) : -1;
-
-            if (remainingDays < 0) {
-                member.setStatus("EXPIRED");
-                memberRepo.save(member);
+            // Central eligibility check runs FIRST — DEACTIVATED members can never be
+            // checked in
+            // even if face recognition matched a historical/cached template.
+            try {
+                attendanceService.validateMemberCheckInEligibility(member, method);
+            } catch (MemberDeactivatedException | ForbiddenOperationException ex) {
+                throw ex;
+            } catch (VerificationRuleException ex) {
+                String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+                if (msg.contains("onboarding") || member.getPlan() == null
+                        || "PENDING_PAYMENT".equalsIgnoreCase(member.getStatus())) {
+                    return buildResponse(user, null, "NO_PLAN", false, false);
+                }
                 return buildResponse(user, null, "MEMBERSHIP_EXPIRED", false, false);
+            } catch (QrSessionConflictException ex) {
+                Optional<FaceAttendance> existingToday = faceAttendanceRepo.findByUserIdAndDate(userId, today);
+                LocalDateTime time = existingToday.map(FaceAttendance::getCheckInTime).orElse(now);
+                return buildResponse(user, time, "ALREADY_CHECKED_IN", true, false);
             }
 
+            // If checking in via FACE, require Face ID to be enabled (not disabled after
+            // deactivation/reactivation)
+            if ("FACE".equalsIgnoreCase(method)) {
+                boolean profileDisabled = faceProfileRepo.findByUserId(user.getId())
+                        .map(fp -> !fp.isEnabled())
+                        .orElse(false)
+                        || memberBiometricRepo.findByMemberId(member.getId())
+                                .map(mb -> !mb.isEnabled())
+                                .orElse(false);
+
+                if (!member.isFaceEnabled() || profileDisabled) {
+                    memberAuditService.logDeniedEntry(member.getId(), "FACE", "FACE_REENROLLMENT_REQUIRED");
+                    throw new MemberDeactivatedException(
+                            "FACE_REENROLLMENT_REQUIRED",
+                            member.getId(),
+                            user.getName(),
+                            "Face ID registration required");
+                }
+            }
+
+            long remainingDays = member.getExpiryDate() != null ? ChronoUnit.DAYS.between(today, member.getExpiryDate())
+                    : 0;
             boolean expiringSoon = remainingDays <= 5;
 
-            // Record face attendance
-            FaceAttendance fa = new FaceAttendance();
+            AttendanceMethod attMethod = AttendanceMethod.MANUAL;
+            CheckInMethod checkInMethod = CheckInMethod.MANUAL;
+            if ("FACE".equalsIgnoreCase(method)) {
+                attMethod = AttendanceMethod.FACE;
+                checkInMethod = CheckInMethod.FACE;
+            } else if ("FINGERPRINT".equalsIgnoreCase(method)) {
+                attMethod = AttendanceMethod.FINGERPRINT;
+                checkInMethod = CheckInMethod.FINGERPRINT;
+            }
+
+            Instant nowInstant = Instant.now();
+            Attendance att = new Attendance();
+            att.setMember(member);
+            att.setAttendanceDate(today);
+            att.setCheckInTime(LocalTime.now(KOLKATA_ZONE));
+            att.setMethod(attMethod);
+            att.setCheckInMethod(checkInMethod);
+            att.setGymId(member.getGymId());
+            att.setBranchId(member.getBranchId());
+            att.setCheckInTimestamp(nowInstant);
+            att.setVerificationMethodLabel(method.toUpperCase());
+            att.setVerificationResult("VERIFIED_" + method.toUpperCase());
+            att.setCreatedAt(nowInstant);
+            attendanceRepo.save(att);
+
+            FaceAttendance fa = faceAttendanceRepo.findByUserIdAndDate(userId, today)
+                    .orElseGet(FaceAttendance::new);
             fa.setUserId(userId);
             fa.setUserName(user.getName());
             fa.setRole("MEMBER");
             fa.setCheckInTime(now);
+            fa.setCheckOutTime(null);
             fa.setDate(today);
             fa.setMethod(method);
             faceAttendanceRepo.save(fa);
-
-            // Also keep legacy Attendance table in sync
-            if (attendanceRepo.findByMemberIdAndAttendanceDate(member.getId(), today).isEmpty()) {
-                Attendance att = new Attendance();
-                att.setMember(member);
-                att.setAttendanceDate(today);
-                att.setCheckInTime(LocalTime.now(KOLKATA_ZONE));
-                AttendanceMethod attMethod = AttendanceMethod.MANUAL;
-                if ("FACE".equalsIgnoreCase(method)) {
-                    attMethod = AttendanceMethod.FACE;
-                } else if ("FINGERPRINT".equalsIgnoreCase(method)) {
-                    attMethod = AttendanceMethod.FINGERPRINT;
-                }
-                att.setMethod(attMethod);
-                attendanceRepo.save(att);
-            }
 
             return buildResponse(user, now, "CHECKED_IN", false, expiringSoon);
 
-        } else if ("TRAINER".equalsIgnoreCase(roleStr)) {
-            // Trainers always record attendance (no plan check)
-            FaceAttendance fa = new FaceAttendance();
-            fa.setUserId(userId);
-            fa.setUserName(user.getName());
-            fa.setRole("TRAINER");
-            fa.setCheckInTime(now);
-            fa.setDate(today);
-            fa.setMethod(method);
-            faceAttendanceRepo.save(fa);
-
-            return buildResponse(user, now, "CHECKED_IN", false, false);
         } else {
-            // ADMIN or other role check-in
+            if (!user.isActive() || user.isDeleted()) {
+                throw new MemberDeactivatedException("USER_DEACTIVATED", user.getId(), user.getName(),
+                        "Access Denied — Account Deactivated");
+            }
+
+            Optional<FaceAttendance> existingToday = faceAttendanceRepo.findByUserIdAndDate(userId, today);
+            if (existingToday.isPresent()) {
+                return buildResponse(user, existingToday.get().getCheckInTime(), "ALREADY_CHECKED_IN", true, false);
+            }
+
             FaceAttendance fa = new FaceAttendance();
             fa.setUserId(userId);
             fa.setUserName(user.getName());
@@ -214,8 +263,7 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
                 checkInTime,
                 status,
                 expiringSoon,
-                alreadyCheckedIn
-        );
+                alreadyCheckedIn);
     }
 
     @Override
@@ -246,7 +294,8 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
 
         List<FaceCheckinResponseDTO> dtos = new ArrayList<>();
         for (FaceAttendance fa : list) {
-            if (role != null && !role.isBlank() && !role.equalsIgnoreCase("ALL") && !fa.getRole().equalsIgnoreCase(role)) {
+            if (role != null && !role.isBlank() && !role.equalsIgnoreCase("ALL")
+                    && !fa.getRole().equalsIgnoreCase(role)) {
                 continue;
             }
             if (name != null && !name.isBlank() && !fa.getUserName().toLowerCase().contains(name.toLowerCase())) {
@@ -274,7 +323,8 @@ public class FaceAttendanceServiceImpl implements FaceAttendanceService {
             dtos.add(buildResponse(user, fa.getCheckInTime(), "CHECKED_IN", false, false));
         }
 
-        // If no records in faceAttendance yet, check legacy Attendance table for members
+        // If no records in faceAttendance yet, check legacy Attendance table for
+        // members
         if (dtos.isEmpty() && "MEMBER".equalsIgnoreCase(user.getRole() != null ? user.getRole().name() : "")) {
             Member member = memberRepo.findByUserId(user.getId()).orElse(null);
             if (member != null) {

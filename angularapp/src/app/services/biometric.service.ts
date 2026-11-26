@@ -19,6 +19,9 @@ export interface BiometricStatusResponse {
   passkeyCount: number;
   fingerprintEnrolled?: boolean;
   fingerprintEnrolledAt?: string | null;
+  faceEnabled?: boolean;
+  faceReenrollmentRequired?: boolean;
+  biometricReenrollmentRequired?: boolean;
 }
 
 export interface BiometricResponse {

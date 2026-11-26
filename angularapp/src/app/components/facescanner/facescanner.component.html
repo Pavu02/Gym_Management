@@ -138,7 +138,7 @@
     <div class="scan-popup" *ngIf="activePopup" [ngClass]="{
       'popup-success': activePopup.status === 'CHECKED_IN',
       'popup-info': activePopup.status === 'ALREADY_CHECKED_IN',
-      'popup-danger': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN'
+      'popup-danger': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN' || activePopup.status === 'MEMBER_DEACTIVATED' || activePopup.status === 'FACE_REENROLLMENT_REQUIRED' || activePopup.status === 'USER_DEACTIVATED'
     }">
       <button class="popup-close-btn" (click)="closePopup()">&times;</button>
       
@@ -159,12 +159,14 @@
           <span class="status-pill" [ngClass]="{
             'pill-in': activePopup.status === 'CHECKED_IN',
             'pill-already': activePopup.status === 'ALREADY_CHECKED_IN',
-            'pill-expired': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN'
+            'pill-expired': activePopup.status === 'MEMBERSHIP_EXPIRED' || activePopup.status === 'NO_PLAN' || activePopup.status === 'MEMBER_DEACTIVATED' || activePopup.status === 'FACE_REENROLLMENT_REQUIRED' || activePopup.status === 'USER_DEACTIVATED'
           }">
             <span *ngIf="activePopup.status === 'CHECKED_IN'">✓ Check-In Recorded</span>
             <span *ngIf="activePopup.status === 'ALREADY_CHECKED_IN'">Already Checked In Today</span>
             <span *ngIf="activePopup.status === 'MEMBERSHIP_EXPIRED'">Access Denied: Membership Expired</span>
             <span *ngIf="activePopup.status === 'NO_PLAN'">Access Denied: No Active Plan</span>
+            <span *ngIf="activePopup.status === 'MEMBER_DEACTIVATED' || activePopup.status === 'USER_DEACTIVATED'">Access Denied — Member Deactivated</span>
+            <span *ngIf="activePopup.status === 'FACE_REENROLLMENT_REQUIRED'">Access Denied — Face ID registration required</span>
           </span>
         </div>
       </div>

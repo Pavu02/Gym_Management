@@ -42,4 +42,18 @@ public class WebAuthnCredential {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "active")
+    private Boolean active = Boolean.TRUE;
+
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+
+    public boolean isActive() {
+        return !Boolean.FALSE.equals(active) && revokedAt == null;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

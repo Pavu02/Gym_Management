@@ -3,6 +3,7 @@ package com.gym.springapp.service;
 import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
+import com.gym.springapp.dto.MemberStatusActionResponseDTO;
 import com.gym.springapp.dto.RenewRequestDTO;
 import com.gym.springapp.model.Member;
 
@@ -14,6 +15,8 @@ public interface MemberService {
     MemberResponseDTO getMemberById(Long id);
     MemberResponseDTO updateMember(Long id, MemberRequestDTO request);
     void deleteMember(Long id);
+    MemberStatusActionResponseDTO deactivateMember(Long memberId, String adminEmail, String reason, Long expectedVersion);
+    MemberStatusActionResponseDTO reactivateMember(Long memberId, String adminEmail, Long expectedVersion);
     MemberResponseDTO assignTrainer(Long memberId, Long trainerId);
     MemberResponseDTO getMyProfile(String email);
     List<MemberResponseDTO> getMembersOfTrainer(String email);

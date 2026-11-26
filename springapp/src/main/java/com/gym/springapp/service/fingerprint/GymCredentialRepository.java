@@ -52,6 +52,7 @@ public class GymCredentialRepository implements CredentialRepository {
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
         return memberRepo.findByUserEmail(username)
                 .map(member -> webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
+                        .filter(WebAuthnCredential::isActive)
                         .map(cred -> PublicKeyCredentialDescriptor.builder()
                                 .id(safeFromBase64Url(cred.getCredentialId()))
                                 .type(PublicKeyCredentialType.PUBLIC_KEY)
@@ -81,6 +82,9 @@ public class GymCredentialRepository implements CredentialRepository {
         }
 
         WebAuthnCredential cred = credOpt.get();
+        if (!cred.isActive()) {
+            return Optional.empty();
+        }
         ByteArray storedUserHandle = new ByteArray(cred.getMember().getUser().getEmail().getBytes(StandardCharsets.UTF_8));
 
         RegisteredCredential rc = RegisteredCredential.builder()
@@ -97,6 +101,7 @@ public class GymCredentialRepository implements CredentialRepository {
     public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
         String credIdBase64 = credentialId.getBase64Url();
         return webAuthnCredentialRepo.findByCredentialId(credIdBase64)
+                .filter(WebAuthnCredential::isActive)
                 .map(cred -> {
                     ByteArray userHandle = new ByteArray(cred.getMember().getUser().getEmail().getBytes(StandardCharsets.UTF_8));
                     RegisteredCredential rc = RegisteredCredential.builder()

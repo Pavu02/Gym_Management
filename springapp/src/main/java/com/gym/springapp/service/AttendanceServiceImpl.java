@@ -3,6 +3,7 @@ package com.gym.springapp.service;
 import com.gym.springapp.config.CheckInPolicyProperties;
 import com.gym.springapp.exceptions.BadRequestException;
 import com.gym.springapp.exceptions.ForbiddenOperationException;
+import com.gym.springapp.exceptions.MemberDeactivatedException;
 import com.gym.springapp.exceptions.QrSessionConflictException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.exceptions.VerificationRuleException;
@@ -30,28 +31,77 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final MemberRepo memberRepo;
     private final FaceAttendanceRepo faceAttendanceRepo;
     private final CheckInPolicyProperties policy;
+    private final MemberAuditService memberAuditService;
 
     public AttendanceServiceImpl(
             AttendanceRepo attendanceRepo,
             MemberRepo memberRepo,
             FaceAttendanceRepo faceAttendanceRepo,
-            CheckInPolicyProperties policy) {
+            CheckInPolicyProperties policy,
+            MemberAuditService memberAuditService) {
         this.attendanceRepo = attendanceRepo;
         this.memberRepo = memberRepo;
         this.faceAttendanceRepo = faceAttendanceRepo;
         this.policy = policy;
+        this.memberAuditService = memberAuditService;
     }
 
     @Override
     public void validateMemberEligibility(Member member) {
-        if (member == null || member.isDeleted() || !member.isActive()
-                || member.getUser() == null || member.getUser().isDeleted() || !member.getUser().isActive()
-                || "SUSPENDED".equalsIgnoreCase(member.getStatus())
-                || "INACTIVE".equalsIgnoreCase(member.getStatus())) {
-            throw new ForbiddenOperationException("Your member account is inactive, suspended, or deleted.");
+        validateMemberCheckInEligibility(member, "CHECK_IN");
+    }
+
+    @Override
+    public void validateMemberCheckInEligibility(Member member) {
+        validateMemberCheckInEligibility(member, "CHECK_IN");
+    }
+
+    @Override
+    public void validateAccountNotDeactivated(Member member, String entryMethod) {
+        if (member == null) {
+            throw new ResourceNotFoundException("Member profile not found.");
         }
 
-        if ("PENDING_PAYMENT".equalsIgnoreCase(member.getStatus()) || !member.isOnboardingCompleted()
+        User user = member.getUser();
+        String memberName = user != null && user.getName() != null ? user.getName() : "Member";
+        String methodLabel = entryMethod != null && !entryMethod.isBlank() ? entryMethod : "CHECK_IN";
+
+        if (member.isDeleted() || (user != null && user.isDeleted())) {
+            memberAuditService.logDeniedEntry(member.getId(), methodLabel, "MEMBER_DELETED");
+            throw new ForbiddenOperationException("Your member account is no longer available.");
+        }
+
+        if ("DEACTIVATED".equalsIgnoreCase(member.getStatus())) {
+            memberAuditService.logDeniedEntry(member.getId(), methodLabel, "MEMBER_DEACTIVATED");
+            String msg = "FACE".equalsIgnoreCase(methodLabel)
+                    ? "Access Denied — Member Deactivated"
+                    : "Your gym membership account is deactivated. Please contact the gym administrator.";
+            throw new MemberDeactivatedException("MEMBER_DEACTIVATED", member.getId(), memberName, msg);
+        }
+
+        if ("SUSPENDED".equalsIgnoreCase(member.getStatus())
+                || "INACTIVE".equalsIgnoreCase(member.getStatus())) {
+            memberAuditService.logDeniedEntry(member.getId(), methodLabel,
+                    "MEMBER_" + member.getStatus().toUpperCase());
+            throw new ForbiddenOperationException("Your member account is inactive or suspended.");
+        }
+
+        if (!member.isActive() || (user != null && !user.isActive())) {
+            memberAuditService.logDeniedEntry(member.getId(), methodLabel, "MEMBER_DEACTIVATED");
+            String msg = "FACE".equalsIgnoreCase(methodLabel)
+                    ? "Access Denied — Member Deactivated"
+                    : "Your gym membership account is deactivated. Please contact the gym administrator.";
+            throw new MemberDeactivatedException("MEMBER_DEACTIVATED", member.getId(), memberName, msg);
+        }
+    }
+
+    @Override
+    public void validateMemberCheckInEligibility(Member member, String entryMethod) {
+        validateAccountNotDeactivated(member, entryMethod);
+
+        if ("PENDING_PAYMENT".equalsIgnoreCase(member.getStatus())
+                || "PENDING".equalsIgnoreCase(member.getStatus())
+                || !member.isOnboardingCompleted()
                 || member.getPlan() == null) {
             throw new VerificationRuleException("Complete your membership onboarding before checking in.");
         }
@@ -65,6 +115,12 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         if ("EXPIRED".equalsIgnoreCase(member.getStatus())) {
             throw new VerificationRuleException("Your membership has expired. Please contact the gym administrator.");
+        }
+
+        Optional<Attendance> openAnyDay = attendanceRepo
+                .findFirstByMemberIdAndCheckOutTimeIsNullOrderByIdDesc(member.getId());
+        if (openAnyDay.isPresent()) {
+            throw new QrSessionConflictException("You are already checked in.");
         }
 
         Optional<Attendance> latestToday = attendanceRepo
@@ -95,7 +151,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             Long deviceCredentialId,
             String idempotencyKey,
             String fallbackReason) {
-        validateMemberEligibility(member);
+        validateMemberCheckInEligibility(member, method != null ? method.name() : "CHECK_IN");
 
         if (qrSessionId != null && attendanceRepo.existsByMemberIdAndQrSessionId(member.getId(), qrSessionId)) {
             throw new QrSessionConflictException("Attendance was already recorded for this check-in session.");
@@ -125,7 +181,8 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         Attendance saved = attendanceRepo.save(attendance);
 
-        // Keep FaceAttendance projection synchronized (method.name() <= 20 chars for pre-migration schemas)
+        // Keep FaceAttendance projection synchronized (method.name() <= 20 chars for
+        // pre-migration schemas)
         Optional<FaceAttendance> existingProjection = faceAttendanceRepo
                 .findByUserIdAndDate(member.getUser().getId(), today);
         if (existingProjection.isEmpty()) {
@@ -149,53 +206,57 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional
     public Attendance checkIn(Long memberId) {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
 
-        if ("PENDING_PAYMENT".equalsIgnoreCase(member.getStatus()) || !member.isOnboardingCompleted()) {
-            throw new BadRequestException("Complete your membership first");
-        }
+        validateMemberCheckInEligibility(member, AttendanceMethod.MANUAL.name());
 
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
-        if (member.getExpiryDate() != null && member.getExpiryDate().isBefore(today)) {
-            member.setStatus("EXPIRED");
-            memberRepo.save(member);
-        }
-
-        if ("EXPIRED".equalsIgnoreCase(member.getStatus())) {
-            throw new BadRequestException("Membership expired");
-        }
-
-        Optional<Attendance> latestToday = attendanceRepo.findFirstByMemberIdAndAttendanceDateOrderByIdDesc(memberId,
-                today);
-        if (latestToday.isPresent()) {
-            Attendance existing = latestToday.get();
-            if (existing.getCheckOutTime() == null) {
-                throw new BadRequestException("Already checked in today");
-            }
-            if (!policy.isAllowReentryAfterCheckout()) {
-                throw new BadRequestException("Already checked in today");
-            }
-        }
+        LocalTime nowTime = LocalTime.now(KOLKATA_ZONE);
+        Instant nowInstant = Instant.now();
 
         Attendance attendance = new Attendance();
         attendance.setMember(member);
         attendance.setAttendanceDate(today);
-        attendance.setCheckInTime(LocalTime.now(KOLKATA_ZONE));
+        attendance.setCheckInTime(nowTime);
         attendance.setMethod(AttendanceMethod.MANUAL);
+        attendance.setCheckInMethod(CheckInMethod.MANUAL);
+        attendance.setCheckInTimestamp(nowInstant);
+        attendance.setVerificationMethodLabel("MANUAL");
+        attendance.setVerificationResult("VERIFIED_MANUAL");
+        attendance.setCreatedAt(nowInstant);
 
-        return attendanceRepo.save(attendance);
+        Attendance saved = attendanceRepo.save(attendance);
+
+        if (member.getUser() != null) {
+            Optional<FaceAttendance> existingProjection = faceAttendanceRepo
+                    .findByUserIdAndDate(member.getUser().getId(), today);
+            if (existingProjection.isEmpty()) {
+                FaceAttendance fa = new FaceAttendance();
+                fa.setUserId(member.getUser().getId());
+                fa.setUserName(member.getUser().getName());
+                fa.setRole("MEMBER");
+                fa.setDate(today);
+                fa.setCheckInTime(LocalDateTime.now(KOLKATA_ZONE));
+                fa.setMethod(AttendanceMethod.MANUAL.name());
+                faceAttendanceRepo.save(fa);
+            }
+        }
+
+        return saved;
     }
 
     @Override
+    @Transactional
     public Attendance checkOut(Long memberId) {
-        if (!memberRepo.existsById(memberId)) {
-            throw new ResourceNotFoundException("Member not found with id: " + memberId);
-        }
+        Member member = memberRepo.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
 
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
-        Attendance attendance = attendanceRepo.findFirstByMemberIdAndAttendanceDateOrderByIdDesc(memberId, today)
+        Attendance attendance = attendanceRepo.findFirstByMemberIdAndCheckOutTimeIsNullOrderByIdDesc(memberId)
+                .or(() -> attendanceRepo.findFirstByMemberIdAndAttendanceDateOrderByIdDesc(memberId, today))
                 .orElseThrow(() -> new ResourceNotFoundException("No check-in record found for today"));
 
         if (attendance.getCheckOutTime() != null) {
@@ -203,7 +264,21 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         attendance.setCheckOutTime(LocalTime.now(KOLKATA_ZONE));
-        return attendanceRepo.save(attendance);
+        attendance.setCheckOutTimestamp(Instant.now());
+        if (attendance.getCheckoutReason() == null) {
+            attendance.setCheckoutReason("MANUAL_CHECKOUT");
+        }
+        Attendance saved = attendanceRepo.save(attendance);
+
+        if (member.getUser() != null) {
+            LocalDate attDate = attendance.getAttendanceDate() != null ? attendance.getAttendanceDate() : today;
+            faceAttendanceRepo.findByUserIdAndDate(member.getUser().getId(), attDate).ifPresent(fa -> {
+                fa.setCheckOutTime(LocalDateTime.now(KOLKATA_ZONE));
+                faceAttendanceRepo.save(fa);
+            });
+        }
+
+        return saved;
     }
 
     @Override

@@ -4,33 +4,46 @@ import com.gym.springapp.model.Plan;
 import com.gym.springapp.model.Role;
 import com.gym.springapp.model.Trainer;
 import com.gym.springapp.model.User;
+import com.gym.springapp.repository.MemberRepo;
 import com.gym.springapp.repository.PlanRepo;
 import com.gym.springapp.repository.TrainerRepo;
 import com.gym.springapp.repository.UserRepo;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepo userRepo;
+    private final MemberRepo memberRepo;
     private final PlanRepo planRepo;
     private final TrainerRepo trainerRepo;
     private final PasswordEncoder passwordEncoder;
+    private final TransactionTemplate transactionTemplate;
 
     public DataSeeder(UserRepo userRepo,
+                      MemberRepo memberRepo,
                       PlanRepo planRepo,
                       TrainerRepo trainerRepo,
-                      PasswordEncoder passwordEncoder) {
+                      PasswordEncoder passwordEncoder,
+                      TransactionTemplate transactionTemplate) {
         this.userRepo = userRepo;
+        this.memberRepo = memberRepo;
         this.planRepo = planRepo;
         this.trainerRepo = trainerRepo;
         this.passwordEncoder = passwordEncoder;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
     public void run(String... args) {
+        try {
+            transactionTemplate.executeWithoutResult(status -> memberRepo.backfillNullVersions());
+        } catch (Exception ignored) {
+        }
+
         // Seed Admin
         if (!userRepo.existsByEmail("admin@gym.com")) {
             User admin = new User();

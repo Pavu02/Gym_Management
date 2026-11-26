@@ -104,8 +104,10 @@ public class QrCheckInSessionService {
             throw new ForbiddenOperationException("Only active gym administrators can start QR check-in sessions.");
         }
 
-        String gymId = resolveBranchValue(request != null ? request.gymId() : null, admin.getGymId(), policy.getDefaultGymId());
-        String branchId = resolveBranchValue(request != null ? request.branchId() : null, admin.getBranchId(), policy.getDefaultBranchId());
+        String gymId = resolveBranchValue(request != null ? request.gymId() : null, admin.getGymId(),
+                policy.getDefaultGymId());
+        String branchId = resolveBranchValue(request != null ? request.branchId() : null, admin.getBranchId(),
+                policy.getDefaultBranchId());
 
         if (admin.getBranchId() != null && !admin.getBranchId().isBlank()
                 && !admin.getBranchId().equalsIgnoreCase(branchId)) {
@@ -189,7 +191,7 @@ public class QrCheckInSessionService {
         }
 
         Member member = resolveMember(memberEmail);
-        attendanceService.validateMemberEligibility(member);
+        attendanceService.validateMemberCheckInEligibility(member, "QR");
 
         String tokenHash = sha256Hex(request.token().trim());
         QrCheckInSession session = sessionRepo.findByTokenHash(tokenHash)
@@ -246,12 +248,13 @@ public class QrCheckInSessionService {
 
     @Transactional
     public AuthOptionsResponse startWebAuthnAssertion(String memberEmail, AuthOptionsRequest request) {
-        if (request == null || request.qrToken() == null || !TOKEN_PATTERN.matcher(request.qrToken().trim()).matches()) {
+        if (request == null || request.qrToken() == null
+                || !TOKEN_PATTERN.matcher(request.qrToken().trim()).matches()) {
             throw new BadRequestException("Malformed or missing QR token.");
         }
 
         Member member = resolveMember(memberEmail);
-        attendanceService.validateMemberEligibility(member);
+        attendanceService.validateMemberCheckInEligibility(member, "QR");
         rateLimitService.checkVerificationRateLimit(member.getId());
 
         String tokenHash = sha256Hex(request.qrToken().trim());
@@ -263,7 +266,8 @@ public class QrCheckInSessionService {
 
         List<MemberWebAuthnCredential> activeCreds = credentialRepo.findByMemberIdAndActiveTrue(member.getId());
         if (activeCreds.isEmpty()) {
-            throw new VerificationRuleException("This phone is not registered for biometric check-in.");
+            throw new VerificationRuleException(
+                    "This phone is not registered for biometric check-in. Please register this device for biometric check-in.");
         }
 
         AssertionRequest assertionRequest = relyingParty.startAssertion(
@@ -273,7 +277,8 @@ public class QrCheckInSessionService {
                         .timeout(policy.getChallengeExpirationSeconds() * 1000L)
                         .build());
 
-        WebAuthnChallenge savedChallenge = challengeService.createAuthenticationChallenge(member, session, assertionRequest);
+        WebAuthnChallenge savedChallenge = challengeService.createAuthenticationChallenge(member, session,
+                assertionRequest);
 
         session.setStatus(QrSessionStatus.AWAITING_USER_VERIFICATION);
         sessionRepo.save(session);
@@ -305,26 +310,32 @@ public class QrCheckInSessionService {
             String memberEmail,
             AuthVerifyRequest request,
             String clientIp) {
-        if (request == null || request.qrToken() == null || !TOKEN_PATTERN.matcher(request.qrToken().trim()).matches()) {
+        if (request == null || request.qrToken() == null
+                || !TOKEN_PATTERN.matcher(request.qrToken().trim()).matches()) {
             throw new BadRequestException("Malformed QR check-in token.");
         }
 
         Member member = resolveMember(memberEmail);
+        attendanceService.validateMemberCheckInEligibility(member, "BIOMETRIC");
         String cleanIdemKey = normalizeIdempotencyKey(request.idempotencyKey(), member.getId());
 
-        // 1. Idempotent lookup if phone lost connectivity before receiving previous commit response
+        // 1. Idempotent lookup if phone lost connectivity before receiving previous
+        // commit response
         if (cleanIdemKey != null) {
             Optional<Attendance> priorAtt = attendanceRepo.findByIdempotencyKey(cleanIdemKey);
             if (priorAtt.isPresent() && priorAtt.get().getMember().getId().equals(member.getId())) {
                 Attendance a = priorAtt.get();
-                QrCheckInSession priorSession = sessionRepo.findByTokenHash(sha256Hex(request.qrToken().trim())).orElse(null);
-                return toVerificationResponse(member, a, priorSession, a.getVerificationResult(), a.getRiskResult(), cleanIdemKey);
+                QrCheckInSession priorSession = sessionRepo.findByTokenHash(sha256Hex(request.qrToken().trim()))
+                        .orElse(null);
+                return toVerificationResponse(member, a, priorSession, a.getVerificationResult(), a.getRiskResult(),
+                        cleanIdemKey);
             }
         }
 
         rateLimitService.checkVerificationRateLimit(member.getId());
 
-        // 2. Pessimistically lock QR session row so concurrent scans cannot double-consume
+        // 2. Pessimistically lock QR session row so concurrent scans cannot
+        // double-consume
         String tokenHash = sha256Hex(request.qrToken().trim());
         QrCheckInSession session = sessionRepo.findByTokenHashForUpdate(tokenHash)
                 .orElseThrow(() -> new ResourceNotFoundException("Check-in QR session does not exist."));
@@ -361,7 +372,8 @@ public class QrCheckInSessionService {
                 throw new BadRequestException("Signed WebAuthn assertion response is required.");
             }
 
-            // 3. Consume bound single-use WebAuthn challenge (operation=AUTHENTICATION, memberId, qrSessionId)
+            // 3. Consume bound single-use WebAuthn challenge (operation=AUTHENTICATION,
+            // memberId, qrSessionId)
             WebAuthnChallenge storedChallenge = challengeService.consumeAuthenticationChallenge(
                     request.challengeId(), member, session);
 
@@ -402,7 +414,8 @@ public class QrCheckInSessionService {
             if (!result.isUserVerified()) {
                 rateLimitService.recordVerificationFailure(member.getId());
                 publishVerificationFailure(session, member, "User verification flag missing");
-                throw new VerificationRuleException("Biometric or screen lock user verification (UV) flag was not satisfied.");
+                throw new VerificationRuleException(
+                        "Biometric or screen lock user verification (UV) flag was not satisfied.");
             }
 
             String credentialIdB64 = result.getCredentialId().getBase64Url();
@@ -419,7 +432,8 @@ public class QrCheckInSessionService {
             if (!cred.isActive() || cred.getRevokedAt() != null) {
                 rateLimitService.recordVerificationFailure(member.getId());
                 publishVerificationFailure(session, member, "Credential revoked");
-                throw new VerificationRuleException("This check-in device has been revoked. Please register a device again.");
+                throw new VerificationRuleException(
+                        "This check-in device has been revoked. Please register a device again.");
             }
 
             // 5. Verify signature counter when supported by authenticator (stored > 0)
@@ -454,6 +468,11 @@ public class QrCheckInSessionService {
         String riskResult = locationRiskService.evaluateLocationAndNetwork(
                 request.latitude(), request.longitude(), request.wifiSsid(), clientIp);
 
+        // Re-check fresh DB account status inside lock immediately before creating
+        // attendance
+        member = resolveMember(memberEmail);
+        attendanceService.validateMemberCheckInEligibility(member, methodLabel);
+
         Attendance savedAttendance;
         try {
             savedAttendance = attendanceService.recordVerifiedCheckIn(
@@ -470,7 +489,8 @@ public class QrCheckInSessionService {
                     cleanIdemKey,
                     null);
         } catch (DataIntegrityViolationException ex) {
-            throw new QrSessionConflictException("This check-in session or attendance record has already been recorded.");
+            throw new QrSessionConflictException(
+                    "This check-in session or attendance record has already been recorded.");
         }
 
         Instant completedAt = Instant.now();
@@ -502,8 +522,10 @@ public class QrCheckInSessionService {
         if (!policy.isAllowAdminManualFallback()) {
             throw new ForbiddenOperationException("Admin manual fallback is disabled.");
         }
-        if (request == null || request.memberId() == null || request.reason() == null || request.reason().trim().length() < 4) {
-            throw new BadRequestException("A clear admin reason (minimum 4 characters) is required for assisted manual check-in.");
+        if (request == null || request.memberId() == null || request.reason() == null
+                || request.reason().trim().length() < 4) {
+            throw new BadRequestException(
+                    "A clear admin reason (minimum 4 characters) is required for assisted manual check-in.");
         }
 
         User admin = userRepo.findByEmailIgnoreCase(adminEmail)
@@ -643,7 +665,8 @@ public class QrCheckInSessionService {
             throw new QrSessionConflictException("This QR code has already been used.");
         }
         if (session.getStatus() == QrSessionStatus.CANCELLED) {
-            throw new QrSessionConflictException("This QR code was cancelled by the administrator. Please scan the latest QR.");
+            throw new QrSessionConflictException(
+                    "This QR code was cancelled by the administrator. Please scan the latest QR.");
         }
         if (session.getStatus() == QrSessionStatus.EXPIRED
                 || Instant.now().minusSeconds(policy.getClockSkewSeconds()).isAfter(session.getExpiresAt())) {
@@ -651,7 +674,8 @@ public class QrCheckInSessionService {
                 session.setStatus(QrSessionStatus.EXPIRED);
                 sessionRepo.save(session);
             }
-            throw new QrSessionExpiredException("This QR code has expired. Ask the administrator to generate a new one.");
+            throw new QrSessionExpiredException(
+                    "This QR code has expired. Ask the administrator to generate a new one.");
         }
     }
 
@@ -659,7 +683,8 @@ public class QrCheckInSessionService {
         String mGym = member.getGymId() != null ? member.getGymId() : policy.getDefaultGymId();
         String mBranch = member.getBranchId() != null ? member.getBranchId() : policy.getDefaultBranchId();
         if (!mGym.equalsIgnoreCase(session.getGymId()) || !mBranch.equalsIgnoreCase(session.getBranchId())) {
-            throw new ForbiddenOperationException("Your membership does not permit check-in at branch " + session.getBranchId());
+            throw new ForbiddenOperationException(
+                    "Your membership does not permit check-in at branch " + session.getBranchId());
         }
     }
 
@@ -750,7 +775,8 @@ public class QrCheckInSessionService {
                 member.getExpiryDate() != null ? member.getExpiryDate().toString() : null,
                 checkTimeFormatted,
                 attendance.getCheckInTimestamp() != null ? attendance.getCheckInTimestamp() : Instant.now(),
-                attendance.getVerificationMethodLabel() != null ? attendance.getVerificationMethodLabel() : attendance.getMethod().name(),
+                attendance.getVerificationMethodLabel() != null ? attendance.getVerificationMethodLabel()
+                        : attendance.getMethod().name(),
                 session != null ? session.getSessionCode() : null,
                 riskResult,
                 idempotencyKey);
@@ -773,8 +799,8 @@ public class QrCheckInSessionService {
         String checkInTime = attendance != null && attendance.getCheckInTime() != null
                 ? attendance.getCheckInTime().format(TIME_FMT)
                 : (session.getConsumedAt() != null
-                ? session.getConsumedAt().atZone(KOLKATA_ZONE).format(TIME_FMT)
-                : null);
+                        ? session.getConsumedAt().atZone(KOLKATA_ZONE).format(TIME_FMT)
+                        : null);
 
         return new CheckInWebSocketEvent(
                 session.getSessionCode(),

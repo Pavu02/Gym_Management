@@ -52,6 +52,6 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.isActive() && !user.isDeleted();
+        return !user.isDeleted();
     }
 }

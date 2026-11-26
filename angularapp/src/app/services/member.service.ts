@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MemberRequest, MemberResponse } from '../models/member.model';
+import { MemberRequest, MemberResponse, MemberStatusActionResponse } from '../models/member.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -9,6 +9,7 @@ import { environment } from '../../environments/environment';
 })
 export class MemberService {
   apiUrl = `${environment.apiUrl}/members`;
+  adminMembersUrl = `${environment.apiUrl}/admin/members`;
 
   constructor(private http: HttpClient) {}
 
@@ -28,8 +29,21 @@ export class MemberService {
     return this.http.put<MemberResponse>(`${this.apiUrl}/${id}`, member);
   }
 
-  deleteMember(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deactivateMember(id: number, reason?: string, expectedVersion?: number): Observable<MemberStatusActionResponse> {
+    return this.http.patch<MemberStatusActionResponse>(`${this.adminMembersUrl}/${id}/deactivate`, {
+      reason: reason || null,
+      expectedVersion: expectedVersion ?? null
+    });
+  }
+
+  reactivateMember(id: number, expectedVersion?: number): Observable<MemberStatusActionResponse> {
+    return this.http.patch<MemberStatusActionResponse>(`${this.adminMembersUrl}/${id}/reactivate`, {
+      expectedVersion: expectedVersion ?? null
+    });
+  }
+
+  deleteMember(id: number): Observable<MemberStatusActionResponse> {
+    return this.deactivateMember(id);
   }
 
   assignTrainer(id: number, trainerId: number): Observable<MemberResponse> {

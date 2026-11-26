@@ -27,14 +27,30 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401 && !request.url.includes('/api/auth/')) {
+        const errCode = (error?.error?.code || error?.error?.error || '').toString().toUpperCase();
+        const errMsg = (error?.error?.message || '').toString().toLowerCase();
+        const isDeactivatedError = error.status === 403
+          && (errCode === 'MEMBER_DEACTIVATED' || errMsg.includes('deactivated'));
+
+        if ((error.status === 401 || isDeactivatedError) && !request.url.includes('/api/auth/')) {
           const currentPath = typeof window !== 'undefined'
             ? (window.location.pathname + window.location.search)
             : '';
           const preserveReturnUrl = currentPath.startsWith('/check-in')
             || currentPath.startsWith('/checkin')
             || currentPath.startsWith('/member/devices');
+
+          // On mobile QR check-in verification, allow component to render explicit deactivation / revoked UX
+          if (isDeactivatedError && (currentPath.startsWith('/check-in') || currentPath.startsWith('/checkin'))) {
+            return throwError(() => error);
+          }
+
           if (!request.url.includes('/revoke-all') && !request.url.includes('/register/options')) {
+            if (isDeactivatedError) {
+              localStorage.clear();
+              window.location.href = '/login?deactivated=1';
+              return throwError(() => error);
+            }
             this.authService.logout(preserveReturnUrl ? currentPath : undefined);
           }
         }

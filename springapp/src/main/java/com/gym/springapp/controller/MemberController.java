@@ -1,8 +1,10 @@
 package com.gym.springapp.controller;
 
+import com.gym.springapp.dto.MemberDeactivateRequestDTO;
 import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
+import com.gym.springapp.dto.MemberStatusActionResponseDTO;
 import com.gym.springapp.dto.RenewRequestDTO;
 import com.gym.springapp.service.MemberService;
 import org.springframework.http.HttpStatus;
@@ -51,9 +53,31 @@ public class MemberController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-        memberService.deleteMember(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<MemberStatusActionResponseDTO> deleteMember(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(memberService.deactivateMember(id, authentication.getName(), "Deactivated by administrator", null));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MemberStatusActionResponseDTO> deactivateMember(
+            @PathVariable Long id,
+            @RequestBody(required = false) MemberDeactivateRequestDTO request,
+            Authentication authentication) {
+        String reason = request != null ? request.reason() : null;
+        Long expectedVersion = request != null ? request.expectedVersion() : null;
+        return ResponseEntity.ok(memberService.deactivateMember(id, authentication.getName(), reason, expectedVersion));
+    }
+
+    @PatchMapping("/{id}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MemberStatusActionResponseDTO> reactivateMember(
+            @PathVariable Long id,
+            @RequestBody(required = false) MemberDeactivateRequestDTO request,
+            Authentication authentication) {
+        Long expectedVersion = request != null ? request.expectedVersion() : null;
+        return ResponseEntity.ok(memberService.reactivateMember(id, authentication.getName(), expectedVersion));
     }
 
     @PutMapping("/{id}/assign-trainer/{trainerId}")

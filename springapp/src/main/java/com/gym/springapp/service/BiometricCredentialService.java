@@ -51,6 +51,7 @@ public class BiometricCredentialService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final CheckInPolicyProperties policy;
+    private final AttendanceService attendanceService;
     private final ObjectProvider<EmailNotificationService> emailServiceProvider;
     private final ObjectProvider<Executor> automationExecutorProvider;
 
@@ -63,6 +64,7 @@ public class BiometricCredentialService {
             UserRepo userRepo,
             PasswordEncoder passwordEncoder,
             CheckInPolicyProperties policy,
+            AttendanceService attendanceService,
             ObjectProvider<EmailNotificationService> emailServiceProvider,
             @Qualifier("automationExecutor") ObjectProvider<Executor> automationExecutorProvider) {
         this.relyingParty = relyingParty;
@@ -73,6 +75,7 @@ public class BiometricCredentialService {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.policy = policy;
+        this.attendanceService = attendanceService;
         this.emailServiceProvider = emailServiceProvider;
         this.automationExecutorProvider = automationExecutorProvider;
     }
@@ -205,7 +208,7 @@ public class BiometricCredentialService {
 
     @Transactional(readOnly = true)
     public List<RegisteredDeviceDTO> getMyDevices(String authEmail) {
-        Member member = resolveMember(authEmail);
+        Member member = resolveActiveMember(authEmail);
         return memberCredentialRepo.findByMemberIdOrderByRegisteredAtDesc(member.getId()).stream()
                 .map(this::toSafeDto)
                 .toList();
@@ -290,10 +293,7 @@ public class BiometricCredentialService {
 
     private Member resolveActiveMember(String authEmail) {
         Member member = resolveMember(authEmail);
-        User user = member.getUser();
-        if (user == null || !user.isActive() || user.isDeleted() || !member.isActive() || member.isDeleted()) {
-            throw new ForbiddenOperationException("Your member account is inactive, suspended, or deleted.");
-        }
+        attendanceService.validateAccountNotDeactivated(member, "BIOMETRIC");
         return member;
     }
 

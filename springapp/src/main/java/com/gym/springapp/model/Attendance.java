@@ -78,6 +78,15 @@ public class Attendance {
     @Column(name = "fallback_reason", length = 255)
     private String fallbackReason;
 
+    @Column(name = "checkout_reason", length = 80)
+    private String checkoutReason;
+
+    @Column(name = "checked_out_by")
+    private Long checkedOutBy;
+
+    @Column(name = "check_out_timestamp")
+    private Instant checkOutTimestamp;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

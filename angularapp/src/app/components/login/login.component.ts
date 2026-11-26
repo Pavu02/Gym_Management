@@ -38,6 +38,9 @@ export class LoginComponent implements OnInit {
       if (params['registered']) {
         this.successMessage = 'Registration successful! Please login with your credentials.';
       }
+      if (params['deactivated']) {
+        this.errorMessage = 'Your account has been deactivated. Please contact the gym administrator.';
+      }
       if (params['returnUrl'] && params['returnUrl'].startsWith('/') && !params['returnUrl'].startsWith('//')) {
         this.returnUrl = params['returnUrl'];
       }

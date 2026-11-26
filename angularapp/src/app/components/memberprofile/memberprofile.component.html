@@ -159,9 +159,9 @@
             </div>
             <div class="bio-status-row">
               <span class="status-indicator" [class.enrolled]="biometricStatus?.faceEnrolled">
-                {{ biometricStatus?.faceEnrolled ? 'Enrolled' : 'Not Enrolled' }}
+                {{ biometricStatus?.faceEnrolled ? 'Enrolled' : (biometricStatus?.faceReenrollmentRequired ? 'Face ID registration required' : 'Not Enrolled') }}
               </span>
-              <span class="enrolled-date" *ngIf="biometricStatus?.faceEnrolledAt">
+              <span class="enrolled-date" *ngIf="biometricStatus?.faceEnrolled && biometricStatus?.faceEnrolledAt">
                 {{ biometricStatus?.faceEnrolledAt | date:'mediumDate' }}
               </span>
             </div>

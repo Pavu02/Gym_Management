@@ -10,12 +10,14 @@ import com.gym.springapp.model.FaceProfile;
 import com.gym.springapp.model.FingerprintProfile;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.MemberBiometric;
+import com.gym.springapp.model.MemberWebAuthnCredential;
 import com.gym.springapp.model.User;
 import com.gym.springapp.repository.FaceProfileRepo;
 import com.gym.springapp.repository.FingerprintProfileRepo;
 import com.gym.springapp.repository.MemberBiometricRepo;
 import com.gym.springapp.repository.MemberPasskeyRepo;
 import com.gym.springapp.repository.MemberRepo;
+import com.gym.springapp.repository.MemberWebAuthnCredentialRepo;
 import com.gym.springapp.repository.UserRepo;
 import com.gym.springapp.repository.WebAuthnCredentialRepo;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -39,10 +41,12 @@ public class BiometricServiceImpl implements BiometricService {
     private final FingerprintProfileRepo fingerprintProfileRepo;
     private final WebAuthnCredentialRepo webAuthnCredentialRepo;
     private final MemberPasskeyRepo memberPasskeyRepo;
+    private final MemberWebAuthnCredentialRepo memberWebAuthnCredentialRepo;
     private final MemberRepo memberRepo;
     private final UserRepo userRepo;
     private final BiometricEncryptionService encryptionService;
     private final PasswordEncoder passwordEncoder;
+    private final AttendanceService attendanceService;
 
     public BiometricServiceImpl(
             MemberBiometricRepo memberBiometricRepo,
@@ -50,19 +54,23 @@ public class BiometricServiceImpl implements BiometricService {
             FingerprintProfileRepo fingerprintProfileRepo,
             WebAuthnCredentialRepo webAuthnCredentialRepo,
             MemberPasskeyRepo memberPasskeyRepo,
+            MemberWebAuthnCredentialRepo memberWebAuthnCredentialRepo,
             MemberRepo memberRepo,
             UserRepo userRepo,
             BiometricEncryptionService encryptionService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            AttendanceService attendanceService) {
         this.memberBiometricRepo = memberBiometricRepo;
         this.faceProfileRepo = faceProfileRepo;
         this.fingerprintProfileRepo = fingerprintProfileRepo;
         this.webAuthnCredentialRepo = webAuthnCredentialRepo;
         this.memberPasskeyRepo = memberPasskeyRepo;
+        this.memberWebAuthnCredentialRepo = memberWebAuthnCredentialRepo;
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.encryptionService = encryptionService;
         this.passwordEncoder = passwordEncoder;
+        this.attendanceService = attendanceService;
     }
 
     @Override
@@ -103,6 +111,9 @@ public class BiometricServiceImpl implements BiometricService {
                 return memberRepo.save(newMember);
             });
         }
+
+        // Block biometric enrollment while member is deactivated
+        attendanceService.validateAccountNotDeactivated(member, "FACE");
 
         // Check if member is re-enrolling
         Optional<MemberBiometric> existingOpt = memberBiometricRepo.findByMemberId(member.getId());
@@ -146,8 +157,14 @@ public class BiometricServiceImpl implements BiometricService {
         biometric.setFaceDescriptorEncrypted(encryptedDescriptor);
         biometric.setFaceEnrolledAt(now);
         biometric.setConsentAt(now);
+        biometric.setEnabled(true);
+        biometric.setStatus("ACTIVE");
+        biometric.setDisabledAt(null);
 
         memberBiometricRepo.save(biometric);
+
+        member.setFaceEnabled(true);
+        memberRepo.save(member);
 
         return new BiometricResponseDTO(
                 "SUCCESS",
@@ -178,11 +195,27 @@ public class BiometricServiceImpl implements BiometricService {
             faceOpt = faceProfileRepo.findByUserId(member.getId());
         }
 
-        int passkeyCount = (int) webAuthnCredentialRepo.countByMemberId(member.getId());
-        List<com.gym.springapp.model.MemberPasskey> memberPasskeys = memberPasskeyRepo.findByMemberId(member.getId());
-        int totalPasskeyCount = passkeyCount + memberPasskeys.size();
+        List<MemberWebAuthnCredential> allMwc = memberWebAuthnCredentialRepo
+                .findByMemberIdOrderByRegisteredAtDesc(member.getId());
+        List<MemberWebAuthnCredential> activeMwc = allMwc.stream().filter(MemberWebAuthnCredential::isActive).toList();
 
-        boolean faceEnrolled = bioOpt.isPresent() || faceOpt.isPresent();
+        List<com.gym.springapp.model.WebAuthnCredential> legacyWac = webAuthnCredentialRepo
+                .findByMemberId(member.getId());
+        long activeLegacyWac = legacyWac.stream().filter(com.gym.springapp.model.WebAuthnCredential::isActive).count();
+
+        List<com.gym.springapp.model.MemberPasskey> memberPasskeys = memberPasskeyRepo.findByMemberId(member.getId());
+        List<com.gym.springapp.model.MemberPasskey> activePasskeys = memberPasskeys.stream()
+                .filter(com.gym.springapp.model.MemberPasskey::isActive).toList();
+
+        int totalPasskeyCount = (int) (activeMwc.size() + activeLegacyWac + activePasskeys.size());
+
+        boolean hasStoredFace = bioOpt.isPresent() || faceOpt.isPresent();
+        boolean faceActive = member.isFaceEnabled()
+                && (bioOpt.map(MemberBiometric::isEnabled).orElse(false)
+                        || faceOpt.map(FaceProfile::isEnabled).orElse(false));
+        boolean faceEnrolled = faceActive;
+        boolean faceReenrollmentRequired = !faceActive && (hasStoredFace || !member.isFaceEnabled());
+
         LocalDateTime faceEnrolledAt = null;
         if (faceOpt.isPresent()) {
             faceEnrolledAt = faceOpt.get().getUpdatedAt() != null ? faceOpt.get().getUpdatedAt()
@@ -191,7 +224,7 @@ public class BiometricServiceImpl implements BiometricService {
             faceEnrolledAt = bioOpt.get().getFaceEnrolledAt();
         }
 
-        boolean consentGiven = faceEnrolled;
+        boolean consentGiven = hasStoredFace;
         LocalDateTime consentAt = faceEnrolledAt;
 
         Optional<FingerprintProfile> fpOpt = Optional.empty();
@@ -202,13 +235,22 @@ public class BiometricServiceImpl implements BiometricService {
             fpOpt = fingerprintProfileRepo.findByUserId(member.getId());
         }
 
-        boolean fingerprintEnrolled = fpOpt.isPresent() || totalPasskeyCount > 0;
+        boolean fpProfileActive = fpOpt.map(FingerprintProfile::isEnabled).orElse(false);
+        boolean fingerprintEnrolled = fpProfileActive || totalPasskeyCount > 0;
+        boolean hasRevokedDevice = allMwc.stream().anyMatch(c -> !c.isActive())
+                || memberPasskeys.stream().anyMatch(p -> !p.isActive())
+                || legacyWac.stream().anyMatch(c -> !c.isActive())
+                || fpOpt.map(fp -> !fp.isEnabled()).orElse(false);
+        boolean biometricReenrollmentRequired = totalPasskeyCount == 0 && (!member.isFaceEnabled() || hasRevokedDevice);
+
         LocalDateTime fingerprintEnrolledAt = null;
-        if (fpOpt.isPresent()) {
+        if (fpProfileActive && fpOpt.isPresent()) {
             fingerprintEnrolledAt = fpOpt.get().getUpdatedAt() != null ? fpOpt.get().getUpdatedAt()
                     : fpOpt.get().getCreatedAt();
-        } else if (!memberPasskeys.isEmpty()) {
-            fingerprintEnrolledAt = memberPasskeys.get(0).getCreatedAt();
+        } else if (!activePasskeys.isEmpty()) {
+            fingerprintEnrolledAt = activePasskeys.get(0).getCreatedAt();
+        } else if (!activeMwc.isEmpty() && activeMwc.get(0).getRegisteredAt() != null) {
+            fingerprintEnrolledAt = LocalDateTime.ofInstant(activeMwc.get(0).getRegisteredAt(), KOLKATA_ZONE);
         }
 
         return new BiometricStatusResponseDTO(
@@ -218,7 +260,10 @@ public class BiometricServiceImpl implements BiometricService {
                 consentAt,
                 totalPasskeyCount,
                 fingerprintEnrolled,
-                fingerprintEnrolledAt);
+                fingerprintEnrolledAt,
+                member.isFaceEnabled(),
+                faceReenrollmentRequired,
+                biometricReenrollmentRequired);
     }
 
     @Override
@@ -260,12 +305,17 @@ public class BiometricServiceImpl implements BiometricService {
         double minDistance = Double.MAX_VALUE;
 
         for (MemberBiometric mb : all) {
+            Member candidate = mb.getMember();
+            if (!mb.isEnabled() || candidate == null || candidate.isDeleted() || !candidate.isActive()
+                    || "DEACTIVATED".equalsIgnoreCase(candidate.getStatus()) || !candidate.isFaceEnabled()) {
+                continue;
+            }
             try {
                 float[] stored = encryptionService.decryptDescriptor(mb.getFaceDescriptorEncrypted());
                 double dist = encryptionService.calculateEuclideanDistance(queryDescriptor, stored);
                 if (dist < minDistance) {
                     minDistance = dist;
-                    closestMember = mb.getMember();
+                    closestMember = candidate;
                 }
             } catch (Exception e) {
                 // Ignore decrypt failure for malformed legacy test records

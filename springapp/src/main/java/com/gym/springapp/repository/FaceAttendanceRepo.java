@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface FaceAttendanceRepo extends JpaRepository<FaceAttendance, Long> {
     Optional<FaceAttendance> findByUserIdAndDate(Long userId, LocalDate date);
+    List<FaceAttendance> findByUserIdAndCheckOutTimeIsNull(Long userId);
     List<FaceAttendance> findByDate(LocalDate date);
     List<FaceAttendance> findByUserId(Long userId);
     List<FaceAttendance> findByUserIdOrderByCheckInTimeDesc(Long userId);

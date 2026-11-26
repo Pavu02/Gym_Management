@@ -52,6 +52,19 @@ public interface QrCheckInSessionRepository extends JpaRepository<QrCheckInSessi
     int markExpiredSessions(@Param("now") Instant now, @Param("activeStatuses") List<QrSessionStatus> activeStatuses);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE QrCheckInSession s
+            SET s.status = :cancelledStatus, s.failureReason = :reason
+            WHERE s.memberId = :memberId
+              AND s.status IN :activeStatuses
+            """)
+    int cancelActiveSessionsForMember(
+            @Param("memberId") Long memberId,
+            @Param("activeStatuses") List<QrSessionStatus> activeStatuses,
+            @Param("cancelledStatus") QrSessionStatus cancelledStatus,
+            @Param("reason") String reason);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE QrCheckInSession s SET s.memberId = null WHERE s.memberId = :memberId")
     void clearMemberReference(@Param("memberId") Long memberId);
 }

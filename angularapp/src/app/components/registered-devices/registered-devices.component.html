@@ -37,8 +37,8 @@
       <div class="loading-box" *ngIf="loading">Loading devices...</div>
 
       <div class="empty-box" *ngIf="!loading && devices.length === 0">
-        <p>No check-in devices enrolled yet.</p>
-        <small>Use "Enable Fingerprint Check-in" on your smartphone to enroll this device.</small>
+        <p>No active check-in devices enrolled.</p>
+        <small>Register this device for biometric check-in using "Enable Fingerprint Check-in" on your smartphone.</small>
       </div>
 
       <div class="device-list" *ngIf="!loading && devices.length > 0">

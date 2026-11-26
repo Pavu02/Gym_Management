@@ -296,6 +296,21 @@ export class FaceScannerComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.playBeep(false);
+        const code = (err?.error?.code || err?.error?.error || err?.error?.status || '').toString().toUpperCase();
+        const profile = this.userProfilesMap.get(userId);
+        const displayName = err?.error?.name || profile?.name || `User #${userId}`;
+        if (code === 'MEMBER_DEACTIVATED' || code === 'USER_DEACTIVATED' || err?.status === 403) {
+          this.showPopup({
+            userId,
+            name: displayName,
+            role: profile?.role || 'MEMBER',
+            totalAttendanceThisMonth: 0,
+            checkInTime: new Date().toISOString(),
+            status: code === 'FACE_REENROLLMENT_REQUIRED' ? 'FACE_REENROLLMENT_REQUIRED' : 'MEMBER_DEACTIVATED',
+            method: 'FACE',
+            alreadyCheckedIn: false
+          });
+        }
         console.error('Face check-in error:', err);
       }
     });

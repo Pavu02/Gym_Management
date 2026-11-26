@@ -45,6 +45,13 @@ public class User {
     @Column(name = "branch_id", length = 64)
     private String branchId = "MAIN";
 
+    @Column(name = "token_version")
+    private Long tokenVersion = 0L;
+
+    public long getEffectiveTokenVersion() {
+        return tokenVersion != null ? tokenVersion : 0L;
+    }
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

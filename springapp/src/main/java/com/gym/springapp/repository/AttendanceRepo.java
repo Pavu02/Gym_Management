@@ -19,6 +19,12 @@ public interface AttendanceRepo extends JpaRepository<Attendance, Long> {
 
     Optional<Attendance> findFirstByMemberIdAndAttendanceDateOrderByIdDesc(Long id, LocalDate attendanceDate);
 
+    Optional<Attendance> findFirstByMemberIdAndCheckOutTimeIsNullOrderByIdDesc(Long memberId);
+
+    List<Attendance> findByMemberIdAndCheckOutTimeIsNull(Long memberId);
+
+    boolean existsByMemberIdAndCheckOutTimeIsNull(Long memberId);
+
     List<Attendance> findAllByMemberIdAndAttendanceDateOrderByIdDesc(Long id, LocalDate attendanceDate);
 
     Optional<Attendance> findByIdempotencyKey(String idempotencyKey);

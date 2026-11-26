@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MemberService } from '../../services/member.service';
@@ -16,7 +16,7 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   filteredMembers: MemberResponse[] = [];
 
   searchTerm = '';
-  statusFilter: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED' = 'ALL';
+  statusFilter: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED' | 'DEACTIVATED' = 'ALL';
   sortBy: 'name' | 'expiryAsc' | 'expiryDesc' | 'status' = 'name';
   viewMode: 'cards' | 'table' = 'cards';
 
@@ -28,6 +28,13 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   selectedMemberForModal: MemberResponse | null = null;
   selectedMemberForFaceEnroll: MemberResponse | null = null;
 
+  // Deactivate / Reactivate Confirmation Modal State
+  showDeactivateModal = false;
+  showReactivateModal = false;
+  targetMemberForState: MemberResponse | null = null;
+  deactivationReasonInput = '';
+  stateActionSubmitting = false;
+
   // Member registered fingerprint devices
   memberFingerprintDevices: FingerprintDeviceDTO[] = [];
   loadingMemberDevices = false;
@@ -36,11 +43,13 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   activeCount = 0;
   pendingCount = 0;
   expiredCount = 0;
+  deactivatedCount = 0;
   expiringSoonCount = 0;
   activeRatio = 0;
 
   private destroy$ = new Subject<void>();
   private copyTimer?: any;
+  private syncInterval?: any;
 
   constructor(
     private memberService: MemberService,
@@ -50,12 +59,19 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMembers();
+    this.syncInterval = setInterval(() => this.refreshMembersSilently(), 30000);
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void {
+    this.refreshMembersSilently();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     if (this.copyTimer) clearTimeout(this.copyTimer);
+    if (this.syncInterval) clearInterval(this.syncInterval);
   }
 
   loadMembers(): void {
@@ -76,13 +92,40 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
       });
   }
 
+  refreshMembersSilently(): void {
+    if (this.stateActionSubmitting) return;
+    this.memberService.getAllMembers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.members = data || [];
+          this.computeMetrics();
+          this.applyFilter();
+          if (this.selectedMemberForModal) {
+            const updated = this.members.find(m => m.id === this.selectedMemberForModal?.id);
+            if (updated) {
+              this.selectedMemberForModal = updated;
+            }
+          }
+        },
+        error: () => {}
+      });
+  }
+
   private computeMetrics(): void {
     const total = this.members.length;
-    this.activeCount = this.members.filter(m => (m.status || '').toUpperCase() === 'ACTIVE').length;
-    this.pendingCount = this.members.filter(m => (m.status || '').toUpperCase() === 'PENDING_PAYMENT').length;
+    this.activeCount = this.members.filter(m =>
+      (m.status || '').toUpperCase() === 'ACTIVE' && m.active !== false
+    ).length;
+    this.pendingCount = this.members.filter(m => {
+      const s = (m.status || '').toUpperCase();
+      return s === 'PENDING_PAYMENT' || s === 'PENDING';
+    }).length;
     this.expiredCount = this.members.filter(m => (m.status || '').toUpperCase() === 'EXPIRED').length;
+    this.deactivatedCount = this.members.filter(m => (m.status || '').toUpperCase() === 'DEACTIVATED').length;
     this.expiringSoonCount = this.members.filter(m =>
       (m.status || '').toUpperCase() === 'ACTIVE' &&
+      m.active !== false &&
       m.daysLeft !== null &&
       m.daysLeft !== undefined &&
       m.daysLeft <= 7
@@ -110,9 +153,11 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
         trainer.includes(q) ||
         goal.includes(q);
 
+      const memberStatus = (m.status || '').toUpperCase();
       const matchStatus =
         this.statusFilter === 'ALL' ||
-        (m.status || '').toUpperCase() === this.statusFilter.toUpperCase();
+        memberStatus === this.statusFilter.toUpperCase() ||
+        (this.statusFilter === 'PENDING_PAYMENT' && memberStatus === 'PENDING');
 
       return matchSearch && matchStatus;
     });
@@ -134,7 +179,7 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
     this.filteredMembers = list;
   }
 
-  selectStatus(status: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED'): void {
+  selectStatus(status: 'ALL' | 'ACTIVE' | 'PENDING_PAYMENT' | 'EXPIRED' | 'DEACTIVATED'): void {
     this.statusFilter = status;
     this.applyFilter();
   }
@@ -155,6 +200,10 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
     this.viewMode = mode;
   }
 
+  isDeactivated(member?: MemberResponse | null): boolean {
+    return !!member && ((member.status || '').toUpperCase() === 'DEACTIVATED' || member.active === false);
+  }
+
   getInitials(name?: string): string {
     if (!name || !name.trim()) return 'BX';
     const parts = name.trim().split(/\s+/);
@@ -165,6 +214,7 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   getStatusClass(status?: string): string {
     const s = (status || '').toUpperCase();
     if (s === 'ACTIVE') return 'st-active';
+    if (s === 'DEACTIVATED' || s === 'SUSPENDED') return 'st-deactivated';
     if (s === 'EXPIRED') return 'st-expired';
     return 'st-pending';
   }
@@ -172,7 +222,22 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   getStatusLabel(status?: string): string {
     const s = (status || '').toUpperCase();
     if (s === 'PENDING_PAYMENT') return 'PENDING';
+    if (s === 'DEACTIVATED') return 'DEACTIVATED';
     return s || 'PENDING';
+  }
+
+  getFaceBadgeLabel(member: MemberResponse): string {
+    if (this.isDeactivated(member)) return 'Face ID: Disabled';
+    if (member.faceEnrolled) return 'Face ID: Active';
+    if (member.faceReenrollmentRequired) return 'Face ID: Re-enroll Req.';
+    return 'Face ID: Off';
+  }
+
+  getPasskeyBadgeLabel(member: MemberResponse): string {
+    if (this.isDeactivated(member)) return 'Passkey / QR: Disabled';
+    const cnt = member.activeBiometricDevices ?? 0;
+    if (cnt > 0) return `Passkey: ${cnt} Active`;
+    return 'Passkey: Not Enrolled';
   }
 
   copyContact(text?: string): void {
@@ -231,6 +296,10 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   }
 
   openFaceEnroll(member: MemberResponse): void {
+    if (this.isDeactivated(member)) {
+      this.errorMessage = 'Cannot enroll Face ID for a deactivated member. Reactivate the member first.';
+      return;
+    }
     this.selectedMemberForModal = null;
     this.selectedMemberForFaceEnroll = member;
   }
@@ -242,6 +311,7 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   onFaceEnrolled(): void {
     this.successMessage = `Face template registered successfully for ${this.selectedMemberForFaceEnroll?.name}!`;
     this.selectedMemberForFaceEnroll = null;
+    this.refreshMembersSilently();
   }
 
   getAge(dob?: string): number | string {
@@ -255,6 +325,10 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   }
 
   checkIn(member: MemberResponse): void {
+    if (this.isDeactivated(member)) {
+      this.errorMessage = `Access Denied — ${member.name} is deactivated.`;
+      return;
+    }
     this.errorMessage = '';
     this.successMessage = '';
     this.attendanceService.checkIn(member.id)
@@ -262,14 +336,23 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.successMessage = `Member ${member.name} checked in successfully!`;
+          member.hasOpenAttendance = true;
+          this.refreshMembersSilently();
         },
         error: (err) => {
           this.errorMessage = err.error?.message || `Failed to check in ${member.name}`;
+          if (err.status === 403 || err.status === 409) {
+            this.refreshMembersSilently();
+          }
         }
       });
   }
 
   checkOut(member: MemberResponse): void {
+    if (this.isDeactivated(member) && !member.hasOpenAttendance) {
+      this.errorMessage = 'Check Out is disabled for deactivated members without an open session.';
+      return;
+    }
     this.errorMessage = '';
     this.successMessage = '';
     this.attendanceService.checkOut(member.id)
@@ -277,6 +360,8 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.successMessage = `Member ${member.name} checked out successfully!`;
+          member.hasOpenAttendance = false;
+          this.refreshMembersSilently();
         },
         error: (err) => {
           this.errorMessage = err.error?.message || `Failed to check out ${member.name}`;
@@ -284,40 +369,158 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
       });
   }
 
-  deleteMember(id: number, name: string): void {
-    const target = this.members.find(m => m.id === id);
-    if (target && this.isProtectedAdmin(target)) {
-      this.errorMessage = 'Admin account cannot be deleted from the database.';
+  openDeactivateModal(member: MemberResponse): void {
+    if (this.isProtectedAdmin(member)) {
+      this.errorMessage = 'Admin account cannot be deactivated or deleted from the database.';
       return;
     }
-
-    if (!confirm(`Are you sure you want to delete member "${name}"? This will also remove attendance and payment records.`)) {
+    if (this.isDeactivated(member)) {
       return;
     }
+    this.errorMessage = '';
+    this.targetMemberForState = member;
+    this.deactivationReasonInput = '';
+    this.showDeactivateModal = true;
+  }
 
+  closeDeactivateModal(): void {
+    if (this.stateActionSubmitting) return;
+    this.showDeactivateModal = false;
+    this.targetMemberForState = null;
+    this.deactivationReasonInput = '';
+  }
+
+  confirmDeactivateMember(): void {
+    if (this.stateActionSubmitting || !this.targetMemberForState) {
+      return;
+    }
+    const target = this.targetMemberForState;
+    const reason = this.deactivationReasonInput.trim();
+    this.stateActionSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.memberService.deleteMember(id)
+    this.memberService.deactivateMember(target.id, reason || undefined, target.version)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          if (this.selectedMemberForModal?.id === id) {
-            this.selectedMemberForModal = null;
-          }
-          this.successMessage = `Member "${name}" deleted successfully!`;
-          this.loadMembers();
+        next: (res) => {
+          this.stateActionSubmitting = false;
+          this.showDeactivateModal = false;
+          this.targetMemberForState = null;
+          this.deactivationReasonInput = '';
+
+          // Immediate optimistic state reflection without page reload
+          this.members = this.members.map(m => {
+            if (m.id !== target.id) return m;
+            const updated: MemberResponse = {
+              ...m,
+              status: 'DEACTIVATED',
+              active: false,
+              faceEnabled: false,
+              faceEnrolled: false,
+              faceReenrollmentRequired: true,
+              activeBiometricDevices: 0,
+              hasOpenAttendance: false,
+              deactivatedAt: new Date().toISOString(),
+              deactivationReason: reason || 'Deactivated by administrator',
+              version: res.version ?? ((m.version ?? 0) + 1)
+            };
+            if (this.selectedMemberForModal?.id === target.id) {
+              this.selectedMemberForModal = updated;
+              this.memberFingerprintDevices = [];
+            }
+            return updated;
+          });
+          this.computeMetrics();
+          this.applyFilter();
+          this.successMessage = `${target.name} has been deactivated cleanly. Historical attendance and payment records are preserved.`;
+          this.refreshMembersSilently();
         },
         error: (err) => {
-          this.errorMessage = err.error?.message || 'Failed to delete member';
+          this.stateActionSubmitting = false;
+          this.showDeactivateModal = false;
+          this.targetMemberForState = null;
+          this.errorMessage = err.error?.message || 'Failed to deactivate member';
+          if (err.status === 409) {
+            this.loadMembers();
+          }
+        }
+      });
+  }
+
+  openReactivateModal(member: MemberResponse): void {
+    if (!this.isDeactivated(member)) {
+      return;
+    }
+    this.errorMessage = '';
+    this.targetMemberForState = member;
+    this.showReactivateModal = true;
+  }
+
+  closeReactivateModal(): void {
+    if (this.stateActionSubmitting) return;
+    this.showReactivateModal = false;
+    this.targetMemberForState = null;
+  }
+
+  confirmReactivateMember(): void {
+    if (this.stateActionSubmitting || !this.targetMemberForState) {
+      return;
+    }
+    const target = this.targetMemberForState;
+    this.stateActionSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.memberService.reactivateMember(target.id, target.version)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.stateActionSubmitting = false;
+          this.showReactivateModal = false;
+          this.targetMemberForState = null;
+
+          this.members = this.members.map(m => {
+            if (m.id !== target.id) return m;
+            const updated: MemberResponse = {
+              ...m,
+              status: res.status || 'ACTIVE',
+              active: true,
+              faceEnabled: false,
+              faceEnrolled: false,
+              faceReenrollmentRequired: true,
+              activeBiometricDevices: 0,
+              deactivatedAt: undefined,
+              deactivationReason: undefined,
+              version: res.version ?? ((m.version ?? 0) + 1)
+            };
+            if (this.selectedMemberForModal?.id === target.id) {
+              this.selectedMemberForModal = updated;
+            }
+            return updated;
+          });
+          this.computeMetrics();
+          this.applyFilter();
+          this.successMessage = `${target.name} reactivated with status ${res.status}. Previously revoked biometrics remain disabled until re-enrolled.`;
+          this.refreshMembersSilently();
+        },
+        error: (err) => {
+          this.stateActionSubmitting = false;
+          this.showReactivateModal = false;
+          this.targetMemberForState = null;
+          this.errorMessage = err.error?.message || 'Failed to reactivate member';
+          if (err.status === 409) {
+            this.loadMembers();
+          }
         }
       });
   }
 
   isProtectedAdmin(member?: MemberResponse | null): boolean {
     if (!member) return false;
+    const role = (member.role || '').trim().toUpperCase();
     const email = (member.email || '').trim().toLowerCase();
     const name = (member.name || '').trim().toUpperCase();
-    return email === 'admin@gym.com' || name === 'ADMIN';
+    return role === 'ADMIN' || email === 'admin@gym.com' || name === 'ADMIN';
   }
 }

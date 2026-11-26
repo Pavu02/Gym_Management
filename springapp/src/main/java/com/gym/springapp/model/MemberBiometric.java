@@ -31,4 +31,21 @@ public class MemberBiometric {
 
     @Column(name = "consent_at", nullable = false)
     private LocalDateTime consentAt;
+
+    @Column(name = "enabled")
+    private Boolean enabled = Boolean.TRUE;
+
+    @Column(name = "status", length = 30)
+    private String status = "ACTIVE";
+
+    @Column(name = "disabled_at")
+    private LocalDateTime disabledAt;
+
+    public boolean isEnabled() {
+        return !Boolean.FALSE.equals(enabled) && !"DISABLED".equalsIgnoreCase(status);
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 }

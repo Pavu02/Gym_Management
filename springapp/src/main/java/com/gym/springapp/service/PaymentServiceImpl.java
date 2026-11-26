@@ -53,6 +53,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void activateMemberOnPayment(Member member) {
+        if ("DEACTIVATED".equalsIgnoreCase(member.getStatus()) || !member.isActive()) {
+            memberRepo.save(member);
+            return;
+        }
         LocalDate today = LocalDate.now(zoneId);
         LocalDate baseDate = today;
         if (member.getExpiryDate() != null && member.getExpiryDate().isAfter(today)) {

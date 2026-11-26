@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -74,4 +75,28 @@ public class Member {
 
     @Column(name = "branch_id", length = 64)
     private String branchId = "MAIN";
+
+    @Column(name = "face_enabled")
+    private Boolean faceEnabled = Boolean.TRUE;
+
+    @Column(name = "deactivated_at")
+    private Instant deactivatedAt;
+
+    @Column(name = "deactivated_by")
+    private Long deactivatedBy;
+
+    @Column(name = "deactivation_reason", length = 500)
+    private String deactivationReason;
+
+    @Version
+    @Column(name = "version")
+    private Long version = 0L;
+
+    public boolean isFaceEnabled() {
+        return !Boolean.FALSE.equals(faceEnabled);
+    }
+
+    public void setFaceEnabled(boolean faceEnabled) {
+        this.faceEnabled = faceEnabled;
+    }
 }
