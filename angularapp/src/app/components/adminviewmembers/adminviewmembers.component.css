@@ -646,6 +646,13 @@
 }
 .act-delete:hover { background: rgba(239, 68, 68, 0.28); color: #ffffff; }
 
+.act-protected {
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+  cursor: default;
+}
+
 /* ── Compact Luxury Table View ── */
 .table-card {
   background: linear-gradient(155deg, var(--card-top), var(--card-bottom));

@@ -2,6 +2,7 @@ package com.gym.springapp.service;
 
 import com.gym.springapp.dto.TrainerRequestDTO;
 import com.gym.springapp.exceptions.DuplicateResourceException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.Member;
 import com.gym.springapp.model.Role;
@@ -25,9 +26,9 @@ public class TrainerServiceImpl implements TrainerService {
     private final PasswordEncoder passwordEncoder;
 
     public TrainerServiceImpl(TrainerRepo trainerRepo,
-                              UserRepo userRepo,
-                              MemberRepo memberRepo,
-                              PasswordEncoder passwordEncoder) {
+            UserRepo userRepo,
+            MemberRepo memberRepo,
+            PasswordEncoder passwordEncoder) {
         this.trainerRepo = trainerRepo;
         this.userRepo = userRepo;
         this.memberRepo = memberRepo;
@@ -78,16 +79,22 @@ public class TrainerServiceImpl implements TrainerService {
         User user = trainer.getUser();
 
         if (user != null) {
-            if (request.name() != null) user.setName(request.name());
-            if (request.phone() != null) user.setPhone(request.phone());
+            if (request.name() != null)
+                user.setName(request.name());
+            if (request.phone() != null)
+                user.setPhone(request.phone());
             userRepo.save(user);
         }
 
-        if (request.specialization() != null) trainer.setSpecialization(request.specialization());
+        if (request.specialization() != null)
+            trainer.setSpecialization(request.specialization());
         trainer.setExperienceYears(request.experienceYears());
-        if (request.bio() != null) trainer.setBio(request.bio());
-        if (request.rating() != null && request.rating() > 0) trainer.setRating(request.rating());
-        if (request.monthlyFee() != null) trainer.setMonthlyFee(request.monthlyFee());
+        if (request.bio() != null)
+            trainer.setBio(request.bio());
+        if (request.rating() != null && request.rating() > 0)
+            trainer.setRating(request.rating());
+        if (request.monthlyFee() != null)
+            trainer.setMonthlyFee(request.monthlyFee());
 
         return trainerRepo.save(trainer);
     }
@@ -97,13 +104,17 @@ public class TrainerServiceImpl implements TrainerService {
     public void deleteTrainer(Long id) {
         Trainer trainer = getTrainerById(id);
 
+        User user = trainer.getUser();
+        if (user != null && user.getRole() == Role.ADMIN) {
+            throw new ForbiddenOperationException("Admin account cannot be deleted from the database.");
+        }
+
         List<Member> members = memberRepo.findByTrainerId(id);
         for (Member member : members) {
             member.setTrainer(null);
             memberRepo.save(member);
         }
 
-        User user = trainer.getUser();
         trainerRepo.delete(trainer);
         if (user != null) {
             userRepo.delete(user);

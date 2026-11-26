@@ -8,6 +8,7 @@ import com.gym.springapp.exceptions.*;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
 import com.gym.springapp.service.BiometricCredentialService;
+import com.gym.springapp.service.MemberService;
 import com.gym.springapp.service.QrCheckInSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,9 +41,12 @@ import static org.mockito.Mockito.*;
 class WebAuthnQrCheckInIntegrationTest {
 
     @Autowired private BiometricCredentialService credentialService;
+    @Autowired private MemberService memberService;
     @Autowired private QrCheckInSessionService sessionService;
     @Autowired private UserRepo userRepo;
     @Autowired private MemberRepo memberRepo;
+    @Autowired private MemberBiometricRepo memberBiometricRepo;
+    @Autowired private PaymentRepo paymentRepo;
     @Autowired private PlanRepo planRepo;
     @Autowired private AttendanceRepo attendanceRepo;
     @Autowired private QrCheckInSessionRepository qrSessionRepo;
@@ -387,6 +391,47 @@ class WebAuthnQrCheckInIntegrationTest {
         assertNotEquals(QrSessionStatus.COMPLETED, afterRollback.getStatus());
         verify(messagingTemplate, never()).convertAndSend(startsWith("/topic/checkin-sessions/"),
                 argThat((Object arg) -> arg instanceof CheckInWebSocketEvent ev && "COMPLETED".equals(ev.status())));
+    }
+
+    @Test
+    void testMemberWithBiometricsDeletesCleanlyWhileAdminCannotBeDeleted() throws Exception {
+        // Member with MemberBiometric + WebAuthn credential + Payment deletes without FK failure
+        enrollAuthenticator(activeMember, "Pixel Wipe Test");
+
+        MemberBiometric bio = new MemberBiometric();
+        bio.setMember(activeMember);
+        bio.setFaceDescriptorEncrypted("enc-test-descriptor");
+        bio.setFaceEnrolledAt(java.time.LocalDateTime.now());
+        bio.setConsentAt(java.time.LocalDateTime.now());
+        memberBiometricRepo.save(bio);
+
+        Payment p = new Payment();
+        p.setMember(activeMember);
+        p.setAmount(2499.0);
+        p.setPaymentDate(LocalDate.now());
+        p.setMode("UPI");
+        p.setStatus("PAID");
+        paymentRepo.save(p);
+
+        Long deletedMemberId = activeMember.getId();
+        Long deletedUserId = activeMember.getUser().getId();
+        memberService.deleteMember(deletedMemberId);
+
+        assertTrue(memberRepo.findById(deletedMemberId).isEmpty());
+        assertTrue(userRepo.findById(deletedUserId).isEmpty());
+        assertTrue(memberBiometricRepo.findByMemberId(deletedMemberId).isEmpty());
+
+        // Admin user linked to a Member row must NEVER be deletable
+        Member adminMember = new Member();
+        adminMember.setUser(adminUser);
+        adminMember.setStatus("ACTIVE");
+        adminMember.setOnboardingCompleted(true);
+        adminMember = memberRepo.save(adminMember);
+
+        Long protectedAdminMemberId = adminMember.getId();
+        assertThrows(ForbiddenOperationException.class, () -> memberService.deleteMember(protectedAdminMemberId));
+        assertTrue(memberRepo.findById(protectedAdminMemberId).isPresent());
+        assertTrue(userRepo.findById(adminUser.getId()).isPresent());
     }
 
     /**

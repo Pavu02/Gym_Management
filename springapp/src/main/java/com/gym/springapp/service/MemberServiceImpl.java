@@ -9,6 +9,7 @@ import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
 import com.gym.springapp.dto.RenewRequestDTO;
 import com.gym.springapp.exceptions.DuplicateResourceException;
+import com.gym.springapp.exceptions.ForbiddenOperationException;
 import com.gym.springapp.exceptions.ResourceNotFoundException;
 import com.gym.springapp.model.*;
 import com.gym.springapp.repository.*;
@@ -249,7 +250,12 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
 
-        Long userId = member.getUser() != null ? member.getUser().getId() : null;
+        User ownerUser = member.getUser();
+        if (ownerUser != null && ownerUser.getRole() == Role.ADMIN) {
+            throw new ForbiddenOperationException("Admin account cannot be deleted from the database.");
+        }
+
+        Long userId = ownerUser != null ? ownerUser.getId() : null;
 
         // 1. Tidy up user-scoped biometric/attendance tables before clearing
         // persistence context

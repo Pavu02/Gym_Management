@@ -285,6 +285,12 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
   }
 
   deleteMember(id: number, name: string): void {
+    const target = this.members.find(m => m.id === id);
+    if (target && this.isProtectedAdmin(target)) {
+      this.errorMessage = 'Admin account cannot be deleted from the database.';
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete member "${name}"? This will also remove attendance and payment records.`)) {
       return;
     }
@@ -306,5 +312,12 @@ export class AdminviewmembersComponent implements OnInit, OnDestroy {
           this.errorMessage = err.error?.message || 'Failed to delete member';
         }
       });
+  }
+
+  isProtectedAdmin(member?: MemberResponse | null): boolean {
+    if (!member) return false;
+    const email = (member.email || '').trim().toLowerCase();
+    const name = (member.name || '').trim().toUpperCase();
+    return email === 'admin@gym.com' || name === 'ADMIN';
   }
 }
