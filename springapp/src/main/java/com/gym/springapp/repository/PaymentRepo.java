@@ -2,6 +2,7 @@ package com.gym.springapp.repository;
 
 import com.gym.springapp.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,8 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
 
     @Query("SELECT COALESCE(SUM(p.amount),0) FROM Payment p WHERE UPPER(p.status) IN ('PAID','SUCCESS') AND MONTH(p.paymentDate)=:month AND YEAR(p.paymentDate)=:year")
     Double sumPaidOrSuccessByMonth(@Param("month") int month, @Param("year") int year);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Payment p WHERE p.member.id = :memberId")
+    void deleteDirectByMemberId(@Param("memberId") Long memberId);
 }

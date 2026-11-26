@@ -1,0 +1,117 @@
+<div class="verify-shell">
+  <div class="verify-card">
+    <div class="brand-row">
+      <span class="brand-logo">BEAST<span>X</span> GYM</span>
+      <span class="timer-badge" *ngIf="remainingSeconds > 0 && stage === 'READY_TO_VERIFY'">
+        QR Valid · {{ remainingSeconds }}s
+      </span>
+    </div>
+
+    <h2>CHECK-IN <span>VERIFICATION</span></h2>
+
+    <!-- Validating QR State -->
+    <div class="center-box" *ngIf="stage === 'VALIDATING_QR'">
+      <div class="pulse-dot"></div>
+      <p>{{ statusMessage }}</p>
+    </div>
+
+    <!-- Staff / Laptop Opened Instead of Registered Member Phone -->
+    <div class="state-box warn" *ngIf="stage === 'STAFF_OR_WRONG_DEVICE'">
+      <div class="icon-badge">💻</div>
+      <h3>Use Member's Registered Phone</h3>
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Phone Not Registered -->
+    <div class="state-box warn" *ngIf="stage === 'UNREGISTERED_PHONE'">
+      <div class="icon-badge">📱</div>
+      <h3>Phone Not Registered</h3>
+      <p>{{ errorMessage }}</p>
+      <p class="sub-hint">Your registered passkey is unavailable. Register this device again or request admin assistance.</p>
+      <button type="button" class="btn-primary-lux" (click)="goToDevices()">
+        Register This Phone →
+      </button>
+    </div>
+
+    <!-- Ready For Biometric / Screen Lock Prompt -->
+    <div class="verify-action-box" *ngIf="stage === 'READY_TO_VERIFY' || stage === 'VERIFYING'">
+      <div class="member-banner" *ngIf="validationInfo">
+        <div class="mb-name">{{ validationInfo.memberName }}</div>
+        <div class="mb-meta">{{ validationInfo.planName }} · Branch {{ validationInfo.branchId }}</div>
+      </div>
+
+      <p class="prompt-copy">{{ statusMessage }}</p>
+
+      <button
+        type="button"
+        class="btn-sensor-cta"
+        [class.scanning]="stage === 'VERIFYING'"
+        [disabled]="stage === 'VERIFYING'"
+        (click)="verifyAndCheckIn()">
+        <span class="sensor-glyph">🔒</span>
+        <span>{{ stage === 'VERIFYING' ? 'Verifying on Phone...' : 'Verify Fingerprint / Screen Lock' }}</span>
+      </button>
+
+      <span class="sec-foot">Protected by WebAuthn FIDO2 · Biometrics remain on your phone</span>
+    </div>
+
+    <!-- Offline / Network Uncertain Recovery -->
+    <div class="state-box info" *ngIf="stage === 'CONFIRMING_OFFLINE_RECOVERY'">
+      <div class="icon-badge">📶</div>
+      <h3>Confirming Check-In</h3>
+      <p>{{ statusMessage }}</p>
+      <button type="button" class="btn-primary-lux" (click)="tryRecoverStatus(false)">
+        Check Attendance Status ↻
+      </button>
+    </div>
+
+    <!-- Error State -->
+    <div class="state-box error" *ngIf="stage === 'ERROR'">
+      <div class="icon-badge">✕</div>
+      <h3>Check-In Not Completed</h3>
+      <p>{{ errorMessage }}</p>
+
+      <div class="action-stack">
+        <button *ngIf="isExpiredPlan" type="button" class="btn-primary-lux" (click)="goToPlan()">
+          Renew Membership Plan →
+        </button>
+        <button *ngIf="canRetryVerification" type="button" class="btn-primary-lux" (click)="validateQrAndPrefetchChallenge()">
+          Try Again ↺
+        </button>
+        <button type="button" class="btn-secondary-lux" (click)="goToDevices()">
+          Manage Check-in Devices
+        </button>
+      </div>
+    </div>
+
+    <!-- Success State -->
+    <div class="state-box success" *ngIf="stage === 'SUCCESS' && result">
+      <div class="icon-badge ok">✓</div>
+      <h3>{{ result.message }}</h3>
+      <div class="time-hero">{{ result.checkInTime }}</div>
+
+      <div class="receipt-card">
+        <div class="r-row">
+          <span>Member</span>
+          <strong>{{ result.memberName }}</strong>
+        </div>
+        <div class="r-row">
+          <span>Plan &amp; Status</span>
+          <strong>{{ result.planName }} ({{ result.membershipStatus }})</strong>
+        </div>
+        <div class="r-row">
+          <span>Method</span>
+          <strong class="orange-val">{{ result.checkInMethod }}</strong>
+        </div>
+        <div class="r-row" *ngIf="result.riskResult">
+          <span>Security</span>
+          <strong>{{ result.riskResult }}</strong>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary-lux" routerLink="/member/attendance">
+        View My Attendance →
+      </button>
+    </div>
+  </div>
+</div>

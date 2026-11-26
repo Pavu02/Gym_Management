@@ -377,7 +377,7 @@ public class FingerprintServiceImpl implements FingerprintService {
 
     private CheckinResultDTO processCheckinOrCheckout(Member member) {
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
-        Optional<Attendance> todayAttOpt = attendanceRepo.findByMemberIdAndAttendanceDate(member.getId(), today);
+        Optional<Attendance> todayAttOpt = attendanceRepo.findFirstByMemberIdAndAttendanceDateOrderByIdDesc(member.getId(), today);
 
         String action;
         String timeStr;
@@ -465,11 +465,8 @@ public class FingerprintServiceImpl implements FingerprintService {
                 : (fpOpt.map(FingerprintProfile::getDeviceName).orElse(null));
         LocalDateTime enrolledAt = !passkeys.isEmpty() ? passkeys.get(0).getCreatedAt()
                 : (fpOpt.map(FingerprintProfile::getUpdatedAt).orElse(null));
-        String hash = !passkeys.isEmpty() ? passkeys.get(0).getCredentialId()
-                : (fpOpt.map(FingerprintProfile::getFingerprintHash).orElse(null));
         Integer quality = fpOpt.map(FingerprintProfile::getQualityScore).orElse(enrolled ? 99 : 0);
-
-        return new FingerprintStatusDTO(enrolled, userId, hash, quality, deviceName, enrolledAt);
+        return new FingerprintStatusDTO(enrolled, userId, null, quality, deviceName, enrolledAt);
     }
 
     @Override

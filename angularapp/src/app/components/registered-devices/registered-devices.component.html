@@ -1,0 +1,97 @@
+<div class="devices-page">
+  <header class="roster-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>MEMBER SECURITY &amp; PASSKEYS</span>
+        <span class="active-pill">{{ activeDevicesCount }} Active Device{{ activeDevicesCount === 1 ? '' : 's' }}</span>
+      </div>
+      <h1>MY CHECK-IN <span>DEVICES</span></h1>
+      <p>Register your primary phone and backup phone for instant QR + biometric gym check-in</p>
+    </div>
+
+    <div class="header-actions" *ngIf="activeDevicesCount > 0">
+      <button type="button" class="btn-revoke-all" (click)="openRevokeAll()">
+        Revoke All Devices
+      </button>
+    </div>
+  </header>
+
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div class="layout-grid">
+    <!-- Left: Device Enrollment -->
+    <app-biometric-device-enrollment
+      [activeDeviceCount]="activeDevicesCount"
+      [maxDevices]="5"
+      (enrolled)="onDeviceEnrolled($event)">
+    </app-biometric-device-enrollment>
+
+    <!-- Right: Registered Devices Table / List (Never exposes public keys or credential IDs) -->
+    <div class="list-card">
+      <div class="list-head">
+        <h3>AUTHORIZED <span>PHONES</span></h3>
+        <span class="count-chip">{{ activeDevicesCount }} / 5</span>
+      </div>
+
+      <div class="loading-box" *ngIf="loading">Loading devices...</div>
+
+      <div class="empty-box" *ngIf="!loading && devices.length === 0">
+        <p>No check-in devices enrolled yet.</p>
+        <small>Use "Enable Fingerprint Check-in" on your smartphone to enroll this device.</small>
+      </div>
+
+      <div class="device-list" *ngIf="!loading && devices.length > 0">
+        <div class="dev-row" *ngFor="let dev of devices" [class.revoked]="!dev.active">
+          <div class="dev-info">
+            <div class="dev-title-line" *ngIf="editingId !== dev.id">
+              <strong>{{ dev.deviceName }}</strong>
+              <span class="type-badge">{{ dev.deviceType }}</span>
+              <span class="status-tag" [class.tag-active]="dev.active" [class.tag-revoked]="!dev.active">
+                {{ dev.active ? 'Active' : 'Revoked' }}
+              </span>
+            </div>
+
+            <div class="rename-row" *ngIf="editingId === dev.id">
+              <input type="text" [(ngModel)]="editName" class="rename-input" />
+              <button type="button" class="btn-mini btn-save" (click)="saveRename(dev)">Save</button>
+              <button type="button" class="btn-mini btn-cancel" (click)="cancelRename()">Cancel</button>
+            </div>
+
+            <div class="dev-dates">
+              <span>Registered: {{ dev.registeredAt | date:'medium' }}</span>
+              <span *ngIf="dev.lastUsedAt"> · Last Used: {{ dev.lastUsedAt | date:'medium' }}</span>
+              <span *ngIf="dev.revokedAt"> · Revoked: {{ dev.revokedAt | date:'medium' }}</span>
+            </div>
+          </div>
+
+          <div class="dev-actions" *ngIf="dev.active && editingId !== dev.id">
+            <button type="button" class="btn-mini" (click)="startRename(dev)">Rename</button>
+            <button type="button" class="btn-mini btn-danger" (click)="revokeSingle(dev)">Revoke</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Re-authentication Modal before Revoke All -->
+  <div class="modal-overlay" *ngIf="showRevokeAllModal" (click)="closeRevokeAll()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>CONFIRM <span>REVOCATION</span></h3>
+        <button type="button" class="btn-close" (click)="closeRevokeAll()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Re-authentication is required before revoking all check-in devices on your account.</p>
+        <label for="revokeAllPassword">Current Password</label>
+        <input id="revokeAllPassword" type="password" [(ngModel)]="revokePassword" class="lux-input" placeholder="Enter your password" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel-modal" (click)="closeRevokeAll()">Cancel</button>
+        <button type="button" class="btn-confirm-danger" (click)="confirmRevokeAll()" [disabled]="revokingAll">
+          {{ revokingAll ? 'Revoking...' : 'Revoke All Devices' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

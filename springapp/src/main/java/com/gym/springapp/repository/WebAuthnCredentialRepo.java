@@ -2,6 +2,9 @@ package com.gym.springapp.repository;
 
 import com.gym.springapp.model.WebAuthnCredential;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,4 +16,8 @@ public interface WebAuthnCredentialRepo extends JpaRepository<WebAuthnCredential
     Optional<WebAuthnCredential> findByCredentialId(String credentialId);
     long countByMemberId(Long memberId);
     void deleteByMemberId(Long memberId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM WebAuthnCredential wc WHERE wc.member.id = :memberId")
+    void deleteDirectByMemberId(@Param("memberId") Long memberId);
 }

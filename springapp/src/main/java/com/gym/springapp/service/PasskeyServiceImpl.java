@@ -272,9 +272,9 @@ public class PasskeyServiceImpl implements PasskeyService {
         return webAuthnCredentialRepo.findByMemberId(member.getId()).stream()
                 .map(c -> new WebAuthnDeviceDTO(
                         c.getId(),
-                        c.getCredentialId(),
+                        null,
                         c.getDeviceName(),
-                        c.getSignCount(),
+                        0L,
                         c.getCreatedAt()))
                 .collect(Collectors.toList());
     }

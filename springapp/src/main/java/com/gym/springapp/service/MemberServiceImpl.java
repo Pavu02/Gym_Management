@@ -3,6 +3,7 @@ package com.gym.springapp.service;
 import com.gym.springapp.automation.events.MemberChangedEvent;
 import com.gym.springapp.automation.events.MemberWelcomeEvent;
 import com.gym.springapp.automation.events.PaymentReceivedEvent;
+import com.gym.springapp.automation.repo.ReminderLogRepo;
 import com.gym.springapp.dto.MemberProfileUpdateDTO;
 import com.gym.springapp.dto.MemberRequestDTO;
 import com.gym.springapp.dto.MemberResponseDTO;
@@ -41,6 +42,11 @@ public class MemberServiceImpl implements MemberService {
     private final FaceAttendanceRepo faceAttendanceRepo;
     private final WorkoutPlanRepo workoutPlanRepo;
     private final MissedVisitNotificationRepo missedVisitNotificationRepo;
+    private final KioskTokenRepo kioskTokenRepo;
+    private final ReminderLogRepo reminderLogRepo;
+    private final MemberWebAuthnCredentialRepo memberWebAuthnCredentialRepo;
+    private final QrCheckInSessionRepository qrCheckInSessionRepository;
+    private final WebAuthnChallengeRepository webAuthnChallengeRepository;
 
     public MemberServiceImpl(MemberRepo memberRepo,
             UserRepo userRepo,
@@ -57,7 +63,12 @@ public class MemberServiceImpl implements MemberService {
             FingerprintProfileRepo fingerprintProfileRepo,
             FaceAttendanceRepo faceAttendanceRepo,
             WorkoutPlanRepo workoutPlanRepo,
-            MissedVisitNotificationRepo missedVisitNotificationRepo) {
+            MissedVisitNotificationRepo missedVisitNotificationRepo,
+            KioskTokenRepo kioskTokenRepo,
+            ReminderLogRepo reminderLogRepo,
+            MemberWebAuthnCredentialRepo memberWebAuthnCredentialRepo,
+            QrCheckInSessionRepository qrCheckInSessionRepository,
+            WebAuthnChallengeRepository webAuthnChallengeRepository) {
         this.memberRepo = memberRepo;
         this.userRepo = userRepo;
         this.planRepo = planRepo;
@@ -74,6 +85,11 @@ public class MemberServiceImpl implements MemberService {
         this.faceAttendanceRepo = faceAttendanceRepo;
         this.workoutPlanRepo = workoutPlanRepo;
         this.missedVisitNotificationRepo = missedVisitNotificationRepo;
+        this.kioskTokenRepo = kioskTokenRepo;
+        this.reminderLogRepo = reminderLogRepo;
+        this.memberWebAuthnCredentialRepo = memberWebAuthnCredentialRepo;
+        this.qrCheckInSessionRepository = qrCheckInSessionRepository;
+        this.webAuthnChallengeRepository = webAuthnChallengeRepository;
     }
 
     @Override
@@ -235,40 +251,42 @@ public class MemberServiceImpl implements MemberService {
 
         Long userId = member.getUser() != null ? member.getUser().getId() : null;
 
-        // 1. Delete attendance records
-        attendanceRepo.deleteAll(attendanceRepo.findByMemberId(id));
-
-        // 2. Delete payment records
-        paymentRepo.deleteAll(paymentRepo.findByMemberId(id));
-
-        // 3. Delete face biometric record (member_biometrics table - FK to members)
-        memberBiometricRepo.findByMemberId(id).ifPresent(memberBiometricRepo::delete);
-
-        // 4. Delete WebAuthn passkeys (member_passkeys table - FK to members)
-        memberPasskeyRepo.deleteByMemberId(id);
-
-        // 5. Delete WebAuthn credentials mirror (webauthn_credentials table - FK to
-        // members)
-        webAuthnCredentialRepo.deleteByMemberId(id);
-
-        // 6. Delete missed visit notifications (FK to members)
-        missedVisitNotificationRepo.deleteByMemberId(id);
-
-        // 7. Delete workout plan (FK to members)
-        workoutPlanRepo.findByMemberId(id).ifPresent(workoutPlanRepo::delete);
-
-        // 8. Delete face profile by userId (no FK to members, but tidy up)
+        // 1. Tidy up user-scoped biometric/attendance tables before clearing
+        // persistence context
         if (userId != null) {
             faceProfileRepo.findByUserId(userId).ifPresent(faceProfileRepo::delete);
             fingerprintProfileRepo.findByUserId(userId).ifPresent(fingerprintProfileRepo::delete);
             faceAttendanceRepo.deleteAll(faceAttendanceRepo.findByUserId(userId));
+            faceAttendanceRepo.flush();
         }
 
-        // 9. Finally delete the member and user
-        User user = member.getUser();
-        memberRepo.delete(member);
-        if (user != null) {
-            userRepo.delete(user);
+        // 2. Delete/unlink all foreign-key child rows directly in SQL order so
+        // Hibernate
+        // cannot emit DELETE FROM members before child deletions are flushed
+        attendanceRepo.deleteDirectByMemberId(id);
+        paymentRepo.deleteDirectByMemberId(id);
+        memberBiometricRepo.deleteDirectByMemberId(id);
+        memberPasskeyRepo.deleteDirectByMemberId(id);
+        webAuthnCredentialRepo.deleteDirectByMemberId(id);
+        missedVisitNotificationRepo.deleteDirectByMemberId(id);
+        workoutPlanRepo.deleteDirectByMemberId(id);
+        reminderLogRepo.deleteDirectByMemberId(id);
+        kioskTokenRepo.clearMemberReference(id);
+        memberWebAuthnCredentialRepo.deleteDirectByMemberId(id);
+        webAuthnChallengeRepository.deleteDirectByMemberId(id);
+        qrCheckInSessionRepository.clearMemberReference(id);
+
+        // 3. Reload managed Member after persistence context clear, then flush Member
+        // delete before User delete
+        Member targetMember = memberRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
+        User targetUser = targetMember.getUser();
+        memberRepo.delete(targetMember);
+        memberRepo.flush();
+
+        if (targetUser != null) {
+            userRepo.delete(targetUser);
+            userRepo.flush();
         }
     }
 

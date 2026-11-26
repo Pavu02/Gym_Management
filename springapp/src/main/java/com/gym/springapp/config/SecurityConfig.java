@@ -1,7 +1,11 @@
 package com.gym.springapp.config;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +35,15 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final MyUserDetailsService userDetailsService;
 
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:8081}")
+    private String allowedOriginsProp;
+
+    @Value("${app.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
+
+    @Value("${webauthn.origins:http://localhost:4200,http://localhost:8081}")
+    private String webauthnOriginsProp;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             JwtAccessDeniedHandler jwtAccessDeniedHandler,
@@ -59,16 +72,34 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // CORS: allow local dev + all Vercel URLs
+    public List<String> resolveExactAllowedOrigins() {
+        Set<String> origins = new LinkedHashSet<>();
+        addCsvOrigins(origins, allowedOriginsProp);
+        addCsvOrigins(origins, frontendUrl);
+        addCsvOrigins(origins, webauthnOriginsProp);
+        if (origins.isEmpty()) {
+            origins.add("http://localhost:4200");
+            origins.add("http://localhost:8081");
+        }
+        return List.copyOf(origins);
+    }
+
+    private void addCsvOrigins(Set<String> target, String csv) {
+        if (csv == null || csv.isBlank()) {
+            return;
+        }
+        Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !"*".equals(s))
+                .forEach(target::add);
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:4200",
-                "http://localhost:8081",
-                "https://*.vercel.app"));
+        config.setAllowedOrigins(resolveExactAllowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Idempotency-Key", "X-Requested-With"));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
@@ -92,7 +123,12 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws-checkin/**", "/ws-checkin-sockjs/**").permitAll()
                         .requestMatchers("/api/checkin/**").permitAll()
+                        .requestMatchers("/api/webauthn/register/**", "/api/webauthn/devices/**").hasRole("MEMBER")
+                        .requestMatchers("/api/webauthn/authenticate/**").hasRole("MEMBER")
+                        .requestMatchers("/api/qr-checkin/sessions/validate", "/api/qr-checkin/sessions/member-status").hasRole("MEMBER")
+                        .requestMatchers("/api/qr-checkin/**").hasRole("ADMIN")
                         .requestMatchers("/api/kiosk/**").hasRole("ADMIN")
                         .requestMatchers("/api/fingerprint/**").hasAnyRole("MEMBER", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

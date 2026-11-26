@@ -50,8 +50,12 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  logout(): void {
+  logout(returnUrl?: string): void {
     localStorage.clear();
-    this.router.navigate(['/login']);
+    if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+      this.router.navigate(['/login'], { queryParams: { returnUrl } });
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 }

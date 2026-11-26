@@ -14,6 +14,7 @@ export class LoginComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
   loading: boolean = false;
+  returnUrl: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -24,13 +25,21 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const rawReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//')) {
+      this.returnUrl = rawReturnUrl;
+    }
+
     if (this.authService.isLoggedIn()) {
-      this.redirectByRole(this.authService.getRole());
+      this.redirectAfterAuth(this.authService.getRole());
     }
 
     this.route.queryParams.subscribe(params => {
       if (params['registered']) {
         this.successMessage = 'Registration successful! Please login with your credentials.';
+      }
+      if (params['returnUrl'] && params['returnUrl'].startsWith('/') && !params['returnUrl'].startsWith('//')) {
+        this.returnUrl = params['returnUrl'];
       }
     });
 
@@ -52,28 +61,21 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: (res) => {
         this.loading = false;
-        if (res.role === 'MEMBER') {
-          this.onboardingService.getStatus().subscribe({
-            next: (status) => {
-              if (status && status.onboardingCompleted) {
-                this.router.navigate(['/member/profile']);
-              } else {
-                this.router.navigate(['/onboarding/plans']);
-              }
-            },
-            error: () => {
-              this.router.navigate(['/onboarding/plans']);
-            }
-          });
-        } else {
-          this.redirectByRole(res.role);
-        }
+        this.redirectAfterAuth(res.role);
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
       }
     });
+  }
+
+  private redirectAfterAuth(role: string | null): void {
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+      return;
+    }
+    this.redirectByRole(role);
   }
 
   private redirectByRole(role: string | null): void {

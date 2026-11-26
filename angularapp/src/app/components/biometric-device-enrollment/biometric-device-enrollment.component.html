@@ -1,0 +1,71 @@
+<div class="enroll-card">
+  <div class="enroll-head">
+    <div class="enroll-badge">WEBAUTHN FIDO2 · ZERO BIOMETRICS UPLOADED</div>
+    <h3>REGISTER <span>CHECK-IN DEVICE</span></h3>
+    <p class="enroll-sub">
+      Enroll your phone once using its built-in Fingerprint, Face ID, Touch ID, or device screen lock.
+      Your actual fingerprint image never leaves your phone.
+    </p>
+  </div>
+
+  <!-- Capability Telemetry -->
+  <div class="cap-row" *ngIf="!checkingCapability">
+    <span class="cap-pill" [class.cap-ok]="webAuthnSupported" [class.cap-warn]="!webAuthnSupported">
+      {{ webAuthnSupported ? '✓ WebAuthn Supported' : '✕ WebAuthn Unsupported' }}
+    </span>
+    <span class="cap-pill" [class.cap-ok]="platformAvailable" [class.cap-warn]="!platformAvailable">
+      {{ platformAvailable ? '✓ Platform Sensor / Screen Lock Ready' : '⚠ No Platform Sensor Detected Here' }}
+    </span>
+  </div>
+
+  <div class="warn-box" *ngIf="!checkingCapability && (!webAuthnSupported || !platformAvailable)">
+    <strong>Mobile Device Recommended:</strong> Open this page on your smartphone (Android Chrome with fingerprint/screen lock, or iPhone Safari with Face ID / Touch ID).
+    If you are in browser Private/Incognito mode or have no phone screen lock set, please configure a screen lock in OS Settings first.
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div class="form-row">
+    <label for="enrollDeviceName">Device Nickname (Primary or Backup Phone)</label>
+    <input
+      id="enrollDeviceName"
+      type="text"
+      [(ngModel)]="deviceName"
+      placeholder="e.g. Primary Pixel 9, Backup iPhone"
+      class="lux-input"
+      [disabled]="enrolling" />
+  </div>
+
+  <div class="form-row" *ngIf="activeDeviceCount > 0">
+    <label for="reauthPwd">Confirm Password (optional extra safeguard for adding replacement devices)</label>
+    <input
+      id="reauthPwd"
+      type="password"
+      [(ngModel)]="currentPassword"
+      placeholder="Enter your account password"
+      class="lux-input"
+      [disabled]="enrolling" />
+  </div>
+
+  <label class="consent-row">
+    <input type="checkbox" [(ngModel)]="consent" [disabled]="enrolling" />
+    <span>
+      Verify my identity locally on this device via Fingerprint, Face ID, Touch ID, or Screen Lock.
+      Only public-key cryptography is registered with BeastX Gym.
+    </span>
+  </label>
+
+  <button
+    type="button"
+    class="btn-enable-fp"
+    (click)="enableFingerprintCheckIn()"
+    [disabled]="enrolling || !webAuthnSupported || !consent || limitReached">
+    <span *ngIf="!enrolling">🔒 Enable Fingerprint Check-in</span>
+    <span *ngIf="enrolling">Waiting for Device Verification...</span>
+  </button>
+
+  <p class="limit-note" *ngIf="limitReached">
+    Maximum active devices ({{ maxDevices }}) reached. Revoke an unused device first.
+  </p>
+</div>

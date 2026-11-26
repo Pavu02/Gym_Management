@@ -27,8 +27,16 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.authService.logout();
+        if (error.status === 401 && !request.url.includes('/api/auth/')) {
+          const currentPath = typeof window !== 'undefined'
+            ? (window.location.pathname + window.location.search)
+            : '';
+          const preserveReturnUrl = currentPath.startsWith('/check-in')
+            || currentPath.startsWith('/checkin')
+            || currentPath.startsWith('/member/devices');
+          if (!request.url.includes('/revoke-all') && !request.url.includes('/register/options')) {
+            this.authService.logout(preserveReturnUrl ? currentPath : undefined);
+          }
         }
         return throwError(() => error);
       })

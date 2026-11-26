@@ -39,6 +39,6 @@ public class FaceAttendance {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "method", nullable = false, length = 20)
-    private String method = "FACE"; // "FACE" or "MANUAL"
+    @Column(name = "method", nullable = false, length = 40)
+    private String method = "FACE"; // e.g. FACE, MANUAL, FINGERPRINT, QR_DEVICE_BIOMETRIC
 }

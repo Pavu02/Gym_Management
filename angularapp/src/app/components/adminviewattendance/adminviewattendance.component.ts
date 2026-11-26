@@ -41,8 +41,9 @@ export class AdminviewattendanceComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
 
-  // Manual Check-In Modal State
+  // Manual Check-In & QR Biometric Modal State
   showManualModal = false;
+  showQrCheckinModal = false;
   manualLoading = false;
   availableUsers: { id: number; name: string; role: string; email: string }[] = [];
   selectedManualUserId: number | null = null;
@@ -111,9 +112,13 @@ export class AdminviewattendanceComponent implements OnInit, OnDestroy {
 
   private rebuildCharts(list: FaceCheckinResponseDTO[]): void {
     // 1. Biometric verification share %
+    const isFp = (m?: string) => {
+      const up = (m || '').toUpperCase();
+      return up.includes('FINGERPRINT') || up.includes('BIOMETRIC') || up === 'DEVICE_PIN';
+    };
     const faceCount = list.filter(r => (r.method || 'FACE').toUpperCase() === 'FACE').length;
-    const fpCount = list.filter(r => (r.method || '').toUpperCase() === 'FINGERPRINT').length;
-    const manualCount = list.filter(r => (r.method || '').toUpperCase() === 'MANUAL').length;
+    const fpCount = list.filter(r => isFp(r.method)).length;
+    const manualCount = list.filter(r => (r.method || '').toUpperCase().includes('MANUAL') || (r.method || '').toUpperCase() === 'OTP_FALLBACK').length;
     const bioTotal = faceCount + fpCount;
     this.biometricRate = list.length > 0 ? Math.round((bioTotal / list.length) * 100) : 0;
 
@@ -233,6 +238,27 @@ export class AdminviewattendanceComponent implements OnInit, OnDestroy {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  formatMethodLabel(method?: string): string {
+    const up = (method || 'FACE').toUpperCase();
+    if (up.includes('BIOMETRIC')) return '📱 QR + DEVICE_BIOMETRIC';
+    if (up === 'DEVICE_PIN') return '🔑 Device PIN';
+    if (up === 'OTP_FALLBACK') return '🔢 OTP Fallback';
+    if (up === 'FINGERPRINT') return '👆 Fingerprint';
+    if (up.includes('MANUAL')) return '📝 Manual';
+    return '📷 Face';
+  }
+
+  methodCssClass(method?: string): string {
+    const up = (method || 'FACE').toUpperCase();
+    if (up.includes('BIOMETRIC') || up === 'FINGERPRINT' || up === 'DEVICE_PIN') {
+      return 'method-fingerprint';
+    }
+    if (up.includes('MANUAL') || up === 'OTP_FALLBACK') {
+      return 'method-manual';
+    }
+    return 'method-face';
+  }
+
   exportCsv(): void {
     if (!this.records.length) return;
     const escape = (val: string) => {
@@ -305,6 +331,20 @@ export class AdminviewattendanceComponent implements OnInit, OnDestroy {
     this.selectedManualUserId = null;
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  openQrCheckinModal(): void {
+    this.showQrCheckinModal = true;
+    this.errorMessage = '';
+  }
+
+  closeQrCheckinModal(): void {
+    this.showQrCheckinModal = false;
+  }
+
+  onQrCheckInCompleted(): void {
+    this.loadTodaySummary();
+    this.loadAttendance();
   }
 
   closeManualModal(): void {

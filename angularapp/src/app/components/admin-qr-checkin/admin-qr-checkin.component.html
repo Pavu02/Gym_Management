@@ -1,0 +1,146 @@
+<div class="qr-modal-overlay" (click)="onCloseBackdrop()">
+  <div class="qr-modal-card" (click)="$event.stopPropagation()">
+    <div class="qr-modal-header">
+      <div>
+        <div class="eyebrow">
+          <span>LIVE GYM CHECK-IN SESSION</span>
+          <span class="ws-chip" [class.ws-live]="channelState === 'WEBSOCKET_LIVE'">
+            {{ channelState === 'WEBSOCKET_LIVE' ? '● STOMP Live' : (channelState === 'POLLING_FALLBACK' ? '● Auto-Sync (2s)' : 'Connecting...') }}
+          </span>
+        </div>
+        <h3>QR BIOMETRIC <span>CHECK-IN</span></h3>
+      </div>
+      <button type="button" class="btn-close" (click)="cancelCurrentSession()" title="Close">&times;</button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="alert alert-success" *ngIf="manualSuccess">{{ manualSuccess }}</div>
+
+    <div class="qr-grid">
+      <!-- Left: Dynamic Single-Use QR + Countdown -->
+      <div class="qr-stage">
+        <div class="loading-qr" *ngIf="loading">Generating cryptographically signed QR...</div>
+
+        <ng-container *ngIf="!loading && session">
+          <div class="qr-frame" [class.qr-expired]="currentStatus === 'EXPIRED' || currentStatus === 'CANCELLED'">
+            <img [src]="session.qrCodeDataUrl" alt="Gym Check-In QR Code" class="qr-img" />
+            <div class="qr-overlay-state" *ngIf="currentStatus === 'EXPIRED'">EXPIRED</div>
+            <div class="qr-overlay-state qr-done" *ngIf="currentStatus === 'COMPLETED'">COMPLETED</div>
+          </div>
+
+          <div class="countdown-bar">
+            <span class="status-pill" [ngClass]="'st-' + currentStatus.toLowerCase()">
+              {{ currentStatus }}
+            </span>
+            <span class="timer-pill" [class.timer-low]="remainingSeconds <= 15">
+              Expires in {{ remainingSeconds }}s
+            </span>
+          </div>
+
+          <p class="security-note">
+            Single-use token · {{ session.branchId }} Branch · Contains no member PII or JWT
+          </p>
+
+          <div class="qr-controls">
+            <button type="button" class="btn-refresh" (click)="startNewSession()">
+              ↻ Refresh QR Session
+            </button>
+            <button type="button" class="btn-cancel-qr" (click)="cancelCurrentSession()">
+              Cancel
+            </button>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Right: Real-Time Verification Telemetry / Arrival Card -->
+      <div class="telemetry-panel">
+        <!-- Waiting State -->
+        <div class="waiting-card" *ngIf="!liveEvent || (!liveEvent.memberName && currentStatus !== 'FAILED')">
+          <div class="radar-icon">📡</div>
+          <h4>Awaiting Member Scan</h4>
+          <p *ngIf="currentStatus === 'PENDING'">
+            Ask the member to scan this QR code on their registered smartphone camera.
+          </p>
+          <p *ngIf="currentStatus === 'PHONE_CONNECTED'">
+            Member phone connected! Waiting for biometric verification prompt...
+          </p>
+          <p *ngIf="currentStatus === 'AWAITING_USER_VERIFICATION'">
+            Prompted member's phone for fingerprint / Face ID / screen lock verification...
+          </p>
+          <p *ngIf="currentStatus === 'EXPIRED'">
+            Session expired after 60s. Click <strong>Refresh QR Session</strong> to issue a new code.
+          </p>
+        </div>
+
+        <!-- Failed Verification Notice -->
+        <div class="result-card result-failed" *ngIf="liveEvent?.status === 'FAILED'">
+          <div class="badge-fail">VERIFICATION FAILED</div>
+          <h4>{{ liveEvent?.memberName || 'Member Verification Attempt' }}</h4>
+          <p>{{ liveEvent?.failureReason || 'Device verification could not be completed.' }}</p>
+        </div>
+
+        <!-- Completed / Verified Member Arrival Dossier -->
+        <div class="result-card result-success" *ngIf="liveEvent?.memberName && liveEvent?.status !== 'FAILED'">
+          <div class="member-head">
+            <div class="avatar-box">
+              <img *ngIf="liveEvent?.memberPhotoUrl" [src]="liveEvent?.memberPhotoUrl" alt="Member Photo" />
+              <span *ngIf="!liveEvent?.memberPhotoUrl">{{ liveEvent?.memberInitials || 'BX' }}</span>
+            </div>
+            <div>
+              <div class="badge-ok">{{ liveEvent?.status === 'COMPLETED' ? '✓ CHECK-IN CONFIRMED' : liveEvent?.status }}</div>
+              <h4>{{ liveEvent?.memberName }}</h4>
+              <span class="member-id-lbl">Member ID #{{ liveEvent?.memberId }}</span>
+            </div>
+          </div>
+
+          <div class="dossier-rows">
+            <div class="d-row">
+              <span>Membership Plan</span>
+              <strong>{{ liveEvent?.planName || 'Standard' }}</strong>
+            </div>
+            <div class="d-row">
+              <span>Plan Status / Expiry</span>
+              <strong>{{ liveEvent?.membershipStatus || 'ACTIVE' }} {{ liveEvent?.expiryDate ? '(' + (liveEvent?.expiryDate | date:'mediumDate') + ')' : '' }}</strong>
+            </div>
+            <div class="d-row">
+              <span>Check-In Time</span>
+              <strong>{{ liveEvent?.checkInTime || 'Pending...' }}</strong>
+            </div>
+            <div class="d-row">
+              <span>Method</span>
+              <strong class="method-highlight">{{ liveEvent?.checkInMethod || 'QR + DEVICE_BIOMETRIC' }}</strong>
+            </div>
+            <div class="d-row" *ngIf="liveEvent?.riskResult">
+              <span>Policy &amp; Risk</span>
+              <strong>{{ liveEvent?.riskResult }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin-Assisted Manual Check-in Fallback -->
+        <div class="fallback-toggle">
+          <button type="button" class="btn-link-fallback" (click)="showManualFallback = !showManualFallback">
+            {{ showManualFallback ? 'Hide Admin Fallback ▲' : 'Biometric unavailable? Admin-Assisted Check-in ▼' }}
+          </button>
+
+          <div class="fallback-box" *ngIf="showManualFallback">
+            <label for="fallbackMember">Member</label>
+            <select id="fallbackMember" [(ngModel)]="manualMemberId" class="lux-input">
+              <option [ngValue]="null">-- Select Member --</option>
+              <option *ngFor="let m of memberOptions" [ngValue]="m.id">{{ m.name }} ({{ m.email }})</option>
+            </select>
+
+            <label for="fallbackReason">Required Reason (logged to audit)</label>
+            <input id="fallbackReason" type="text" [(ngModel)]="manualReason"
+                   placeholder="e.g. Phone battery dead / sensor damaged"
+                   class="lux-input" />
+
+            <button type="button" class="btn-manual-submit" (click)="submitManualFallback()" [disabled]="manualSubmitting">
+              {{ manualSubmitting ? 'Recording...' : 'Record Admin-Assisted Check-In' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

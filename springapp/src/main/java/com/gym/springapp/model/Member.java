@@ -65,4 +65,13 @@ public class Member {
 
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @Column(name = "webauthn_user_handle", unique = true, length = 128)
+    private String webAuthnUserHandle;
+
+    @Column(name = "gym_id", length = 64)
+    private String gymId = "BEASTX-01";
+
+    @Column(name = "branch_id", length = 64)
+    private String branchId = "MAIN";
 }

@@ -20,6 +20,8 @@ import { MemberpaymentsComponent } from './components/memberpayments/memberpayme
 import { MembertrainerComponent } from './components/membertrainer/membertrainer.component';
 import { MemberfingerprintComponent } from './components/memberfingerprint/memberfingerprint.component';
 import { FingerprintcheckinComponent } from './components/fingerprintcheckin/fingerprintcheckin.component';
+import { RegisteredDevicesComponent } from './components/registered-devices/registered-devices.component';
+import { MobileCheckinVerificationComponent } from './components/mobile-checkin-verification/mobile-checkin-verification.component';
 import { TrainerviewmembersComponent } from './components/trainerviewmembers/trainerviewmembers.component';
 import { OnboardingplansComponent } from './components/onboardingplans/onboardingplans.component';
 import { OnboardingtrainerComponent } from './components/onboardingtrainer/onboardingtrainer.component';
@@ -63,7 +65,9 @@ const routes: Routes = [
   { path: 'member/attendance', component: MemberattendanceComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
   { path: 'member/payments', component: MemberpaymentsComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
   { path: 'member/fingerprint', component: MemberfingerprintComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
-  { path: 'checkin/fingerprint', component: FingerprintcheckinComponent },
+  { path: 'member/devices', component: RegisteredDevicesComponent, canActivate: [authGuard, onboardingGuard], data: { role: 'MEMBER' } },
+  { path: 'check-in/verify', component: MobileCheckinVerificationComponent },
+  { path: 'checkin/fingerprint', component: MobileCheckinVerificationComponent },
 
   // Trainer routes
   { path: 'trainer/members', component: TrainerviewmembersComponent, canActivate: [authGuard], data: { role: 'TRAINER' } },

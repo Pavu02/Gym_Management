@@ -202,7 +202,7 @@
               <div class="device-row" *ngFor="let dev of passkeyDevices">
                 <div class="dev-info">
                   <strong>{{ dev.deviceName }}</strong>
-                  <span class="dev-meta">Added: {{ dev.createdAt | date:'shortDate' }} | Checks: {{ dev.signCount }}</span>
+                  <span class="dev-meta">Added: {{ dev.createdAt | date:'shortDate' }}</span>
                 </div>
                 <button type="button" class="btn-del-device" (click)="deletePasskey(dev.credentialId)"
                   title="Remove device">
@@ -233,8 +233,8 @@
               Register your phone's fingerprint sensor once to check in effortlessly via kiosk QR code.
             </p>
           </div>
-          <a routerLink="/member/fingerprint" class="btn-bracket btn-sm" style="text-decoration: none; padding: 0.6rem 1.2rem; font-size: 0.88rem; white-space: nowrap;">
-            Set Up Fingerprint →
+          <a routerLink="/member/devices" class="btn-bracket btn-sm" style="text-decoration: none; padding: 0.6rem 1.2rem; font-size: 0.88rem; white-space: nowrap;">
+            My Check-in Devices →
           </a>
         </div>
       </div>

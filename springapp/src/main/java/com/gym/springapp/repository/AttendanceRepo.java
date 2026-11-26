@@ -2,6 +2,7 @@ package com.gym.springapp.repository;
 
 import com.gym.springapp.model.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,14 @@ public interface AttendanceRepo extends JpaRepository<Attendance, Long> {
     List<Attendance> findByMemberId(Long id);
 
     Optional<Attendance> findByMemberIdAndAttendanceDate(Long id, LocalDate attendanceDate);
+
+    Optional<Attendance> findFirstByMemberIdAndAttendanceDateOrderByIdDesc(Long id, LocalDate attendanceDate);
+
+    List<Attendance> findAllByMemberIdAndAttendanceDateOrderByIdDesc(Long id, LocalDate attendanceDate);
+
+    Optional<Attendance> findByIdempotencyKey(String idempotencyKey);
+
+    boolean existsByMemberIdAndQrSessionId(Long memberId, Long qrSessionId);
 
     long countByAttendanceDate(LocalDate attendanceDate);
 
@@ -38,4 +47,8 @@ public interface AttendanceRepo extends JpaRepository<Attendance, Long> {
     default long countByDate(LocalDate date) {
         return countByAttendanceDate(date);
     }
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Attendance a WHERE a.member.id = :memberId")
+    void deleteDirectByMemberId(@Param("memberId") Long memberId);
 }

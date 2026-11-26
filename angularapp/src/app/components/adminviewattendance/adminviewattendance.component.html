@@ -14,6 +14,10 @@
     </div>
 
     <div class="header-actions">
+      <button type="button" class="btn-luxury-qr" (click)="openQrCheckinModal()">
+        <span>📱 Start QR Biometric Check-in</span>
+      </button>
+
       <button type="button" class="btn-export" (click)="exportCsv()" [disabled]="records.length === 0"
               title="Download filtered attendance logs as CSV">
         <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor">
@@ -250,8 +254,8 @@
           <td class="tbl-date">{{ record.checkInTime | date:'mediumDate' }}</td>
           <td class="time-in">{{ record.checkInTime | date:'shortTime' }}</td>
           <td>
-            <span class="method-badge" [ngClass]="'method-' + (record.method || 'face').toLowerCase()">
-              {{ (record.method || 'FACE').toUpperCase() === 'FINGERPRINT' ? '👆 Fingerprint' : ((record.method || 'FACE').toUpperCase() === 'MANUAL' ? '📝 Manual' : '📷 Face') }}
+            <span class="method-badge" [ngClass]="methodCssClass(record.method)">
+              {{ formatMethodLabel(record.method) }}
             </span>
           </td>
           <td>
@@ -287,8 +291,8 @@
         <span>⏱ {{ record.checkInTime | date:'shortTime' }}</span>
       </div>
       <div class="log-foot">
-        <span class="method-badge" [ngClass]="'method-' + (record.method || 'face').toLowerCase()">
-          {{ (record.method || 'FACE').toUpperCase() === 'FINGERPRINT' ? '👆 Fingerprint' : ((record.method || 'FACE').toUpperCase() === 'MANUAL' ? '📝 Manual' : '📷 Face') }}
+        <span class="method-badge" [ngClass]="methodCssClass(record.method)">
+          {{ formatMethodLabel(record.method) }}
         </span>
         <span class="status-badge status-present">✓ Present</span>
       </div>
@@ -329,4 +333,12 @@
       </div>
     </div>
   </div>
+
+  <!-- ── Live QR Biometric Check-In Modal ── -->
+  <app-admin-qr-checkin
+    *ngIf="showQrCheckinModal"
+    [availableMembers]="availableUsers"
+    (close)="closeQrCheckinModal()"
+    (checkInCompleted)="onQrCheckInCompleted()">
+  </app-admin-qr-checkin>
 </div>

@@ -42,6 +42,10 @@ import { BarchartComponent } from './components/barchart/barchart.component';
 import { DonutchartComponent } from './components/donutchart/donutchart.component';
 import { ProgressbarsComponent } from './components/progressbars/progressbars.component';
 import { HeatmapstripComponent } from './components/heatmapstrip/heatmapstrip.component';
+import { BiometricDeviceEnrollmentComponent } from './components/biometric-device-enrollment/biometric-device-enrollment.component';
+import { RegisteredDevicesComponent } from './components/registered-devices/registered-devices.component';
+import { AdminQrCheckinComponent } from './components/admin-qr-checkin/admin-qr-checkin.component';
+import { MobileCheckinVerificationComponent } from './components/mobile-checkin-verification/mobile-checkin-verification.component';
 
 @NgModule({
   declarations: [
@@ -81,7 +85,11 @@ import { HeatmapstripComponent } from './components/heatmapstrip/heatmapstrip.co
     BarchartComponent,
     DonutchartComponent,
     ProgressbarsComponent,
-    HeatmapstripComponent
+    HeatmapstripComponent,
+    BiometricDeviceEnrollmentComponent,
+    RegisteredDevicesComponent,
+    AdminQrCheckinComponent,
+    MobileCheckinVerificationComponent
   ],
   imports: [
     BrowserModule,

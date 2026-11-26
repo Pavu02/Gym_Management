@@ -3,5 +3,8 @@ package com.gym.springapp.model;
 public enum AttendanceMethod {
     FACE,
     FINGERPRINT,
-    MANUAL
+    MANUAL,
+    QR_DEVICE_BIOMETRIC,
+    DEVICE_PIN,
+    OTP_FALLBACK
 }
